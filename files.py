@@ -17,7 +17,7 @@ logging.basicConfig(level=logging.INFO,
                         datefmt='%Y-%m-%d %H:%M:%S')
 
 class measurement_data:
-    def __init__(self, path, file_timestamp_format, file_extension, season_start, file_timestep, columns, column_names, column_dtypes, chamber_cycle_file, measurement_start, measurement_end):
+    def __init__(self, path, file_timestamp_format, file_extension, season_start, file_timestep, columns, column_names, column_dtypes, chamber_cycle_file, measurement_start_sec, measurement_end_sec, default_temp, default_pressure):
         self.path = path
         self.file_timestamp_format = file_timestamp_format
         self.file_extension = file_extension
@@ -33,11 +33,14 @@ class measurement_data:
         self.column_names = column_names
         self.column_dtypes = column_dtypes
         self.chamber_cycle_file = chamber_cycle_file
-        self.measurement_start = measurement_start
-        self.measurement_end = measurement_end
+        self.measurement_start_sec = measurement_start_sec
+        self.measurement_end_sec = measurement_end_sec
         self.chamber_cycle_df = self.create_chamber_cycle()
-        self.measurement = self.read_measurement()
-        self.starts = self.filter_data()
+        self.whole_measurement = self.read_measurement()
+        self.filtered_measurement = self.filter_data()
+        self.filtered_measurement['default_temp']= default_temp
+        self.filtered_measurement['default_pressure'] = default_pressure
+
 
     def get_newest(self):
         """
@@ -153,18 +156,42 @@ class measurement_data:
             date = self.extract_date(file)
             df['date'] = date
             df['datetime'] = pd.to_datetime(df['date'].astype(str)+' '+df['time'].astype(str)) 
-            df['open_time'] = df['datetime'] + pd.to_timedelta(self.measurement_start, unit='S')
-            df['close_time'] = df['datetime'] + pd.to_timedelta(self.measurement_end, unit='S')
+            df['open_time'] = df['datetime'] + pd.to_timedelta(self.measurement_start_sec, unit='S')
+            df['close_time'] = df['datetime'] + pd.to_timedelta(self.measurement_end_sec, unit='S')
             tmp.append(df)
         dfs = pd.concat(tmp)
         dfs.set_index('datetime', inplace=True)
-        print(dfs)
         return dfs
 
     def filter_data(self):
-        starts = self.chamber_cycle_df['open_time']
-        closes = self.chamber_cycle_df['close_time']
-        return starts
+        filter_tuple = list(zip(self.chamber_cycle_df['open_time'], self.chamber_cycle_df['close_time']))
+        tmp = []
+        for date in filter_tuple:
+            #print(f'{date[0] = }')
+            #print(f'{date[1] = }')
+            mask = (self.whole_measurement.index >= date[0]) & (self.whole_measurement.index <= date[1])
+            df = self.whole_measurement[mask]
+            #print(f'{df = }')
+            tmp.append(df)
+        dfs = pd.concat(tmp)
+        return dfs
+
+#class chamber_measurement(measurement_data):
+#      def __init__(self):
+#        super().__init__(defaults_dict.get('measurementpath'),
+#                             defaults_dict.get('actimeformat'),
+#                             defaults_dict.get('file_extension'),
+#                             defaults_dict.get('seasonstart'),
+#                             int(defaults_dict.get('airdatatimestep')),
+#                             list(map(int,measurement_dict.get('columns').split(','))),
+#                             list(measurement_dict.get('names').split(',')),
+#                             measurement_dtype_dict,
+#                             defaults_dict.get('chamber_cycle_file'),
+#                             int(measurement_time_dict.get('measstart')),
+#                             int(measurement_time_dict.get('measend')),
+#                             defaults_dict.get('default_temp'),
+#                             defaults_dict.get('default_pressure'),
+#                             )
 
 def ordinalTimer(time):
     """
@@ -229,6 +256,7 @@ def checkLastDbTimestamp(bucket, measurementName, url, token, organization, seas
     return lastTs
 
 
+
 def convert_timestamp(timestamp, current_format, new_format):
     # Parse the input timestamp using the current format
     dt = datetime.datetime.strptime(timestamp, current_format)
@@ -263,13 +291,16 @@ if __name__=="__main__":
                              measurement_dtype_dict,
                              defaults_dict.get('chamber_cycle_file'),
                              int(measurement_time_dict.get('measstart')),
-                             int(measurement_time_dict.get('measend')))
+                             int(measurement_time_dict.get('measend')),
+                             defaults_dict.get('default_temp'),
+                             defaults_dict.get('default_pressure'),
+                             )
+
+#    data2 = chamber_measurement()
     print(data1.path)
     print(data1.file_timestamp_format)
     print(data1.get_newest())
-    print(data1.file_timestamp_format)
     print(data1.strftime_to_regex())
     print(data1.measurement_files)
-    print(data1.measurement)
-    print(data1.chamber_cycle_df)
-    print(data1.starts)
+    print(data1.whole_measurement)
+    print(data1.filtered_measurement)
