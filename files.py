@@ -32,13 +32,13 @@ class measurement_data:
         self.columns = columns
         self.column_names = column_names
         self.column_dtypes = column_dtypes
-        self.measurement = self.read_measurement()
         self.chamber_cycle_file = chamber_cycle_file
         self.measurement_start = measurement_start
         self.measurement_end = measurement_end
         self.chamber_cycle_df = self.create_chamber_cycle()
+        self.measurement = self.read_measurement()
+        self.starts = self.filter_data()
 
-    
     def get_newest(self):
         """
         Fetchest name of the newest file in a folder
@@ -124,7 +124,8 @@ class measurement_data:
                 continue
             files.append(file)
         return files[::-1]
-    
+
+
     def read_measurement(self):
         tmp = []
         for f in self.measurement_files:
@@ -133,11 +134,10 @@ class measurement_data:
                              delimiter = '\t',
                              usecols = self.columns,
                              names = self.column_names,
-                             dtype = self.column_dtypes 
+                             dtype = self.column_dtypes
                              )
             tmp.append(df)
-            break
-        dfs = pd.concat(tmp) 
+        dfs = pd.concat(tmp)
         dfs['datetime'] = pd.to_datetime(dfs['date'].apply(str)+' '+dfs['time'])
         dfs['ordinal_date'] = pd.to_datetime(dfs['datetime']).map(datetime.datetime.toordinal)
         dfs['ordinal_time'] = dfs.apply(lambda row: ordinalTimer(row['time']),axis=1)
@@ -146,20 +146,26 @@ class measurement_data:
         return dfs
 
     def create_chamber_cycle(self):
-        df = pd.read_csv(self.chamber_cycle_file,
-                          names = ['time', 'chamber'])
+        tmp = []
         for file in self.measurement_files:
+            df = pd.read_csv(self.chamber_cycle_file,
+                              names = ['time', 'chamber'])
             date = self.extract_date(file)
             df['date'] = date
             df['datetime'] = pd.to_datetime(df['date'].astype(str)+' '+df['time'].astype(str)) 
             df['open_time'] = df['datetime'] + pd.to_timedelta(self.measurement_start, unit='S')
             df['close_time'] = df['datetime'] + pd.to_timedelta(self.measurement_end, unit='S')
-            df.set_index('datetime', inplace=True)
-            print(f'{df = }')
-        return df
+            tmp.append(df)
+        dfs = pd.concat(tmp)
+        dfs.set_index('datetime', inplace=True)
+        print(dfs)
+        return dfs
 
+    def filter_data(self):
+        starts = self.chamber_cycle_df['open_time']
+        closes = self.chamber_cycle_df['close_time']
+        return starts
 
-    
 def ordinalTimer(time):
     """
     Helper function to calculate ordinal time from HHMMSS
@@ -226,7 +232,7 @@ def checkLastDbTimestamp(bucket, measurementName, url, token, organization, seas
 def convert_timestamp(timestamp, current_format, new_format):
     # Parse the input timestamp using the current format
     dt = datetime.datetime.strptime(timestamp, current_format)
-    
+
     # Format the datetime object with the new format
     #new_timestamp = dt.strftime(new_format)
     return dt
@@ -266,3 +272,4 @@ if __name__=="__main__":
     print(data1.measurement_files)
     print(data1.measurement)
     print(data1.chamber_cycle_df)
+    print(data1.starts)
