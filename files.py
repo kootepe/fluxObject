@@ -17,12 +17,14 @@ logging.basicConfig(level=logging.INFO,
                         datefmt='%Y-%m-%d %H:%M:%S')
 
 class measurement_data:
-    def __init__(self, path, file_timestamp_format, file_extension, season_start, file_timestep, columns, column_names, column_dtypes, chamber_cycle_file, measurement_start_sec, measurement_end_sec, default_temp, default_pressure):
+    def __init__(self, path, file_timestamp_format, file_extension, season_start, file_timestep, influxdb_dict, columns, column_names, column_dtypes, chamber_cycle_file, measurement_start_sec, measurement_end_sec, default_temp, default_pressure):
         self.path = path
         self.file_timestamp_format = file_timestamp_format
         self.file_extension = file_extension
+        self.season_start = season_start
         self.file_timestep = file_timestep
-        self.start_timestamp = checkLastDbTimestamp(bucket, measurementName, url, token, organization, seasonStart, influx_timestamp_format)
+        self.influxdb_dict = influxdb_dict
+        self.start_timestamp = self.checkLastDbTimestamp(self.influxdb_dict, self.season_start, influx_timestamp_format)
         self.end_timestamp = self.extract_date(self.get_newest())
         if self.start_timestamp > self.end_timestamp:
             logging.info('No files newer than what is already in the database.')
@@ -176,6 +178,33 @@ class measurement_data:
         dfs = pd.concat(tmp)
         return dfs
 
+    def checkLastDbTimestamp(self, influxdb_dict, seasonStart, influx_timestamp_format):
+    # inflxudb query to get the timestamp of the last input
+        query = f'from(bucket: "{influxdb_dict.get("bucket")}")' \
+          '|> range(start: 0, stop: now())' \
+          f'|> filter(fn: (r) => r["_measurement"] == "{influxdb_dict.get("measurementname")}")' \
+          '|> keep(columns: ["_time"])' \
+          '|> sort(columns: ["_time"], desc: false)' \
+          '|> last(column: "_time")' 
+
+        client = ifdb.InfluxDBClient(url = influxdb_dict.get('url'),
+                             token = influxdb_dict.get('token'),
+                             org = influxdb_dict.get('organization'),
+                             )
+        tables = client.query_api().query(query=query)
+        # Get last timestamp from influxDB and if it doesn't exist, use a
+        # hardcoded one
+        try:
+            # removes timezone info from data, will this have implications in the future?
+            lastTs = tables[0].records[0]['_time'].replace(tzinfo=None)
+        #print(type(lastTs))
+        #print(lastTs)
+        #lastTs = lastTs.strftime('%Y%m%d')
+        except IndexError:
+            #if there's no timestamp, use some default one
+            lastTs = datetime.datetime.strptime(seasonStart, influx_timestamp_format)
+            #lastTs = pd.Timestamp(seasonStart).strptime(influx_timestamp_format)
+        return lastTs
 #class chamber_measurement(measurement_data):
 #      def __init__(self):
 #        super().__init__(defaults_dict.get('measurementpath'),
@@ -214,46 +243,19 @@ def ordinalTimer(time):
     time = float(time)
     return time
 
-url = '192.168.1.110:8089'
-#token = jjHam24-jnCdK1QlT10IrgWqpK07u0D6vhm7eZZZZHK7A38bPAlgpVWdr4B59VarRa-Kqu04fPGUQeOWL5-kJw==
-token = 'I6yqllNcyDYWSnShn3MNWpF4pXu93R2ep06c9lebBFbR6o0MQiOYT8LGEkUE6mnjHO6Bf4qClO4WgErnuo28DQ=='
-measurementName	= 'fluxOulaTest21'
-organization = 'Zack'
-bucket = 'Zack'
-timeout = 20000
-# timezone of the data, needs to be in specific format
-timezone = 'ETC/GMT-0'
-seasonStart = '2023-02-07 00:00:00'
-#influx_timestamp_format =  '%Y-%m-%d %H:%M:%S'
+#url = '192.168.1.110:8089'
+##token = jjHam24-jnCdK1QlT10IrgWqpK07u0D6vhm7eZZZZHK7A38bPAlgpVWdr4B59VarRa-Kqu04fPGUQeOWL5-kJw==
+#token = 'I6yqllNcyDYWSnShn3MNWpF4pXu93R2ep06c9lebBFbR6o0MQiOYT8LGEkUE6mnjHO6Bf4qClO4WgErnuo28DQ=='
+#measurementName	= 'fluxOulaTest21'
+#organization = 'Zack'
+#bucket = 'Zack'
+#timeout = 20000
+## timezone of the data, needs to be in specific format
+#timezone = 'ETC/GMT-0'
+#seasonStart = '2023-02-07 00:00:00'
+##influx_timestamp_format =  '%Y-%m-%d %H:%M:%S'
 influx_timestamp_format =  '%Y-%m-%d %H:%M:%S'
 
-def checkLastDbTimestamp(bucket, measurementName, url, token, organization, seasonStart, influx_timestamp_format):
-# inflxudb query to get the timestamp of the last input
-    query = f'from(bucket: "{bucket}")' \
-      '|> range(start: 0, stop: now())' \
-      f'|> filter(fn: (r) => r["_measurement"] == "{measurementName}")' \
-      '|> keep(columns: ["_time"])' \
-      '|> sort(columns: ["_time"], desc: false)' \
-      '|> last(column: "_time")' 
-
-    client = ifdb.InfluxDBClient(url = url,
-                         token=token,
-                         org = organization,
-                         )
-    tables = client.query_api().query(query=query)
-    # Get last timestamp from influxDB and if it doesn't exist, use a
-    # hardcoded one
-    try:
-        lastTs = tables[0].records[0]['_time']
-        lastTs = datetime.datetime.strptime(lastTs, influx_timestamp_format)
-    #print(type(lastTs))
-    #print(lastTs)
-    #lastTs = lastTs.strftime('%Y%m%d')
-    except IndexError:
-        #if there's no timestamp, use some default one
-        lastTs = datetime.datetime.strptime(seasonStart, influx_timestamp_format)
-        #lastTs = pd.Timestamp(seasonStart).strptime(influx_timestamp_format)
-    return lastTs
 
 
 
@@ -278,6 +280,7 @@ if __name__=="__main__":
     measurement_dict = dict(config.items('measurementData'))
     measurement_time_dict = dict(config.items('measuringTimesAC'))
     measurement_dtype_dict = dict(config.items('measurementDataDtypes'))
+    influxdb_dict = dict(config.items('influxDB'))
     print(measurement_dtype_dict)
     print(dict(config.items('defaults')))
 
@@ -286,6 +289,7 @@ if __name__=="__main__":
                              defaults_dict.get('file_extension'),
                              defaults_dict.get('seasonstart'),
                              int(defaults_dict.get('airdatatimestep')),
+                             influxdb_dict,
                              list(map(int,measurement_dict.get('columns').split(','))),
                              list(measurement_dict.get('names').split(',')),
                              measurement_dtype_dict,
