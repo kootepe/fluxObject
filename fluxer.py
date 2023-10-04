@@ -404,6 +404,7 @@ class chamber_cycle:
         dfs.set_index('datetime', inplace=True)
         return dfs
 
+
 class file_finder:
     """
     Finds and generates filenames
@@ -559,13 +560,9 @@ class timestamps:
         else:
             pass
 
-
-
-
-if __name__=="__main__":
-    iniFile = sys.argv[1]
+def main_no_push(inifile):
     config = configparser.ConfigParser()
-    config.read(iniFile)
+    config.read(inifile)
 
     defaults_dict = dict(config.items('defaults'))
     measurement_time_dict = dict(config.items('chamber_start_stop'))
@@ -644,14 +641,22 @@ if __name__=="__main__":
                                  float(defaults_dict.get('default_pressure')),
                                  float(defaults_dict.get('default_temperature'))
                                       )
-    print(calculated_data.upload_ready_data.head())
-    sys.exit(0)
-    pusher(calculated_data.upload_ready_data, influxdb_dict)
+    print(ready_data.upload_ready_data.head())
 
 
-    stop = timeit.default_timer()
-    execution_time = stop - start
-    print("Program Executed in "+str(execution_time))
+if __name__=="__main__":
+    inifile = sys.argv[1]
+    mode = sys.argv[2]
+    if mode == 'ac':
+        start = timeit.default_timer()
+        main_no_push(inifile)
+        stop = timeit.default_timer()
+        execution_time = stop - start
+        print("Program Executed in "+str(execution_time))
+    if mode == 'man':
+        sys.exit(0)
+    if mode == 'csv':
+        sys.exit(0)
     #print(measurement_df.measurement_df)
     #print(air_temperature_df.aux_data_df)
     #print(air_pressure_df.aux_data_df)
