@@ -698,6 +698,28 @@ class csv_reader:
         return dfs
     def read_csv(self):
         files = self.files
+
+def eddypro_push(inifile):
+    config = configparser.ConfigParser()
+    config.read(inifile)
+
+    defaults_dict = dict(config.items('defaults'))
+    influxdb_dict = dict(config.items('influxDB'))
+    measurement_dict = dict(config.items('measurement_data'))
+
+    timestamps_values = timestamps(influxdb_dict,
+                          measurement_dict,
+                          defaults_dict.get('season_start')
+                            )
+
+    measurement_files = file_finder(measurement_dict,
+                                   int(defaults_dict.get('airdatatimestep')),
+                                   timestamps_values.start_timestamp,
+                                   timestamps_values.end_timestamp
+                                    )
+    data = zip_open(measurement_files.measurement_files, measurement_dict)
+    print(data.data)
+    #pusher(data.data, influxdb_dict)
 def main_no_push(inifile):
     config = configparser.ConfigParser()
     config.read(inifile)
@@ -800,6 +822,8 @@ if __name__=="__main__":
         sys.exit(0)
     if mode == 'csv':
         sys.exit(0)
+    if mode == 'eddypro':
+        eddypro_push(inifile)
     #print(measurement_df.measurement_df)
     #print(air_temperature_df.aux_data_df)
     #print(air_pressure_df.aux_data_df)
