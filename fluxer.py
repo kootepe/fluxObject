@@ -720,6 +720,35 @@ def eddypro_push(inifile):
     data = zip_open(measurement_files.measurement_files, measurement_dict)
     print(data.data)
     #pusher(data.data, influxdb_dict)
+
+def csv_push(inifile):
+    config = configparser.ConfigParser()
+    config.read(inifile)
+
+    defaults_dict = dict(config.items('defaults'))
+    influxdb_dict = dict(config.items('influxDB'))
+    measurement_dict = dict(config.items('measurement_data'))
+
+    timestamps_values = timestamps(influxdb_dict,
+                          measurement_dict,
+                          defaults_dict.get('season_start')
+                            )
+
+    measurement_files = file_finder(measurement_dict,
+                                   int(defaults_dict.get('airdatatimestep')),
+                                   timestamps_values.start_timestamp,
+                                   timestamps_values.end_timestamp
+                                    )
+    if measurement_dict.get('file_extension') == '.zip':
+        data = zip_open(measurement_files.measurement_files, measurement_dict)
+    else:
+        data = csv_reader(measurement_files.measurement_files, measurement_dict)
+
+        print(measurement_files.measurement_files)
+        logging.warning('Some other function')
+    print(data.data)
+    #pusher(data.data, influxdb_dict)
+
 def main_no_push(inifile):
     config = configparser.ConfigParser()
     config.read(inifile)
@@ -821,7 +850,7 @@ if __name__=="__main__":
     if mode == 'man':
         sys.exit(0)
     if mode == 'csv':
-        sys.exit(0)
+        csv_push(inifile)
     if mode == 'eddypro':
         eddypro_push(inifile)
     #print(measurement_df.measurement_df)
