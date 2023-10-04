@@ -68,12 +68,14 @@ class snowdepth_parser:
         return snowdepth
 
 class calculated_data:
-    def __init__(self, measured_data, measuring_chamber_dict, filter_tuple, get_temp_and_pressure_from_file):
+    def __init__(self, measured_data, measuring_chamber_dict, filter_tuple, get_temp_and_pressure_from_file, default_pressure, default_temperature):
         self.get_temp_and_pressure_from_file = get_temp_and_pressure_from_file
         self.chamber_height = int(measuring_chamber_dict.get('chamber_height'))
         self.chamber_width = int(measuring_chamber_dict.get('chamber_width'))
         self.chamber_length = int(measuring_chamber_dict.get('chamber_length'))
         self.filter_tuple = filter_tuple
+        self.default_pressure = default_pressure
+        self.default_temperature = default_temperature
         self.calculated_data = self.calculate_slope_pearsons_r(measured_data, 'ch4')
         self.calculated_data = self.calculate_slope_pearsons_r(self.calculated_data, 'co2')
         self.upload_ready_data = self.summarize(self.calculated_data)
@@ -121,8 +123,8 @@ class calculated_data:
         slope = df[f'{measurement_name}_slope']
         chamber_volume = (self.chamber_height * 0.001) * (self.chamber_width * 0.001) * ((self.chamber_height * 0.001) - df['snowdepth'])
         if self.get_temp_and_pressure_from_file == 0:
-            pressure = df['air_pressure'] = float(defaults_dict.get('default_pressure'))
-            temperature = df['air_temperature'] = float(defaults_dict.get('default_temperature'))
+            pressure = df['air_pressure'] = self.default_pressure
+            temperature = df['air_temperature'] = self.default_temperature
         if self.get_temp_and_pressure_from_file == 1:
             pressure = df['air_pressure'].mean()
             temperature = df['air_temperature'].mean()
@@ -626,9 +628,11 @@ if __name__=="__main__":
 
     merged_data.merged_data['snowdepth'] = 0
 
-    calculated_data = calculated_data(merged_data.merged_data,
+    ready_data = calculated_data(merged_data.merged_data,
                                       measuring_chamber_dict, filter_tuple,
                                       get_temp_and_pressure_from_file,
+                                 float(defaults_dict.get('default_pressure')),
+                                 float(defaults_dict.get('default_temperature'))
                                       )
     print(calculated_data.upload_ready_data.head())
     sys.exit(0)
