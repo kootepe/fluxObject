@@ -444,10 +444,14 @@ class file_finder:
         filenames = []
         current_date = start_date
 
+        new_filename = 'init'
         while current_date <= end_date:
             filename = current_date.strftime(self.file_timestamp_format)
+            if filename == new_filename:
+                return [filename]
             filenames.append(filename)
             current_date += datetime.timedelta(seconds=self.file_timestep)
+            new_filename = filename
 
         filenames = sorted(filenames)
         return filenames
@@ -535,6 +539,10 @@ class timestamps:
         #except AttributeError:
         #    print('Files are found in folder but no matching file found, is the format of the timestamp correct?')
         #    return None
+        if self.file_timestamp_format == timestamps.strftime_to_regex(self):
+            logging.info('No strftime formatting in filename, returning current date')
+            print(datetime.date.today())
+            return datetime.datetime.today()
         date = re.search(timestamps.strftime_to_regex(self), datestring).group(0)
         # class chamber_cycle calls this method and using an instance variable here might cause issues if the timestamp formats should be different
         return datetime.datetime.strptime(date, self.file_timestamp_format)
