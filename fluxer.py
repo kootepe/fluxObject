@@ -25,8 +25,10 @@ logging.basicConfig(level=logging.INFO,
 class pusher:
     def __init__(self, data, influxdb_dict):
         self.influxdb_dict = influxdb_dict
+        self.data = data
         logging.info('Pushing data to DB')
-        self.influxPush(data)
+        self.tag_columns = self.read_tag_columns()
+        #self.influxPush(self.data)
 
     def influxPush(self, df):
         """
@@ -42,9 +44,23 @@ class pusher:
             write_api.write(bucket = self.influxdb_dict.get('bucket'), record = df,
                             data_frame_measurement_name = self.influxdb_dict.get('measurement_name'),
                             data_frame_timestamp_timezone = self.influxdb_dict.get('timezone'),
-                            data_frame_tag_columns = ['chamber'],
+                            data_frame_tag_columns = self.tag_columns,
                             debug = True)
         logging.info('Pushed data to DB')
+        
+    def read_tag_columns(self):
+        tag_columns = self.influxdb_dict.get('tag_columns').split(',')
+        measurement_columns = self.data.columns
+        check = any(item in tag_columns for item in measurement_columns)
+        if len(tag_columns) == 1 and tag_columns[0] == '':
+            logging.warning('No tag columns defined')
+            return []
+        else:
+            if check == True:
+                return tag_columns
+            else:
+                logging.warning("Columns labeled for tagging don't exist in dataframe, exiting")
+                sys.exit(0)
 
 class snowdepth_parser:
     def __init__(self, snowdepth_measurement):
@@ -646,6 +662,7 @@ def main_no_push(inifile):
                                  float(defaults_dict.get('default_temperature'))
                                       )
     print(ready_data.upload_ready_data.head())
+    pusher(ready_data.upload_ready_data, influxdb_dict)
 
 
 if __name__=="__main__":
