@@ -121,8 +121,8 @@ class calculated_data:
         slope = df[f'{measurement_name}_slope']
         chamber_volume = (self.chamber_height * 0.001) * (self.chamber_width * 0.001) * ((self.chamber_height * 0.001) - df['snowdepth'])
         if self.get_temp_and_pressure_from_file == 0:
-            pressure = df['air_pressure'] = 1000
-            temperature = df['air_temperature'] = 8
+            pressure = df['air_pressure'] = float(defaults_dict.get('default_pressure'))
+            temperature = df['air_temperature'] = float(defaults_dict.get('default_temperature'))
         if self.get_temp_and_pressure_from_file == 1:
             pressure = df['air_pressure'].mean()
             temperature = df['air_temperature'].mean()
