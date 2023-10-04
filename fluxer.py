@@ -10,6 +10,8 @@ import glob
 import timeit
 import pandas as pd
 import numpy as np
+import zipfile as zf
+from zipfile import BadZipFile
 import influxdb_client as ifdb
 from pathlib import Path
 #from influxdb_client import InfluxDBClient, Point, WriteOptions
@@ -575,6 +577,55 @@ class timestamps:
             sys.exit(0)
         else:
             pass
+
+class zip_open:
+    """
+    Opens zip files
+    """
+    def __init__(self, zip_files, measurement_dict):
+        self.zip_files = zip_files
+        self.measurement_dict = measurement_dict
+        self.path = self.measurement_dict.get('path')
+        self.names = self.measurement_dict.get('names').split(',')
+        self.columns = list(map(int, self.measurement_dict.get('columns').split(',')))
+        #self.columns = self.measurement_dict.get('columns')
+        #columns = list(map(int, dict.get('columns').split(',')))
+        self.delimiter = self.measurement_dict.get('delimiter')
+        self.skiprows = int(self.measurement_dict.get('skiprows'))
+
+        self.data = self.open_eddypro()
+
+    def open_eddypro(self):
+        dfList = []
+        for i in self.zip_files:
+            try:
+
+                zip_file = f'{self.path}{i}'
+                archive = zf.ZipFile(zip_file , 'r')
+            except BadZipFile:
+                continue
+            files = archive.namelist()
+            file = [x for x in files if 'eddypro_exp_full' in x]
+            if len(file) == 1:
+                filename = file.pop()
+            else:
+                continue
+            csv = archive.open(filename)
+            ec = pd.read_csv(csv,
+                             usecols = self.columns,
+                             skiprows = self.skiprows,
+                             names = self.names,
+                             na_values = 'NaN'
+                            )
+            if len(ec) != 1:
+                continue
+            dfList.append(ec)
+        ready_data = pd.concat(dfList)
+        ready_data['datetime'] = pd.to_datetime(ready_data['date'].apply(str)+' '+ready_data['time'], format = '%Y-%m-%d %H:%M')
+        ready_data.drop(['date', 'time'])
+        ready_data = ready_data.set_index(ready_data['datetime'])
+        print(ready_data)
+        return ready_data
 
 def main_no_push(inifile):
     config = configparser.ConfigParser()
