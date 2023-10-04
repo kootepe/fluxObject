@@ -630,8 +630,8 @@ class zip_open:
             dfList.append(ec)
         ready_data = pd.concat(dfList)
         ready_data['datetime'] = pd.to_datetime(ready_data['date'].apply(str)+' '+ready_data['time'], format = '%Y-%m-%d %H:%M')
-        ready_data = ready_data.drop(columns = ['date', 'time'])
         ready_data = ready_data.set_index(ready_data['datetime'])
+        ready_data = ready_data.drop(columns = ['date', 'time', 'datetime'])
         return ready_data
 
 def main_no_push(inifile):
