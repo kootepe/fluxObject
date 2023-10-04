@@ -573,22 +573,26 @@ def main_no_push(inifile):
     measurement_dict = dict(config.items('measurement_data'))
     get_temp_and_pressure_from_file = int(defaults_dict.get('get_temp_and_pressure_from_file'))
 
-    start = timeit.default_timer()
-    timestamps = timestamps(influxdb_dict,
+    timestamps_values = timestamps(influxdb_dict,
                           measurement_dict,
                           defaults_dict.get('season_start')
                             )
 
     measurement_files = file_finder(measurement_dict,
                                    int(defaults_dict.get('airdatatimestep')),
-                                   timestamps.start_timestamp,
-                                   timestamps.end_timestamp
+                                   timestamps_values.start_timestamp,
+                                   timestamps_values.end_timestamp
                                     )
 
     air_pressure_files = file_finder(air_pressure_dict,
                                    int(defaults_dict.get('airdatatimestep')),
-                                   timestamps.start_timestamp,
-                                   timestamps.end_timestamp
+                                   timestamps_values.start_timestamp,
+                                   timestamps_values.end_timestamp
+                                     )
+    air_temperature_files = file_finder(air_temperature_dict,
+                                   int(defaults_dict.get('airdatatimestep')),
+                                   timestamps_values.start_timestamp,
+                                   timestamps_values.end_timestamp
                                      )
 
     chamber_cycle_df = chamber_cycle(measurement_dict.get('file_timestamp_format'),
