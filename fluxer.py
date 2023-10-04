@@ -634,6 +634,70 @@ class zip_open:
         ready_data = ready_data.drop(columns = ['date', 'time', 'datetime'])
         return ready_data
 
+class csv_reader:
+    def __init__(self, csv_files, measurement_dict):
+        self.files = csv_files
+        self.measurement_dict = measurement_dict
+        self.data = self.add_csv_data(self.measurement_dict)
+        #print(self.files)
+        
+
+    def csv_ini_parser(self, ini_dict):
+        """
+        Parses then aux data dictionary from the .ini
+        """
+        dict = ini_dict
+        path = dict.get('path')
+        # unnecessary?
+        #file_timestamp_format = dict.get('file_timestamp_format')
+        #if file_timestamp_format == '':
+        #    files = [p for p in Path(path).glob(f'*{file}*') if '~' not in str(p)]
+
+        delimiter = dict.get('delimiter')
+        file_extension = dict.get('file_extension')
+        skiprows = int(dict.get('skiprows'))
+        timestamp_format = dict.get('timestamp_format')
+        columns = list(map(int,dict.get('columns').split(',')))
+        names = dict.get('names').split(',')
+        dtypes = dict.get('dtypes').split(',')
+        dtypes = {names[i]: dtypes[i] for i in range(len(names))}
+        return path, delimiter, skiprows, timestamp_format, file_extension, columns, names, dtypes
+
+    def add_csv_data(self, ini_dict):
+        """
+        Reads the .csv file as defined in the .ini
+        """
+        path, delimiter, skiprows, timestamp_format, file_extension, columns, names, dtypes = self.csv_ini_parser(ini_dict)
+        tmp = []
+        date_and_time = ['date', 'time']
+        for f in self.files:
+            try:
+                print(names)
+                print(columns)
+                print(dtypes)
+                f = f + file_extension
+                df = pd.read_csv(Path(path) / f,
+                                 skiprows = skiprows,
+                                 delimiter = delimiter,
+                                 usecols = columns,
+                                 names = names,
+                                 dtype = dtypes
+                                 )
+            except FileNotFoundError:
+                logging.info(f'File not found at {Path(path) / f}, make sure the .ini is correct')
+                sys.exit()
+            # check if date and time are separate columns
+            check = any(item in date_and_time for item in names)
+            if check == True:
+                df['datetime'] = pd.to_datetime(df['date'].apply(str)+' '+df['time'], format = timestamp_format)
+            else:
+                df['datetime'] = pd.to_datetime(df['datetime'], format = timestamp_format)
+            df.set_index('datetime', inplace = True)
+            tmp.append(df)
+        dfs = pd.concat(tmp)
+        return dfs
+    def read_csv(self):
+        files = self.files
 def main_no_push(inifile):
     config = configparser.ConfigParser()
     config.read(inifile)
