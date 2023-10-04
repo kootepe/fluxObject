@@ -371,12 +371,20 @@ class measurement_reader:
         return time
 
 class chamber_cycle:
-    def __init__(self, chamber_cycle_file, chamber_measurement_start_sec, chamber_measurement_end_sec, measurement_files):
+    def __init__(self, file_timestamp_format, chamber_cycle_file, chamber_measurement_start_sec, chamber_measurement_end_sec, measurement_files):
+        self.file_timestamp_format = file_timestamp_format
         self.chamber_cycle_file = chamber_cycle_file
         self.chamber_measurement_start_sec = chamber_measurement_start_sec
         self.chamber_measurement_end_sec = chamber_measurement_end_sec
         self.measurement_files = measurement_files
         self.chamber_cycle_df = self.create_chamber_cycle()
+
+    def call_extract(self, file):
+        """
+        calls date extraction function from another class
+        """
+        return timestamps.extract_date(self, file)
+
 
     def create_chamber_cycle(self):
         """
@@ -386,7 +394,7 @@ class chamber_cycle:
         for file in self.measurement_files:
             df = pd.read_csv(self.chamber_cycle_file,
                               names = ['time', 'chamber'])
-            date = timestamps.extract_date(file)
+            date = self.call_extract(os.path.splitext(file)[0])
             df['date'] = date
             df['datetime'] = pd.to_datetime(df['date'].astype(str)+' '+df['time'].astype(str)) 
             df['open_time'] = df['datetime'] + pd.to_timedelta(self.chamber_measurement_start_sec, unit='S')
@@ -503,11 +511,12 @@ class timestamps:
         """
         Extract date from file name
         """
-        try: 
-            date = re.search(self.strftime_to_regex(), datestring).group(0)
-        except AttributeError:
-            print('Files are found in folder but no matching file found, is the format of the timestamp correct?')
-            return None
+        #try: 
+        #    date = re.search(self.strftime_to_regex(), datestring).group(0)
+        #except AttributeError:
+        #    print('Files are found in folder but no matching file found, is the format of the timestamp correct?')
+        #    return None
+        date = re.search(timestamps.strftime_to_regex(self), datestring).group(0)
         # class chamber_cycle calls this method and using an instance variable here might cause issues if the timestamp formats should be different
         return datetime.datetime.strptime(date, self.file_timestamp_format)
 
@@ -585,7 +594,8 @@ if __name__=="__main__":
                                    timestamps.end_timestamp
                                      )
 
-    chamber_cycle_df = chamber_cycle(defaults_dict.get('chamber_cycle_file'),
+    chamber_cycle_df = chamber_cycle(measurement_dict.get('file_timestamp_format'),
+                                     defaults_dict.get('chamber_cycle_file'),
                                      int(measurement_time_dict.get('start_of_measurement')),
                                      int(measurement_time_dict.get('end_of_measurement')),
                                      measurement_files.measurement_files
