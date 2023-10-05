@@ -6,5 +6,6 @@ services:
       dockerfile: ./dockerfile
     volumes:
       - D:\Data\AC\Licor:/data/AC_Oulanka:ro
+      - D:\Data\EC\results\2023:/data/EC_Oulanka:ro
     entrypoint:
       ["/run.sh"]
