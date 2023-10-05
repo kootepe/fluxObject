@@ -1,5 +1,5 @@
 # more here
 # text here
-* * * * * /usr/local/bin/python /fluxObject/fluxer.py /inifiles/settings_new_gios_docker.ini ac >> /cronlog 2>&1
+* * * * * /usr/local/bin/python /fluxObject/fluxer.py /inifiles/AC_chamber.ini ac >> /cronlog 2>&1
 # this extra line makes it a valid cron
 
