@@ -570,7 +570,7 @@ class timestamps:
         """
         Fetchest name of the newest file in a folder
         """
-        files = list(Path(self.path).glob(f'*{self.file_extension}*'))
+        files = list(Path(self.path).rglob(f'*{self.file_extension}*'))
         if not files:
             print(f'No files found in {self.path}')
             return None
