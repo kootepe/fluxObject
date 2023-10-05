@@ -56,7 +56,7 @@ class pusher:
         self.data = data
         logging.info('Pushing data to DB')
         self.tag_columns = self.read_tag_columns()
-        #self.influxPush(self.data)
+        self.influxPush(self.data)
 
     def influxPush(self, df):
         """
