@@ -615,9 +615,11 @@ class timestamps:
         try:
             # removes timezone info from data, will this have implications in the future?
             lastTs = tables[0].records[0]['_time'].replace(tzinfo=None)
+            logging.info("Got last timestamp from influxdb.")
         #lastTs = lastTs.strftime('%Y%m%d')
         except IndexError:
             #if there's no timestamp, use some default one
+            logging.warning("Couldn't get timestamp from influxdb, using season_start from .ini")
             lastTs = datetime.datetime.strptime(self.season_start, self.influxdb_dict.get('influxdb_timestamp_format'))
         return lastTs
 
