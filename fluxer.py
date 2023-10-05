@@ -891,7 +891,7 @@ if __name__=="__main__":
     mode = sys.argv[2]
     if mode == 'ac':
         start = timeit.default_timer()
-        main_no_push(inifile)
+        push_ac(inifile)
         stop = timeit.default_timer()
         execution_time = stop - start
         print("Program Executed in "+str(execution_time))
