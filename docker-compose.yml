@@ -1,0 +1,9 @@
+version: "3.4"
+services:
+  python:
+    build: ./python_container
+    container_name: python_container
+    volumes:
+      - /home/eerokos/zackenberg/zackenberg_data/AC_GIOS/:/data/AC_GIOS:ro
+    entrypoint:
+      ["./run.sh"]
