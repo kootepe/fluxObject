@@ -6,4 +6,4 @@ services:
     volumes:
       - /home/eerokos/zackenberg/zackenberg_data/AC_GIOS/:/data/AC_GIOS:ro
     entrypoint:
-      ["./run.sh"]
+      ["/run.sh"]
