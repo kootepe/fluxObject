@@ -48,9 +48,9 @@ class pusher:
     """
     def __init__(self, data, influxdb_dict):
         """
-        keyword args:
-            data = pandas dataframe
-            influxdb_dict = dictionary from the .ini file with necessary info about influxdb connection
+        args:
+            data -- pandas dataframe
+            influxdb_dict -- dictionary from the .ini file with necessary info about influxdb connection
         """
         self.influxdb_dict = influxdb_dict
         self.data = data
@@ -81,7 +81,7 @@ class pusher:
         
     def read_tag_columns(self):
         """
-        Reads tag columns from .ini and returns them as list
+        Reads tag columns from .ini and checks that they are in the file, and returns them as list
         """
         tag_columns = self.influxdb_dict.get('tag_columns').split(',')
         measurement_columns = self.data.columns
@@ -97,6 +97,20 @@ class pusher:
                 sys.exit(0)
 
 class snowdepth_parser:
+    """
+    Class for parsing the snowdepth measurement for automatic chambers
+    Attributes
+    ---
+        snowdepth_measurement : xlsx file
+            .xlsx file for with snowdepth for each chamber
+        snowdepth_df : pandas dataframe 
+            dataframe version of the .xlsx file.
+
+    Methods
+    ---
+    add_snowdepth()
+        Reads snowdepth measurement if it exists, or creates a dummy one.
+    """
     def __init__(self, snowdepth_measurement):
         self.snowdepth_measurement = snowdepth_measurement
         self.snowdepth_df = self.add_snowdepth()
