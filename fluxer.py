@@ -600,7 +600,7 @@ class timestamps:
     # inflxudb query to get the timestamp of the last input
         query = f'from(bucket: "{self.influxdb_dict.get("bucket")}")' \
           '|> range(start: 0, stop: now())' \
-          f'|> filter(fn: (r) => r["_measurement"] == "{self.influxdb_dict.get("measurementname")}")' \
+          f'|> filter(fn: (r) => r["_measurement"] == "{self.influxdb_dict.get("measurement_name")}")' \
           '|> keep(columns: ["_time"])' \
           '|> sort(columns: ["_time"], desc: false)' \
           '|> last(column: "_time")' 
