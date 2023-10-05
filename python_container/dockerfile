@@ -8,7 +8,7 @@ RUN git clone -b main https://github.com/kootepe/fluxObject.git
 
 COPY run.sh .
 
-COPY giosstart.txt .
+COPY ACstart.txt .
 
 COPY requirements.txt .
 
