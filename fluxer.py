@@ -898,9 +898,17 @@ if __name__=="__main__":
     if mode == 'man':
         sys.exit(0)
     if mode == 'csv':
+        start = timeit.default_timer()
         csv_push(inifile)
+        stop = timeit.default_timer()
+        execution_time = stop - start
+        print("Program Executed in "+str(execution_time))
     if mode == 'eddypro':
+        start = timeit.default_timer()
         eddypro_push(inifile)
+        stop = timeit.default_timer()
+        execution_time = stop - start
+        print("Program Executed in "+str(execution_time))
     #print(measurement_df.measurement_df)
     #print(air_temperature_df.aux_data_df)
     #print(air_pressure_df.aux_data_df)
