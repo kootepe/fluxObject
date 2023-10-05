@@ -797,7 +797,7 @@ def csv_push(inifile):
     print(data.data)
     #pusher(data.data, influxdb_dict)
 
-def main_no_push(inifile):
+def push_ac(inifile):
     config = configparser.ConfigParser()
     config.read(inifile)
 
