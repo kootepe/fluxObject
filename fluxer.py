@@ -574,7 +574,10 @@ class timestamps:
             print(f'No files found in {self.path}')
             return None
 
-        newest_file = str(max([f for f in files], key=lambda item: item.stat().st_ctime))
+        # linux only
+        #newest_file = str(max([f for f in files], key=lambda item: item.stat().st_ctime))
+        # cross platform
+        newest_file = str(max(files, key = os.path.getmtime))
         return newest_file
 
     def extract_date(self, datestring):
