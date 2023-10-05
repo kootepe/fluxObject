@@ -202,9 +202,11 @@ class calculated_data:
         """
         dfList = []
         data = data[['ch4_flux', 'co2_flux', 'ch4_pearsons_r', 'co2_pearsons_r', 'chamber']]
-        for _, g in data.groupby([data.index.hour, data.index.day, 'chamber']):
-            g.reset_index(drop=True)
-            dfList.append(g.iloc[:1])
+        for date in self.filter_tuple:
+            start = data.index.searchsorted(date[0])
+            end = data.index.searchsorted(date[1])
+            dfa = data.iloc[start:end]
+            dfList.append(dfa.iloc[:1])
         summary = pd.concat(dfList)
         return summary
 
