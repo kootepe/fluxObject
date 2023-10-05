@@ -25,7 +25,33 @@ logging.basicConfig(level=logging.INFO,
                         format='%(asctime)s.%(msecs)03d %(levelname)s:\t%(message)s',
                         datefmt='%Y-%m-%d %H:%M:%S')
 class pusher:
+    """
+    Pushes pandas dataframes to InfluxDB
+
+    Attributes
+    ---
+    influxdb_dict : dictionary
+        dictionary with the influxdb login information from .ini
+    data : pandas dataframe
+        data that will be pushed to influxdb
+    tag_columns : list
+        List of columns that will be used as tags in influxdb
+
+    Methods
+    ---
+    influxPush(df)
+        Pushes data to influxdb
+    read_tag_columns()
+        Sets tag columns for pushing to influxdb
+
+
+    """
     def __init__(self, data, influxdb_dict):
+        """
+        keyword args:
+            data = pandas dataframe
+            influxdb_dict = dictionary from the .ini file with necessary info about influxdb connection
+        """
         self.influxdb_dict = influxdb_dict
         self.data = data
         logging.info('Pushing data to DB')
@@ -35,6 +61,9 @@ class pusher:
     def influxPush(self, df):
         """
         Push data to InfluxDB
+
+        args:
+            df -- pandas dataframe
         """
         #grouped = df.groupby('chamber')
         point_settings = PointSettings()
@@ -51,6 +80,9 @@ class pusher:
         logging.info('Pushed data to DB')
         
     def read_tag_columns(self):
+        """
+        Reads tag columns from .ini and returns them as list
+        """
         tag_columns = self.influxdb_dict.get('tag_columns').split(',')
         measurement_columns = self.data.columns
         check = any(item in tag_columns for item in measurement_columns)
