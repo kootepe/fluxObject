@@ -510,11 +510,10 @@ class file_finder:
         if self.scan_or_generate == 1:
             for filestr in patterns:
                 filestr = f'*{filestr}*'
-                filepath = p / filestr
-                filepath = str(filepath)
                 try:
-                    file = glob.glob(f'{filepath}')[0]
-                    file = os.path.basename(file)
+                    file = p.rglob(filestr)
+                    file = [x for x in file if x.is_file()]
+                    file = os.path.basename(str(file[0]))
                 except IndexError:
                     continue
                 files.append(file)
@@ -657,8 +656,9 @@ class zip_open:
         dfList = []
         for i in self.zip_files:
             try:
-
-                zip_file = f'{self.path}{i}'
+                zip_file = Path(self.path).rglob(i)
+                zip_file = [x for x in zip_file if x.is_file()]
+                zip_file = str(zip_file[0])
                 archive = zf.ZipFile(zip_file , 'r')
             except BadZipFile:
                 continue
