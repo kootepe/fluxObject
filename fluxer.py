@@ -132,6 +132,42 @@ class snowdepth_parser:
         return snowdepth
 
 class calculated_data:
+    """
+    Calculates gas flux and pearsonsR of each flux measurement.
+
+    Attributes
+    ---
+    get_temp_and_pressure_from_file -- bool
+        1 to get temp and pressure from files, 0 to use defaults
+    chamber_height -- int
+        Height of the measurement chamber, for volume
+    chamber_width -- int
+        Width of the measurement chamber, for volume
+    chamber_length -- int
+        Length of the measurement chamber, for volume
+    filter_tupe -- tuple
+        (start_time, end_time, chamber_num), measurement is calculated from values between these timestamps
+    default_pressure -- int
+        Default pressure value
+    default_temp -- int
+        Default temperature value
+    calculated_data -- df
+        Data with gas flux and pearsonsR calculated
+    upload_ready_data -- df
+        Data with unnecessary columns removed
+
+    Methods
+    ---
+    calculate_slope_pearsons_r(df, measurement_name)
+        Calculates slope and pearsonsR
+    calculate_gas_flux(df, measurement_name)
+        Calculates gas flux
+    summarize(data)
+        Grabs first row from each measurement, since flux and r are the
+        same per measurement, also removes unnecesary columns
+
+    
+    """
     def __init__(self, measured_data, measuring_chamber_dict, filter_tuple, get_temp_and_pressure_from_file, default_pressure, default_temperature):
         self.get_temp_and_pressure_from_file = get_temp_and_pressure_from_file
         self.chamber_height = int(measuring_chamber_dict.get('chamber_height'))
