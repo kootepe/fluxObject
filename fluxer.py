@@ -81,7 +81,13 @@ class pusher:
         
     def read_tag_columns(self):
         """
-        Reads tag columns from .ini and checks that they are in the file, and returns them as list
+        Reads tag columns from .ini and checks that they are in the dataframe, and returns them as list
+
+        args:
+
+        returns:
+            tag_columns -- list
+            list of tag_columns, as defined in .ini
         """
         tag_columns = self.influxdb_dict.get('tag_columns').split(',')
         measurement_columns = self.data.columns
