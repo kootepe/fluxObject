@@ -814,7 +814,7 @@ def eddypro_push(inifile):
                                     )
     data = zip_open(measurement_files.measurement_files, measurement_dict)
     print(data.data)
-    #pusher(data.data, influxdb_dict)
+    pusher(data.data, influxdb_dict)
 
 def csv_push(inifile):
     config = configparser.ConfigParser()
@@ -907,14 +907,19 @@ def push_ac(inifile):
     # same list as before but the timestamps witno data or invalid data
     # dropped
     filter_tuple = filtered_measurement.clean_filter_tuple
+
+    air_temperature_df = filterer(filter_tuple, 
+                                  air_temperature_df.aux_data_df)
+    air_pressure_df = filterer(filter_tuple, 
+                                  air_pressure_df.aux_data_df)
     
     snowdepth_df = snowdepth_parser(defaults_dict.get('snowdepth_measurement'),)
 
     if get_temp_and_pressure_from_file == 1:
         merged_data = merge_data(filtered_measurement.filtered_data,
-                                 air_temperature_df.aux_data_df) 
+                                 air_temperature_df.filtered_data)
         merged_data = merge_data(merged_data.merged_data,
-                                 air_pressure_df.aux_data_df) 
+                                 air_pressure_df.filtered_data)
         merged_data = merge_data(merged_data.merged_data,
                                  snowdepth_df.snowdepth_df) 
     else:
