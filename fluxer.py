@@ -105,6 +105,7 @@ class pusher:
 class snowdepth_parser:
     """
     Class for parsing the snowdepth measurement for automatic chambers
+
     Attributes
     ---
         snowdepth_measurement : xlsx file
@@ -115,13 +116,25 @@ class snowdepth_parser:
     Methods
     ---
     add_snowdepth()
-        Reads snowdepth measurement if it exists, or creates a dummy one.
+        Reads snowdepth measurement and turns it into a dataframe, if it exists. Or creates a dummy one.
     """
     def __init__(self, snowdepth_measurement):
         self.snowdepth_measurement = snowdepth_measurement
         self.snowdepth_df = self.add_snowdepth()
 
     def add_snowdepth(self):
+        """
+        Creates a dataframe from snowdepth measurements. If there's no measurement, it will create an empty one.
+
+        ---
+        args:
+            snowdepth_measurement -- .xlsx file
+
+        ---
+        returns:
+            snowdepth -- df
+        
+        """
         if self.snowdepth_measurement:
             snowdepth = pd.read_excel(self.snowdepth_measurement)
             snowdepth['datetime'] = pd.to_datetime(snowdepth['datetime'])
@@ -176,6 +189,7 @@ class calculated_data:
     
     """
     def __init__(self, measured_data, measuring_chamber_dict, filter_tuple, get_temp_and_pressure_from_file, default_pressure, default_temperature):
+        self.measured_data = measured_data
         self.get_temp_and_pressure_from_file = get_temp_and_pressure_from_file
         self.chamber_height = int(measuring_chamber_dict.get('chamber_height'))
         self.chamber_width = int(measuring_chamber_dict.get('chamber_width'))
@@ -183,17 +197,27 @@ class calculated_data:
         self.filter_tuple = filter_tuple
         self.default_pressure = default_pressure
         self.default_temperature = default_temperature
-        self.calculated_data = self.calculate_slope_pearsons_r(measured_data, 'ch4')
+        self.calculated_data = self.calculate_slope_pearsons_r(self.measured_data, 'ch4')
         self.calculated_data = self.calculate_slope_pearsons_r(self.calculated_data, 'co2')
         self.upload_ready_data = self.summarize(self.calculated_data)
 
 
     def calculate_slope_pearsons_r(self, df, measurement_name):
         """
-        Function to calculate Pearsons R (correlation) and the slope of
+        Calculates Pearsons R (correlation) and the slope of
         the CH4 flux.
-        ------
-        ------
+
+        ---
+        args:
+            df -- pandas.dataframe
+                dataframe of the gas flux
+            measurement_name -- str
+                name of the gas that slope, pearsons_r and flux is going to be calculated for
+
+        ---
+        returns:
+            dfs -- pandas.dataframe
+                same dataframe with additional slope, pearsons_r and flux columns
         """
         tmp = []
         # following loop raises a false positive warning, disable it
@@ -223,9 +247,19 @@ class calculated_data:
 
     def calculate_gas_flux(self, df, measurement_name):
         """
-        flux calculation
-        ------
-        ------
+        Calculates gas flux
+
+        ---
+        args:
+            df -- pandas.dataframe
+                dataframe with slope calculated.
+            measurement_name -- str
+                name of the gas that flux is going to be calculated for
+
+        ---
+        returns:
+            flux -- numpy.array
+                one column for the dataframe with the calculated gas flux
         """
         slope = df[f'{measurement_name}_slope']
         chamber_volume = (self.chamber_height * 0.001) * (self.chamber_width * 0.001) * ((self.chamber_height * 0.001) - df['snowdepth'])
@@ -240,8 +274,17 @@ class calculated_data:
 
     def summarize(self, data):
         """
-        ------
-        ------
+        Drops most columns as from here they will be pushed to influxdb
+
+        ---
+        args:
+            data -- pandas.dataframe
+
+        ---
+        returns:
+            summary -- pandas.dataframe
+            
+
         """
         dfList = []
         data = data[['ch4_flux', 'co2_flux', 'ch4_pearsons_r', 'co2_pearsons_r', 'chamber']]
