@@ -152,7 +152,8 @@ class calculated_data:
     chamber_length -- int
         Length of the measurement chamber, for volume
     filter_tupe -- tuple
-        (start_time, end_time, chamber_num), measurement is calculated from values between these timestamps
+        (start_time, end_time, chamber_num), measurement is calculated from values
+        between these timestamps,
     default_pressure -- int
         Default pressure value
     default_temp -- int
@@ -834,13 +835,7 @@ def csv_push(inifile):
                                    timestamps_values.start_timestamp,
                                    timestamps_values.end_timestamp
                                     )
-    if measurement_dict.get('file_extension') == '.zip':
-        data = zip_open(measurement_files.measurement_files, measurement_dict)
-    else:
-        data = csv_reader(measurement_files.measurement_files, measurement_dict)
-
-        print(measurement_files.measurement_files)
-        logging.warning('Some other function')
+    data = csv_reader(measurement_files.measurement_files, measurement_dict)
     print(data.data)
     #pusher(data.data, influxdb_dict)
 
@@ -967,4 +962,3 @@ if __name__=="__main__":
     #print(filtered_measurement.filtered_data)
     #print(merged_data.merged_data)
     #print(calculated_data.calculated_data)
-
