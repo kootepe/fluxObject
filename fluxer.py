@@ -188,6 +188,7 @@ class calculated_data:
     
     """
     def __init__(self, measured_data, measuring_chamber_dict, filter_tuple, get_temp_and_pressure_from_file, default_pressure, default_temperature):
+        self.measured_data = measured_data
         self.get_temp_and_pressure_from_file = get_temp_and_pressure_from_file
         self.chamber_height = int(measuring_chamber_dict.get('chamber_height'))
         self.chamber_width = int(measuring_chamber_dict.get('chamber_width'))
@@ -195,7 +196,7 @@ class calculated_data:
         self.filter_tuple = filter_tuple
         self.default_pressure = default_pressure
         self.default_temperature = default_temperature
-        self.calculated_data = self.calculate_slope_pearsons_r(measured_data, 'ch4')
+        self.calculated_data = self.calculate_slope_pearsons_r(self.measured_data, 'ch4')
         self.calculated_data = self.calculate_slope_pearsons_r(self.calculated_data, 'co2')
         self.upload_ready_data = self.summarize(self.calculated_data)
 
