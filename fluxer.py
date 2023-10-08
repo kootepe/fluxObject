@@ -828,6 +828,9 @@ class file_finder:
         """
         Generates filenames by adding file_timestep to the timestamp in
         the filename
+        TODO:
+            Should generate filenames at least one timestep past the
+            end_date to make sure the whole timeframe is covered.
 
         args:
         ---
