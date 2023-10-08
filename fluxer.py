@@ -107,7 +107,10 @@ class pusher:
         # checks that all items in list tag_colums exist in list
         # measurement_columns, if so return true, else return false
         check = any(item in tag_columns for item in measurement_columns)
-        if len(tag_columns) == 1 and tag_columns[0] == '':
+        # if tag_colums length is 1 and the only item is an emoty string,
+        # no tag_colums have been defined, return empty list
+        #if len(tag_columns) == 1 and tag_columns[0] == '':
+        if not tag_columns[0]:
             logging.warning('No tag columns defined')
             return []
         else:
