@@ -99,6 +99,7 @@ class pusher:
         """
         tag_columns = self.influxdb_dict.get('tag_columns').split(',')
         measurement_columns = self.data.columns
+        # if all items in tag_columns are in measuremeny_columns, return true
         check = any(item in tag_columns for item in measurement_columns)
         if len(tag_columns) == 1 and tag_columns[0] == '':
             logging.warning('No tag columns defined')
@@ -350,6 +351,8 @@ class merge_data:
                                     tolerance = pd.Timedelta('60m'),
                                     direction = 'nearest',
                                     suffixes =('','_y'))
+            # merge_asof creates some unnecessary columns that are named
+            #{colname}_y, drop them
             df.drop(df.filter(regex='_y$').columns, axis=1, inplace=True)
             df.set_index('datetime', inplace=True)
         else:
@@ -469,7 +472,7 @@ class filterer:
             logging.info('No data found for any timestamp, is there data in the files?')
             sys.exit(0)
         clean_df = pd.concat(clean_data)
-        # tuples that are clean
+        # save tuples that have data and no error codes
         self.clean_filter_tuple = clean_timestamps
         # dataframes with errors
         if len(dirty_data) != 0:
@@ -477,6 +480,8 @@ class filterer:
         # the timestamps which cover data with errors
         self.dirty_timestamps = dirty_timestamps
         self.empty_timestamps = empty_timestamps
+        # loop raises false positive error which was turned off before,
+        # turn it on
         pd.options.mode.chained_assignment = 'warn'
         return clean_df
 
@@ -643,6 +648,8 @@ class measurement_reader:
                                  names = names,
                                  dtype = dtypes,
                                  )
+            # there's old LICOR files which have an extra column,
+            # this handles those
             except ValueError:
                 df = pd.read_csv(Path(path) / f,
                                  skiprows = skiprows,
@@ -993,7 +1000,9 @@ class timestamps:
             print(datetime.date.today())
             return datetime.datetime.today()
         date = re.search(timestamps.strftime_to_regex(self), datestring).group(0)
-        # class chamber_cycle calls this method and using an instance variable here might cause issues if the timestamp formats should be different
+        # class chamber_cycle calls this method and using an instance
+        # variable here might cause issues if the timestamp formats
+        # should be different
         return datetime.datetime.strptime(date, self.file_timestamp_format)
 
     def check_last_db_timestamp(self):
@@ -1008,7 +1017,7 @@ class timestamps:
             lastTs -- datetime.datetime
                 Either the last timestamp in influxdb or season_start from .ini
         """
-    # inflxudb query to get the timestamp of the last input
+        # inflxudb query to get the timestamp of the last input
         query = f'from(bucket: "{self.influxdb_dict.get("bucket")}")' \
           '|> range(start: 0, stop: now())' \
           f'|> filter(fn: (r) => r["_measurement"] == "{self.influxdb_dict.get("measurement_name")}")' \
@@ -1021,8 +1030,8 @@ class timestamps:
                              org = self.influxdb_dict.get('organization'),
                              )
         tables = client.query_api().query(query=query)
-        # Get last timestamp from influxDB and if it doesn't exist, use a
-        # hardcoded one
+        # Get last timestamp from influxDB and if it doesn't exist, use
+        # one defined in the .ini
         try:
             # removes timezone info from data, will this have implications in the future?
             lastTs = tables[0].records[0]['_time'].replace(tzinfo=None)
@@ -1116,11 +1125,18 @@ class zip_open:
             try:
                 zip_file = Path(self.path).rglob(i)
                 zip_file = [x for x in zip_file if x.is_file()]
+                # creates a list of the matched files
+                # cheks that everything that matched is file, not a
+                # folder
                 zip_file = str(zip_file[0])
                 archive = zf.ZipFile(zip_file , 'r')
+            # skip zips that have errors
             except BadZipFile:
                 continue
+            # get list of all files and folders inside .zip
             files = archive.namelist()
+            # remove all files that don't have 'eddypro_exp_full' in
+            # them, this should leave only one file
             file = [x for x in files if 'eddypro_exp_full' in x]
             if len(file) == 1:
                 filename = file.pop()
@@ -1133,6 +1149,7 @@ class zip_open:
                              names = self.names,
                              na_values = 'NaN'
                             )
+            # this file should only have one row, skip if there's more
             if len(ec) != 1:
                 continue
             dfList.append(ec)
@@ -1249,8 +1266,10 @@ class csv_reader:
                 sys.exit()
             # check if date and time are separate columns
             check = any(item in date_and_time for item in names)
+            # if date and time are separate, combine them to datetime
             if check == True:
                 df['datetime'] = pd.to_datetime(df['date'].apply(str)+' '+df['time'], format = timestamp_format)
+            # if they are not separate, there should be a datetime column already
             else:
                 df['datetime'] = pd.to_datetime(df['datetime'], format = timestamp_format)
             df.set_index('datetime', inplace = True)
