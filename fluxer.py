@@ -1485,9 +1485,3 @@ if __name__=="__main__":
         stop = timeit.default_timer()
         execution_time = stop - start
         print("Program Executed in "+str(execution_time))
-    #print(measurement_df.measurement_df)
-    #print(air_temperature_df.aux_data_df)
-    #print(air_pressure_df.aux_data_df)
-    #print(filtered_measurement.filtered_data)
-    #print(merged_data.merged_data)
-    #print(calculated_data.calculated_data)
