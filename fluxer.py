@@ -397,9 +397,9 @@ class filterer:
     """
     Takes in a large dataframe and two timestamps, and removes all data
     that isn't between those two timestamps. Also drops dataframes if
-    there's no data between the timestamps at all, and if there's a
-    column called error_codes (LICOR data), and there's errors, those
-    will be dropped.
+    there's no data at all between the timestamps, and if there's a
+    column called error_codes (LICOR data) with errors, those will be
+    dropped.
 
     Attributes
     ---
@@ -427,6 +427,9 @@ class filterer:
         """
         Takes in the dataframe and two timestamps from each tuple, drops
         data that isn't between the timestamps.
+        TODO:
+            there's lots of old deprecated stuff in this function, needs
+            cleaning up
 
         args:
         ---
