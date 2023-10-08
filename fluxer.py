@@ -24,6 +24,8 @@ from influxdb_client.client.write_api import SYNCHRONOUS, PointSettings
 logging.basicConfig(level=logging.INFO,
                         format='%(asctime)s.%(msecs)03d %(levelname)s:\t%(message)s',
                         datefmt='%Y-%m-%d %H:%M:%S')
+
+
 class pusher:
     """
     Pushes pandas dataframes to InfluxDB
@@ -113,6 +115,7 @@ class pusher:
                 logging.warning("Columns labeled for tagging don't exist in dataframe, exiting")
                 sys.exit(0)
 
+
 class snowdepth_parser:
     """
     Class for parsing the snowdepth measurement for automatic chambers
@@ -161,6 +164,7 @@ class snowdepth_parser:
             snowdepth.set_index('datetime', inplace = True)
             print(snowdepth)
         return snowdepth
+
 
 class calculated_data:
     """
@@ -211,7 +215,6 @@ class calculated_data:
         self.calculated_data = self.calculate_slope_pearsons_r(self.measured_data, 'ch4')
         self.calculated_data = self.calculate_slope_pearsons_r(self.calculated_data, 'co2')
         self.upload_ready_data = self.summarize(self.calculated_data)
-
 
     def calculate_slope_pearsons_r(self, df, measurement_name):
         """
@@ -310,6 +313,7 @@ class calculated_data:
         summary = pd.concat(dfList)
         return summary
 
+
 class merge_data:
     """
     Merges "auxiliary" data to the main gas measurement. Auxiliary data
@@ -392,6 +396,7 @@ class merge_data:
             return False
 
         return df.index.is_monotonic_increasing
+
 
 class filterer:
     """
@@ -523,7 +528,6 @@ class aux_data_reader:
         self.files = files
         self.aux_data_df = self.add_aux_data(self.aux_data_dict)
 
-
     def aux_data_ini_parser(self, ini_dict):
         """
         Parses the .ini dictionary into values.
@@ -602,6 +606,7 @@ class aux_data_reader:
             tmp.append(df)
         dfs = pd.concat(tmp)
         return dfs
+
 
 class measurement_reader:
     """
@@ -703,6 +708,7 @@ class measurement_reader:
         time = (sec*(sec*h)+sec*m+s)/secondsInDay
         return time
 
+
 class chamber_cycle:
     """
     Creates the chamber cycle dataframe which will be used to select
@@ -754,7 +760,6 @@ class chamber_cycle:
         datetime.datetime
         """
         return timestamps.extract_date(self, file)
-
 
     def create_chamber_cycle(self):
         """
@@ -822,7 +827,6 @@ class file_finder:
         self.end_timestamp = end_timestamp
         self.scan_or_generate = int(measurement_dict.get('scan_or_generate'))
         self.measurement_files = self.match_files(self.generate_filenames())
-
 
     def generate_filenames(self):
         """
@@ -1086,6 +1090,7 @@ class timestamps:
         else:
             pass
 
+
 class zip_open:
     """
     Opens eddypro .zip files and reads the .csv file inside them
@@ -1183,6 +1188,7 @@ class zip_open:
         ready_data = ready_data.drop(columns = ['date', 'time', 'datetime'])
         return ready_data
 
+
 class csv_reader:
     """
     Reads .csv files into pandas.dataframes
@@ -1209,7 +1215,6 @@ class csv_reader:
         self.measurement_dict = measurement_dict
         self.data = self.add_csv_data(self.measurement_dict)
         #print(self.files)
-
 
     def csv_ini_parser(self, ini_dict):
         """
@@ -1301,6 +1306,7 @@ class csv_reader:
         dfs = pd.concat(tmp)
         return dfs
 
+
 def timer(func):
     """Decorator for printing execution time of function."""
     @functools.wraps(func)
@@ -1349,6 +1355,7 @@ def eddypro_push(inifile):
     print(data.data)
     pusher(data.data, influxdb_dict)
 
+
 def csv_push(inifile):
     """
     Reads .csv files and pushes them to influxdb
@@ -1382,6 +1389,7 @@ def csv_push(inifile):
     data = csv_reader(measurement_files.measurement_files, measurement_dict)
     print(data.data)
     #pusher(data.data, influxdb_dict)
+
 
 def push_ac(inifile):
     """
@@ -1447,7 +1455,6 @@ def push_ac(inifile):
 
         air_pressure_df = aux_data_reader(air_pressure_dict,
                                       air_pressure_files.measurement_files)
-
 
     # list with three values, start_time, end_time, chamber_num, flux is
     # calculated from the data between start and end times
