@@ -133,7 +133,8 @@ class snowdepth_parser:
 
     def add_snowdepth(self):
         """
-        Creates a dataframe from snowdepth measurements. If there's no measurement, it will create an empty one.
+        Creates a dataframe from snowdepth measurements. If there's no
+        measurement, it will create an empty one.
 
         args:
         ---
@@ -174,8 +175,8 @@ class calculated_data:
     chamber_length -- int
         Length of the measurement chamber, for volume
     filter_tupe -- tuple
-        (start_time, end_time, chamber_num), measurement is calculated from values
-        between these timestamps,
+        (start_time, end_time, chamber_num), measurement is calculated
+        from values between these timestamps,
     default_pressure -- int
         Default pressure value
     default_temp -- int
@@ -220,12 +221,14 @@ class calculated_data:
             df -- pandas.dataframe
                 dataframe of the gas flux
             measurement_name -- str
-                name of the gas that slope, pearsons_r and flux is going to be calculated for
+                name of the gas that slope, pearsons_r and flux is
+                going to be calculated for
 
         returns:
         ---
             dfs -- pandas.dataframe
-                same dataframe with additional slope, pearsons_r and flux columns
+                same dataframe with additional slope, pearsons_r and
+                flux columns
         """
         tmp = []
         # following loop raises a false positive warning, disable it
@@ -267,7 +270,8 @@ class calculated_data:
         returns:
         ---
             flux -- numpy.array
-                one column for the dataframe with the calculated gas flux
+                one column for the dataframe with the calculated gas
+                flux
         """
         slope = df[f'{measurement_name}_slope']
         chamber_volume = (self.chamber_height * 0.001) * (self.chamber_width * 0.001) * ((self.chamber_height * 0.001) - df['snowdepth'])
@@ -314,7 +318,8 @@ class merge_data:
     merged_data -- pandas.dataframe
         The gas measurement dataframe
     aux_data -- pandas.dataframe
-        The "auxiliary" dataframe, can be any data that has a datetimeindex
+        The "auxiliary" dataframe, can be any data that has a
+        datetimeindex
 
     Methods
     ---
@@ -329,7 +334,8 @@ class merge_data:
 
     def merge_aux_data(self, measurement_df, aux_df):
         """
-        Drops most columns as from here they will be pushed to influxdb
+        Merges 'auxiliary' data to the dataframe, mainly air temperature,
+        air pressure and snowdepth.
 
         args:
         ---
@@ -488,8 +494,8 @@ class filterer:
 
 class aux_data_reader:
     """
-    Reads "auxiliary" as defined in the .ini, aux data being air temperature
-    and air pressure data
+    Reads "auxiliary" as defined in the .ini, aux data being air
+    temperature and air pressure data
 
     Attributes
     ---
@@ -519,7 +525,8 @@ class aux_data_reader:
         args:
         ---
             ini_dict -- dictionary
-                The part of the .ini which defines how to read the .csv file
+                The part of the .ini which defines how to read the .csv
+                file
         returns:
         ---
             path -- str
@@ -531,7 +538,8 @@ class aux_data_reader:
             timestamp_format -- str
                 timestamp format of the .csv timestamp column
             columns -- list of ints
-                list of the column numbers which will be read from the .csv
+                list of the column numbers which will be read from the
+                .csv
             names -- list of strings
                 names for the columns that will be read
             dtypes -- dict
@@ -605,7 +613,8 @@ class measurement_reader:
     read_measurement
         Reads the .ini and then reads the .csv into a pandas dataframe
     ordinal_timer
-        Calculates ordinal time from the timestamps, required for slope calculations
+        Calculates ordinal time from the timestamps, required for slope
+        calculations
 
     """
     def __init__(self, measurement_dict, measurement_files):
@@ -809,7 +818,8 @@ class file_finder:
 
     def generate_filenames(self):
         """
-        Generates filenames
+        Generates filenames by adding file_timestep to the timestamp in
+        the filename
 
         args:
         ---
@@ -1047,7 +1057,7 @@ class timestamps:
         """
         Compare the start and end timestamps, if start timestamp is
         older than end timestamp, terminate script as then there's no
-        new data'
+        new data
 
         args:
         ---
@@ -1278,6 +1288,19 @@ class csv_reader:
         return dfs
 
 def eddypro_push(inifile):
+    """
+    Pipeline to handle reading eddypro .zip files, reading the flux
+    from inside them and pusing that to influxdb
+
+    args:
+    ---
+        inifile -- str
+            path to the .ini file
+
+    returns:
+    ---
+
+    """
     config = configparser.ConfigParser()
     config.read(inifile)
 
@@ -1300,6 +1323,18 @@ def eddypro_push(inifile):
     pusher(data.data, influxdb_dict)
 
 def csv_push(inifile):
+    """
+    Reads .csv files and pushes them to influxdb
+
+    args:
+    ---
+        inifile -- str
+            path to the .ini file
+
+    returns:
+    ---
+
+    """
     config = configparser.ConfigParser()
     config.read(inifile)
 
@@ -1322,6 +1357,18 @@ def csv_push(inifile):
     #pusher(data.data, influxdb_dict)
 
 def push_ac(inifile):
+    """
+    Function to handle flux calculation and influx pushing pipeline
+
+    args:
+    ---
+        inifile -- str
+            path to the .ini file
+
+    returns:
+    ---
+
+    """
     config = configparser.ConfigParser()
     config.read(inifile)
 
