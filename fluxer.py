@@ -116,9 +116,9 @@ class snowdepth_parser:
 
     Attributes
     ---
-        snowdepth_measurement : xlsx file
+        snowdepth_measurement -- xlsx file
             .xlsx file for with snowdepth for each chamber
-        snowdepth_df : pandas dataframe 
+        snowdepth_df -- pandas dataframe
             dataframe version of the .xlsx file.
 
     Methods
