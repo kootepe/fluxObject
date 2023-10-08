@@ -78,7 +78,7 @@ class pusher:
                             data_frame_tag_columns = self.tag_columns,
                             debug = True)
         logging.info('Pushed data to DB')
-        
+
     def read_tag_columns(self):
         """
         Reads tag columns from .ini and checks that they are in the dataframe, and returns them as list
@@ -133,7 +133,7 @@ class snowdepth_parser:
         ---
         returns:
             snowdepth -- df
-        
+
         """
         if self.snowdepth_measurement:
             snowdepth = pd.read_excel(self.snowdepth_measurement)
@@ -186,7 +186,6 @@ class calculated_data:
         Grabs first row from each measurement, since flux and r are the
         same per measurement, also removes unnecesary columns
 
-    
     """
     def __init__(self, measured_data, measuring_chamber_dict, filter_tuple, get_temp_and_pressure_from_file, default_pressure, default_temperature):
         self.measured_data = measured_data
@@ -283,7 +282,7 @@ class calculated_data:
         ---
         returns:
             summary -- pandas.dataframe
-            
+
 
         """
         dfList = []
