@@ -1133,11 +1133,11 @@ class zip_open:
         dfList = []
         for i in self.zip_files:
             try:
-                zip_file = Path(self.path).rglob(i)
-                zip_file = [x for x in zip_file if x.is_file()]
                 # creates a list of the matched files
+                zip_file_list = Path(self.path).rglob(i)
                 # cheks that everything that matched is file, not a
                 # folder
+                zip_file_list = [x for x in zip_file if x.is_file()]
                 zip_file = str(zip_file[0])
                 archive = zf.ZipFile(zip_file , 'r')
             # skip zips that have errors
