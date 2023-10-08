@@ -21,6 +21,7 @@ from pathlib import Path
 from influxdb_client import InfluxDBClient, Point, WriteOptions
 from influxdb_client.client.write_api import SYNCHRONOUS, PointSettings
 
+#define logging format
 logging.basicConfig(level=logging.INFO,
                         format='%(asctime)s.%(msecs)03d %(levelname)s:\t%(message)s',
                         datefmt='%Y-%m-%d %H:%M:%S')
@@ -1393,7 +1394,7 @@ def csv_push(inifile):
 
 def push_ac(inifile):
     """
-    Function to handle flux calculation and influx pushing pipeline
+    Function to handle flux calculation and influx pushing
 
     args:
     ---
