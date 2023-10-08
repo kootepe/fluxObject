@@ -30,11 +30,11 @@ class pusher:
 
     Attributes
     ---
-    influxdb_dict : dictionary
+    influxdb_dict -- dictionary
         dictionary with the influxdb login information from .ini
-    data : pandas dataframe
+    data -- pandas dataframe
         data that will be pushed to influxdb
-    tag_columns : list
+    tag_columns -- list
         List of columns that will be used as tags in influxdb
 
     Methods
@@ -50,7 +50,7 @@ class pusher:
         """
         args:
         ---
-            data -- pandas dataframe
+        data -- pandas dataframe
             influxdb_dict -- dictionary from the .ini file with necessary info about influxdb connection
         """
         self.influxdb_dict = influxdb_dict
@@ -65,7 +65,8 @@ class pusher:
 
         args:
         ---
-            df -- pandas dataframe
+        df -- pandas dataframe
+            data to be pushed into influxdb
 
         returns:
         ---
@@ -87,14 +88,15 @@ class pusher:
 
     def read_tag_columns(self):
         """
-        Reads tag columns from .ini and checks that they are in the dataframe, and returns them as list
+        Reads tag columns from .ini and checks that they are in the
+        dataframe, and returns them as list
 
         args:
         ---
 
         returns:
         ---
-            tag_columns -- list
+        tag_columns -- list
             list of tag_columns, as defined in .ini
         """
         tag_columns = self.influxdb_dict.get('tag_columns').split(',')
@@ -117,10 +119,10 @@ class snowdepth_parser:
 
     Attributes
     ---
-        snowdepth_measurement -- xlsx file
-            .xlsx file for with snowdepth for each chamber
-        snowdepth_df -- pandas dataframe
-            dataframe version of the .xlsx file.
+    snowdepth_measurement -- xlsx file
+        .xlsx file for with snowdepth for each chamber
+    snowdepth_df -- pandas dataframe
+        dataframe version of the .xlsx file.
 
     Methods
     ---
@@ -138,11 +140,11 @@ class snowdepth_parser:
 
         args:
         ---
-            snowdepth_measurement -- .xlsx file
+        snowdepth_measurement -- .xlsx file
 
         returns:
         ---
-            snowdepth -- df
+        snowdepth -- df
 
         """
         if self.snowdepth_measurement:
@@ -218,17 +220,17 @@ class calculated_data:
 
         args:
         ---
-            df -- pandas.dataframe
-                dataframe of the gas flux
-            measurement_name -- str
-                name of the gas that slope, pearsons_r and flux is
-                going to be calculated for
+        df -- pandas.dataframe
+            dataframe of the gas flux
+        measurement_name -- str
+            name of the gas that slope, pearsons_r and flux is
+            going to be calculated for
 
         returns:
         ---
-            dfs -- pandas.dataframe
-                same dataframe with additional slope, pearsons_r and
-                flux columns
+        dfs -- pandas.dataframe
+            same dataframe with additional slope, pearsons_r and
+            flux columns
         """
         tmp = []
         # following loop raises a false positive warning, disable it
@@ -262,16 +264,16 @@ class calculated_data:
 
         args:
         ---
-            df -- pandas.dataframe
-                dataframe with slope calculated.
-            measurement_name -- str
-                name of the gas that flux is going to be calculated for
+        df -- pandas.dataframe
+            dataframe with slope calculated.
+        measurement_name -- str
+            name of the gas that flux is going to be calculated for
 
         returns:
         ---
-            flux -- numpy.array
-                one column for the dataframe with the calculated gas
-                flux
+        flux -- numpy.array
+            one column for the dataframe with the calculated gas
+            flux
         """
         slope = df[f'{measurement_name}_slope']
         chamber_volume = (self.chamber_height * 0.001) * (self.chamber_width * 0.001) * ((self.chamber_height * 0.001) - df['snowdepth'])
@@ -290,11 +292,11 @@ class calculated_data:
 
         args:
         ---
-            data -- pandas.dataframe
+        data -- pandas.dataframe
 
         returns:
         ---
-            summary -- pandas.dataframe
+        summary -- pandas.dataframe
 
 
         """
@@ -339,15 +341,15 @@ class merge_data:
 
         args:
         ---
-            measurement_df -- pandas.dataframe
-                gas measurement dataframe
-            aux_df -- pandas.dataframe
-                "aux" data dataframe
+        measurement_df -- pandas.dataframe
+            gas measurement dataframe
+        aux_df -- pandas.dataframe
+            "aux" data dataframe
 
         returns:
         ---
-            df -- pandas.dataframe
-                dataframe with aux_data merged into the main gas measurement dataframe
+        df -- pandas.dataframe
+            dataframe with aux_data merged into the main gas measurement dataframe
         """
         if self.is_dataframe_sorted_by_datetime_index(measurement_df) and self.is_dataframe_sorted_by_datetime_index(aux_df):
             df = pd.merge_asof(measurement_df,
@@ -373,11 +375,11 @@ class merge_data:
 
         args:
         ---
-            df -- pandas.dataframe
+        df -- pandas.dataframe
 
         returns:
         ---
-            bool
+        bool
 
         """
         if not isinstance(df, pd.DataFrame):
@@ -428,13 +430,13 @@ class filterer:
 
         args:
         ---
-            data_to_filter -- pandas.dataframe
-                Large dataframe that can be thinned
+        data_to_filter -- pandas.dataframe
+            Large dataframe that can be thinned
 
         returns:
         ---
-            clean_df -- pandas.dataframe
-                Dataframe with data outside the timestamps removed
+        clean_df -- pandas.dataframe
+            Dataframe with data outside the timestamps removed
 
         """
         # data with no errors
@@ -524,26 +526,27 @@ class aux_data_reader:
 
         args:
         ---
-            ini_dict -- dictionary
-                The part of the .ini which defines how to read the .csv
-                file
+        ini_dict -- dictionary
+            The part of the .ini which defines how to read the .csv
+            file
+
         returns:
         ---
-            path -- str
-                path to the file
-            delimiter -- str
-                .csv delimiter
-            skiprows -- int
-                how many rows to skip at beginning of file
-            timestamp_format -- str
-                timestamp format of the .csv timestamp column
-            columns -- list of ints
-                list of the column numbers which will be read from the
-                .csv
-            names -- list of strings
-                names for the columns that will be read
-            dtypes -- dict
-                columns and names paired into a dict
+        path -- str
+            path to the file
+        delimiter -- str
+            .csv delimiter
+        skiprows -- int
+            how many rows to skip at beginning of file
+        timestamp_format -- str
+            timestamp format of the .csv timestamp column
+        columns -- list of ints
+            list of the column numbers which will be read from the
+            .csv
+        names -- list of strings
+            names for the columns that will be read
+        dtypes -- dict
+            columns and names paired into a dict
         """
         dict = ini_dict
         path = dict.get('path')
@@ -567,13 +570,13 @@ class aux_data_reader:
 
         args:
         ---
-            ini_dict -- dictionary
-                The part of the .ini that defines the .csv file
+        ini_dict -- dictionary
+            The part of the .ini that defines the .csv file
 
         returns:
         ---
-            dfs -- pandas.dataframe
-                The .csv file read into a pandas.dataframe
+        dfs -- pandas.dataframe
+            The .csv file read into a pandas.dataframe
 
         """
         path, delimiter, skiprows, timestamp_format, columns, names, dtypes = self.aux_data_ini_parser(ini_dict)
@@ -628,14 +631,14 @@ class measurement_reader:
 
         args:
         ---
-            dict -- dictionary
-                The part of the .ini that defines that measurement .csv
+        dict -- dictionary
+            The part of the .ini that defines that measurement .csv
 
         returns:
         ---
-            dfs -- pandas.dataframe
-                All of the .csv in self.measurement_files read into one
-                big dataframe
+        dfs -- pandas.dataframe
+            All of the .csv in self.measurement_files read into one
+            big dataframe
         """
         path = dict.get('path')
         skiprows = int(dict.get('skiprows'))
@@ -682,13 +685,13 @@ class measurement_reader:
 
         args:
         ---
-            time -- numpy.array
-                Array of HH:MM:SS string timestamps
+        time -- numpy.array
+            Array of HH:MM:SS string timestamps
 
         returns:
         ---
-            time -- numpy.array
-                Array of float timestamps
+        time -- numpy.array
+            Array of float timestamps
         """
         h,m,s = map(int, time.split(':'))
         sec = 60
@@ -739,11 +742,12 @@ class chamber_cycle:
 
         args:
         ---
-            file -- str
-                file name
+        file -- str
+            file name
+
         returns:
         ---
-            datetime.datetime
+        datetime.datetime
         """
         return timestamps.extract_date(self, file)
 
@@ -757,9 +761,9 @@ class chamber_cycle:
 
         returns:
         ---
-            dfs -- pandas.dataframe
-                dataframe with chamber opening times, measurement
-                starting times and measurement ending times.
+        dfs -- pandas.dataframe
+            dataframe with chamber opening times, measurement
+            starting times and measurement ending times.
         """
         tmp = []
         for file in self.measurement_files:
@@ -826,8 +830,8 @@ class file_finder:
 
         returns:
         ---
-            filenames -- list
-                list of the filenames
+        filenames -- list
+            list of the filenames
         """
         start_date = self.start_timestamp
         end_date = self.end_timestamp
@@ -854,13 +858,13 @@ class file_finder:
 
         args:
         ---
-            patterns -- list
-                This is the list of filenames
+        patterns -- list
+            This is the list of filenames
 
         returns:
         ---
-            files -- list
-                List of filepaths
+        files -- list
+            List of filepaths
         """
         files = []
         p = Path(self.path)
@@ -937,7 +941,7 @@ class timestamps:
 
         returns:
         ---
-            file_timestamp_format in regex
+        file_timestamp_format in regex
 
         """
         conversion_dict = {
@@ -972,6 +976,7 @@ class timestamps:
 
         returns:
         ---
+        newest_file -- str
             Name of the newest file in a folder
 
         """
@@ -992,13 +997,13 @@ class timestamps:
 
         args:
         ---
-            datestring -- str
-                The format of the timestamp in the filename
+        datestring -- str
+            The format of the timestamp in the filename
 
         returns:
         ---
-            datetime.datetime
-                timestamp in datetime.datetime format
+        datetime.datetime
+            timestamp in datetime.datetime format
         """
         #try:
         #    date = re.search(self.strftime_to_regex(), datestring).group(0)
@@ -1022,10 +1027,10 @@ class timestamps:
         args:
         ---
 
-        ---
         returns:
-            lastTs -- datetime.datetime
-                Either the last timestamp in influxdb or season_start from .ini
+        ---
+        lastTs -- datetime.datetime
+            Either the last timestamp in influxdb or season_start from .ini
         """
         # inflxudb query to get the timestamp of the last input
         query = f'from(bucket: "{self.influxdb_dict.get("bucket")}")' \
@@ -1126,9 +1131,9 @@ class zip_open:
 
         returns:
         ---
-            ready_data -- pandas.dataframe
-                the .csv files from inside the zip files read into a
-                pandas.dataframe
+        ready_data -- pandas.dataframe
+            the .csv files from inside the zip files read into a
+            pandas.dataframe
         """
         dfList = []
         for i in self.zip_files:
@@ -1203,26 +1208,26 @@ class csv_reader:
 
         args:
         ---
-            ini_dict -- dictionary
-                The part of the .ini which defines the .csv file
+        ini_dict -- dictionary
+            The part of the .ini which defines the .csv file
         returns:
         ---
-            path -- str
-                path to the file
-            delimiter -- str
-                .csv delimiter
-            skiprows -- int
-                how many rows to skip at beginning of file
-            timestamp_format -- str
-                timestamp format of the .csv timestamp column
-            file_extension -- str
-                file extension of the file to be read
-            columns -- list of ints
-                list of the column numbers which will be read from the .csv
-            names -- list of strings
-                names for the columns that will be read
-            dtypes -- dict
-                columns and names paired into a dict
+        path -- str
+            path to the file
+        delimiter -- str
+            .csv delimiter
+        skiprows -- int
+            how many rows to skip at beginning of file
+        timestamp_format -- str
+            timestamp format of the .csv timestamp column
+        file_extension -- str
+            file extension of the file to be read
+        columns -- list of ints
+            list of the column numbers which will be read from the .csv
+        names -- list of strings
+            names for the columns that will be read
+        dtypes -- dict
+            columns and names paired into a dict
         """
         dict = ini_dict
         path = dict.get('path')
@@ -1247,12 +1252,12 @@ class csv_reader:
 
         args:
         ---
-            ini_dict -- dictionary
-                The part of the .ini file that defines the .csv file
+        ini_dict -- dictionary
+            The part of the .ini file that defines the .csv file
         returns:
         ---
-            dfs -- pandas.dataframe
-                All of the .csv files read into a pandas.dataframe
+        dfs -- pandas.dataframe
+            All of the .csv files read into a pandas.dataframe
 
         """
         path, delimiter, skiprows, timestamp_format, file_extension, columns, names, dtypes = self.csv_ini_parser(ini_dict)
@@ -1294,8 +1299,8 @@ def eddypro_push(inifile):
 
     args:
     ---
-        inifile -- str
-            path to the .ini file
+    inifile -- str
+        path to the .ini file
 
     returns:
     ---
@@ -1328,8 +1333,8 @@ def csv_push(inifile):
 
     args:
     ---
-        inifile -- str
-            path to the .ini file
+    inifile -- str
+        path to the .ini file
 
     returns:
     ---
@@ -1362,8 +1367,8 @@ def push_ac(inifile):
 
     args:
     ---
-        inifile -- str
-            path to the .ini file
+    inifile -- str
+        path to the .ini file
 
     returns:
     ---
