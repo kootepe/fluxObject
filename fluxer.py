@@ -1257,8 +1257,6 @@ class csv_reader:
             tmp.append(df)
         dfs = pd.concat(tmp)
         return dfs
-    def read_csv(self):
-        files = self.files
 
 def eddypro_push(inifile):
     config = configparser.ConfigParser()
