@@ -907,7 +907,7 @@ class timestamps:
         self.path = measurement_dict.get('path')
         self.file_extension = measurement_dict.get('file_extension')
         self.file_timestamp_format = measurement_dict.get('file_timestamp_format')
-        self.start_timestamp = self.checkLastDbTimestamp()
+        self.start_timestamp = self.check_last_db_timestamp()
         self.end_timestamp = self.extract_date(self.get_newest())
         self.check_timestamp()
 
@@ -996,7 +996,7 @@ class timestamps:
         # class chamber_cycle calls this method and using an instance variable here might cause issues if the timestamp formats should be different
         return datetime.datetime.strptime(date, self.file_timestamp_format)
 
-    def checkLastDbTimestamp(self):
+    def check_last_db_timestamp(self):
         """
         Extract latest date from influxDB
 
