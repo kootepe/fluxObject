@@ -1424,6 +1424,7 @@ def push_ac(inifile):
                                      measurement_files.measurement_files
                                      )
 
+    # should filter tuple just be generated here?
     measurement_df = measurement_reader(measurement_dict,
                                         measurement_files.measurement_files)
 
