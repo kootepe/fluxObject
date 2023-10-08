@@ -297,12 +297,43 @@ class calculated_data:
 
 class merge_data:
     """
-    merges auxiliary data to the measurements.
+    Merges "auxiliary" data to the main gas measurement. Auxiliary data
+    being air pressure, air temperature and snowdepth most of the time.
+
+    Attributes
+    ---
+    merged_data -- pandas.dataframe
+        The gas measurement dataframe
+    aux_data -- pandas.dataframe
+        The "auxiliary" dataframe, can be any data that has a datetimeindex
+
+    Methods
+    ---
+    merge_aux_data
+        Merges the two dataframes if they are sorted by datetimeindex
+    is_dataframe_sorted_by_datetime_index
+        Checks if input is a dataframe, if it has a datetimeindex and
+        that the index is ascending.
     """
     def __init__(self, measurement_df, aux_df):
         self.merged_data = self.merge_aux_data(measurement_df, aux_df)
 
     def merge_aux_data(self, measurement_df, aux_df):
+        """
+        Drops most columns as from here they will be pushed to influxdb
+
+        ---
+        args:
+            measurement_df -- pandas.dataframe
+                gas measurement dataframe
+            aux_df -- pandas.dataframe
+                "aux" data dataframe
+
+        ---
+        returns:
+            df -- pandas.dataframe
+                dataframe with aux_data merged into the main gas measurement dataframe
+        """
         if self.is_dataframe_sorted_by_datetime_index(measurement_df) and self.is_dataframe_sorted_by_datetime_index(aux_df):
             df = pd.merge_asof(measurement_df,
                                     aux_df,
@@ -320,7 +351,17 @@ class merge_data:
 
     def is_dataframe_sorted_by_datetime_index(self, df):
         """
-        Checks that both dataframes are sorted by a datetime index
+        Checks that the dataframe is a dataframe, is sorted by a
+        datetimeindex and that the index is ascending
+
+        ---
+        args:
+            df -- pandas.dataframe
+
+        ---
+        returns:
+            bool
+
         """
         if not isinstance(df, pd.DataFrame):
             return False
@@ -335,7 +376,28 @@ class merge_data:
 
 class filterer:
     """
-    Removes empty data, data with errors and records the invalid data
+    Takes in a large dataframe and two timestamps, and removes all data
+    that isn't between those two timestamps. Also drops dataframes if
+    there's no data between the timestamps at all, and if there's a
+    column called error_codes (LICOR data), and there's errors, those
+    will be dropped.
+
+    Attributes
+    ---
+    clean_filter_tuple -- list of tuples
+        Tuples which are not empty and have no errors in the data will
+        be stored here.
+    filter_tuple -- list of tuples
+        "Raw" tuples generated from chamber cycle or read from files
+        [(YYYY-MM-DD HH:MM:SS, YYYY-MM-DD HH:MM:SS, chamberNum), (YYYY-MM-DD HH:MM:SS, YYYY-MM-DD HH:MM:SS, chamberNum)]
+    df -- pandas.dataframe
+        Any dataframe
+
+    Methods
+    ---
+    filter_data_by_dateime
+        Removes data that isn't between two timestamps
+
     """
     def __init__(self, filter_tuple, df):
         self.clean_filter_tuple = []
@@ -344,12 +406,19 @@ class filterer:
 
     def filter_data_by_datetime(self, data_to_filter):
         """
-        To do:
-            proper handling of data with errores, currently they are
-            just discarded. Timestamps which have no measuremeny data or
-            only have data with errorcodes, should be recorded but
-            dismissed.
-            What to do with data that is there but the timestamps don't hit the chamber cycles?
+        Takes in the dataframe and two timestamps from each tuple, drops
+        data that isn't between the timestamps.
+
+        ---
+        args:
+            data_to_filter -- pandas.dataframe
+                Large dataframe that can be thinned
+
+        ---
+        returns:
+            clean_df -- pandas.dataframe
+                Dataframe with data outside the timestamps removed
+
         """
         # data with no errors
         clean_data = []
