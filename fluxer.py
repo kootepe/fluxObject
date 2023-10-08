@@ -352,8 +352,8 @@ class merge_data:
                                     suffixes =('','_y'))
             df.drop(df.filter(regex='_y$').columns, axis=1, inplace=True)
             df.set_index('datetime', inplace=True)
-        else: 
-            logging.info('Dataframes are not properly sorted by datetimeindex') 
+        else:
+            logging.info('Dataframes are not properly sorted by datetimeindex')
             sys.exit(0)
         return df
 
@@ -469,7 +469,7 @@ class filterer:
             logging.info('No data found for any timestamp, is there data in the files?')
             sys.exit(0)
         clean_df = pd.concat(clean_data)
-        # tuples that are clean 
+        # tuples that are clean
         self.clean_filter_tuple = clean_timestamps
         # dataframes with errors
         if len(dirty_data) != 0:
@@ -751,7 +751,7 @@ class chamber_cycle:
                               names = ['time', 'chamber'])
             date = self.call_extract(os.path.splitext(file)[0])
             df['date'] = date
-            df['datetime'] = pd.to_datetime(df['date'].astype(str)+' '+df['time'].astype(str)) 
+            df['datetime'] = pd.to_datetime(df['date'].astype(str)+' '+df['time'].astype(str))
             df['open_time'] = df['datetime'] + pd.to_timedelta(self.chamber_measurement_start_sec, unit='S')
             df['close_time'] = df['datetime'] + pd.to_timedelta(self.chamber_measurement_end_sec, unit='S')
             tmp.append(df)
@@ -1014,7 +1014,7 @@ class timestamps:
           f'|> filter(fn: (r) => r["_measurement"] == "{self.influxdb_dict.get("measurement_name")}")' \
           '|> keep(columns: ["_time"])' \
           '|> sort(columns: ["_time"], desc: false)' \
-          '|> last(column: "_time")' 
+          '|> last(column: "_time")'
 
         client = ifdb.InfluxDBClient(url = self.influxdb_dict.get('url'),
                              token = self.influxdb_dict.get('token'),
@@ -1351,10 +1351,10 @@ def push_ac(inifile):
 
     if get_temp_and_pressure_from_file == 1:
         air_temperature_df = aux_data_reader(air_temperature_dict,
-                                      air_pressure_files.measurement_files) 
+                                      air_pressure_files.measurement_files)
 
         air_pressure_df = aux_data_reader(air_pressure_dict,
-                                      air_pressure_files.measurement_files) 
+                                      air_pressure_files.measurement_files)
 
 
     # list with three values, start_time, end_time, chamber_num, flux is
@@ -1368,11 +1368,11 @@ def push_ac(inifile):
     # dropped
     filter_tuple = filtered_measurement.clean_filter_tuple
 
-    air_temperature_df = filterer(filter_tuple, 
+    air_temperature_df = filterer(filter_tuple,
                                   air_temperature_df.aux_data_df)
-    air_pressure_df = filterer(filter_tuple, 
+    air_pressure_df = filterer(filter_tuple,
                                   air_pressure_df.aux_data_df)
-    
+
     snowdepth_df = snowdepth_parser(defaults_dict.get('snowdepth_measurement'),)
 
     if get_temp_and_pressure_from_file == 1:
@@ -1381,10 +1381,10 @@ def push_ac(inifile):
         merged_data = merge_data(merged_data.merged_data,
                                  air_pressure_df.filtered_data)
         merged_data = merge_data(merged_data.merged_data,
-                                 snowdepth_df.snowdepth_df) 
+                                 snowdepth_df.snowdepth_df)
     else:
         merged_data = merge_data(filtered_measurement.filtered_data,
-                                 snowdepth_df.snowdepth_df) 
+                                 snowdepth_df.snowdepth_df)
 
     merged_data.merged_data['snowdepth'] = 0
 
