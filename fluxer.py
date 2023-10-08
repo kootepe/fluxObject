@@ -49,6 +49,7 @@ class pusher:
     def __init__(self, data, influxdb_dict):
         """
         args:
+        ---
             data -- pandas dataframe
             influxdb_dict -- dictionary from the .ini file with necessary info about influxdb connection
         """
@@ -63,7 +64,12 @@ class pusher:
         Push data to InfluxDB
 
         args:
+        ---
             df -- pandas dataframe
+
+        returns:
+        ---
+
         """
         #grouped = df.groupby('chamber')
         point_settings = PointSettings()
@@ -84,8 +90,10 @@ class pusher:
         Reads tag columns from .ini and checks that they are in the dataframe, and returns them as list
 
         args:
+        ---
 
         returns:
+        ---
             tag_columns -- list
             list of tag_columns, as defined in .ini
         """
@@ -126,12 +134,12 @@ class snowdepth_parser:
         """
         Creates a dataframe from snowdepth measurements. If there's no measurement, it will create an empty one.
 
-        ---
         args:
+        ---
             snowdepth_measurement -- .xlsx file
 
-        ---
         returns:
+        ---
             snowdepth -- df
 
         """
@@ -206,15 +214,15 @@ class calculated_data:
         Calculates Pearsons R (correlation) and the slope of
         the CH4 flux.
 
-        ---
         args:
+        ---
             df -- pandas.dataframe
                 dataframe of the gas flux
             measurement_name -- str
                 name of the gas that slope, pearsons_r and flux is going to be calculated for
 
-        ---
         returns:
+        ---
             dfs -- pandas.dataframe
                 same dataframe with additional slope, pearsons_r and flux columns
         """
@@ -248,15 +256,15 @@ class calculated_data:
         """
         Calculates gas flux
 
-        ---
         args:
+        ---
             df -- pandas.dataframe
                 dataframe with slope calculated.
             measurement_name -- str
                 name of the gas that flux is going to be calculated for
 
-        ---
         returns:
+        ---
             flux -- numpy.array
                 one column for the dataframe with the calculated gas flux
         """
@@ -275,12 +283,12 @@ class calculated_data:
         """
         Drops most columns as from here they will be pushed to influxdb
 
-        ---
         args:
+        ---
             data -- pandas.dataframe
 
-        ---
         returns:
+        ---
             summary -- pandas.dataframe
 
 
@@ -322,15 +330,15 @@ class merge_data:
         """
         Drops most columns as from here they will be pushed to influxdb
 
-        ---
         args:
+        ---
             measurement_df -- pandas.dataframe
                 gas measurement dataframe
             aux_df -- pandas.dataframe
                 "aux" data dataframe
 
-        ---
         returns:
+        ---
             df -- pandas.dataframe
                 dataframe with aux_data merged into the main gas measurement dataframe
         """
@@ -354,12 +362,12 @@ class merge_data:
         Checks that the dataframe is a dataframe, is sorted by a
         datetimeindex and that the index is ascending
 
-        ---
         args:
+        ---
             df -- pandas.dataframe
 
-        ---
         returns:
+        ---
             bool
 
         """
@@ -409,13 +417,13 @@ class filterer:
         Takes in the dataframe and two timestamps from each tuple, drops
         data that isn't between the timestamps.
 
-        ---
         args:
+        ---
             data_to_filter -- pandas.dataframe
                 Large dataframe that can be thinned
 
-        ---
         returns:
+        ---
             clean_df -- pandas.dataframe
                 Dataframe with data outside the timestamps removed
 
@@ -475,17 +483,54 @@ class filterer:
 
 class aux_data_reader:
     """
-    Reads auxiliary data
+    Reads "auxiliary" as defined in the .ini, aux data being air temperature
+    and air pressure data
+
+    Attributes
+    ---
+    aux_data_dict -- dictionary
+        The part of the .ini file which defines air_pressure and
+        air_temperature data
+    files -- list
+        List of the filenames that will be read into pandas dataframe
+
+    Methods
+    ---
+    aux_data_ini_parser
+        Parsers the .ini dictionary into values
+    add_aux_data
+        Reads the .csv to pandas.dataframe
     """
     def __init__(self, aux_data_dict, files):
         self.aux_data_dict = aux_data_dict
         self.files = files
         self.aux_data_df = self.add_aux_data(self.aux_data_dict)
-        
+
 
     def aux_data_ini_parser(self, ini_dict):
         """
-        Parses then aux data dictionary from the .ini
+        Parses the .ini dictionary into values.
+
+        args:
+        ---
+            ini_dict -- dictionary
+                The part of the .ini which defines how to read the .csv file
+        returns:
+        ---
+            path -- str
+                path to the file
+            delimiter -- str
+                .csv delimiter
+            skiprows -- int
+                how many rows to skip at beginning of file
+            timestamp_format -- str
+                timestamp format of the .csv timestamp column
+            columns -- list of ints
+                list of the column numbers which will be read from the .csv
+            names -- list of strings
+                names for the columns that will be read
+            dtypes -- dict
+                columns and names paired into a dict
         """
         dict = ini_dict
         path = dict.get('path')
@@ -505,7 +550,18 @@ class aux_data_reader:
 
     def add_aux_data(self, ini_dict):
         """
-        Reads the .csv file as defined in the .ini
+        Reads the .csv file into a pandas.dataframe
+
+        args:
+        ---
+            ini_dict -- dictionary
+                The part of the .ini that defines the .csv file
+
+        returns:
+        ---
+            dfs -- pandas.dataframe
+                The .csv file read into a pandas.dataframe
+
         """
         path, delimiter, skiprows, timestamp_format, columns, names, dtypes = self.aux_data_ini_parser(ini_dict)
         tmp = []
@@ -528,6 +584,25 @@ class aux_data_reader:
         return dfs
 
 class measurement_reader:
+    """
+    Reads the LI-COR gas measurement.
+
+    Attributes
+    ---
+    measurement_dict -- dictionary
+        Defines how to read the gas measurement file
+    measurement_files -- list
+        list of the measurement file names
+    measurement_df -- pandas.dataframe
+        The measurement .csv files read into a pandas.dataframe
+    Methods
+    ---
+    read_measurement
+        Reads the .ini and then reads the .csv into a pandas dataframe
+    ordinal_timer
+        Calculates ordinal time from the timestamps, required for slope calculations
+
+    """
     def __init__(self, measurement_dict, measurement_files):
         self.measurement_dict = measurement_dict
         self.measurement_files = measurement_files
@@ -535,7 +610,18 @@ class measurement_reader:
 
     def read_measurement(self, dict):
         """
-        Reads the measurement files according to the .ini
+        Reads the measurement file into a pandas.dataframe
+
+        args:
+        ---
+            dict -- dictionary
+                The part of the .ini that defines that measurement .csv
+
+        returns:
+        ---
+            dfs -- pandas.dataframe
+                All of the .csv in self.measurement_files read into one
+                big dataframe
         """
         path = dict.get('path')
         skiprows = int(dict.get('skiprows'))
@@ -576,13 +662,17 @@ class measurement_reader:
 
     def ordinalTimer(self, time):
         """
-        Helper function to calculate ordinal time from HHMMSS
-        ------
-        inputs:
-            HH:MM:SS timestamp
-        ------
+        Helper function to calculate ordinal time from HH:MM:SS
+
+        args:
+        ---
+            time -- numpy.array
+                Array of HH:MM:SS string timestamps
+
         returns:
-            float of the timestamp in ordinal time
+        ---
+            time -- numpy.array
+                Array of float timestamps
         """
         h,m,s = map(int, time.split(':'))
         sec = 60
@@ -591,6 +681,34 @@ class measurement_reader:
         return time
 
 class chamber_cycle:
+    """
+    Creates the chamber cycle dataframe which will be used to select
+    data that will be calculated
+
+    Attributes
+    ---
+    file_timestamp_format -- str
+        Format of the timestamp in the measurement files
+    chamber_cycle_file -- str
+        Path to the chamber cycle file
+    chamber_measurement_start_sec -- int
+        How many seconds past the opening of the chamber to start the
+        actual measurement
+    chamber_measurement_end_sec -- int
+        How many seconds past the opening of the chamber to end the
+        actual measurement
+    measurement_files -- list
+        List of the measurement file paths
+
+    Methods
+    ---
+    call_extract
+        Calls date extraction function from the timestamps class
+    create_chamber_cycle
+        Reads date from each filename, and creates dataframe with
+        starting and ending times for each measurement
+
+    """
     def __init__(self, file_timestamp_format, chamber_cycle_file, chamber_measurement_start_sec, chamber_measurement_end_sec, measurement_files):
         self.file_timestamp_format = file_timestamp_format
         self.chamber_cycle_file = chamber_cycle_file
@@ -602,13 +720,30 @@ class chamber_cycle:
     def call_extract(self, file):
         """
         calls date extraction function from another class
+
+        args:
+        ---
+            file -- str
+                file name
+        returns:
+        ---
+            datetime.datetime
         """
         return timestamps.extract_date(self, file)
 
 
     def create_chamber_cycle(self):
         """
-        Reads a csv file with the chamber cycles 
+        Reads a csv file with the chamber cycles
+
+        args:
+        ---
+
+        returns:
+        ---
+            dfs -- pandas.dataframe
+                dataframe with chamber opening times, measurement
+                starting times and measurement ending times.
         """
         tmp = []
         for file in self.measurement_files:
@@ -627,7 +762,33 @@ class chamber_cycle:
 
 class file_finder:
     """
-    Finds and generates filenames
+    Generates lists of filenames and then finds them.
+
+    Attributes
+    ---
+    path -- str
+        path to the file
+    file_timestamp_format -- str
+        format of the timestamp in the filename, in strftime format
+    file_timestep -- int
+        How many seconds is between each file
+    start_timestamp -- str
+        The timestamp where the file name generation will start, either
+        from influxdb or season_start in .ini
+    end_timestamp -- str
+        The timestamp where the file name generation will end, from
+        the newest file in the input data
+    scan_or_generate -- bool
+        To generate filenames or just scan them from the folder
+    measurement_files -- list
+        List of the final measurement files that will be read
+
+    Methods
+    ---
+    generate_filenames
+        Generates the list of filenames
+    match_files
+        Checks that all of the generated filenames can be found
     """
     def __init__(self, measurement_dict, airdatatimestep, start_timestamp, end_timestamp):
         self.path = measurement_dict.get('path')
@@ -640,6 +801,17 @@ class file_finder:
 
 
     def generate_filenames(self):
+        """
+        Generates filenames
+
+        args:
+        ---
+
+        returns:
+        ---
+            filenames -- list
+                list of the filenames
+        """
         start_date = self.start_timestamp
         end_date = self.end_timestamp
 
@@ -659,6 +831,20 @@ class file_finder:
         return filenames
 
     def match_files(self, patterns):
+        """
+        Finds the files listed in the list of filenames and returns a
+        list of the filenames that were found
+
+        args:
+        ---
+            patterns -- list
+                This is the list of filenames
+
+        returns:
+        ---
+            files -- list
+                List of filepaths
+        """
         files = []
         p = Path(self.path)
         if self.scan_or_generate == 1:
@@ -677,10 +863,43 @@ class file_finder:
         return files
 
 
-
 class timestamps:
     """
-    Gets starting and ending timestamps
+    Gets timestamps between which the files that will be calculated
+    / uploaded are selected
+
+    Attributes
+    ---
+    influxdb_dict -- dict
+        Influxdb part of the .ini
+    season_start -- str
+        This date will be used as starting date if there's no data in
+        the influxdb bucket
+    path -- str
+        Path where to look for files
+    file_extension -- str
+        file extension of the file that will be scanned for
+    file_timestamp_format -- str
+        format of the timestamp in the filename, in strftime
+    start_timestamp -- str
+        Start date for the file name generation
+    end_timestamp -- str
+        End date for the file name generation
+
+    Methods
+    ---
+    strftime_to_regex
+        Converts strftime to regex, for file matching
+    get_newest
+        Gets newest file in a folder
+    extract_date
+        Extracts the date that is given in file_timestamp_format from
+        the filename
+    check_last_db_timestamp
+        Checks the last timestamp in influxdb
+    check_timestamp
+        Terminates the script if start_timestamp is older than the
+        end_timestamp, it means that there's no new data to push to db
     """
     def __init__(self, influxdb_dict, measurement_dict, season_start):
         self.influxdb_dict = influxdb_dict
@@ -694,7 +913,15 @@ class timestamps:
 
     def strftime_to_regex(self):
         """
-        convert python strf timestamps to regex
+        Changes the strftime timestamp to regex format
+
+        args:
+        ---
+
+        returns:
+        ---
+            file_timestamp_format in regex
+
         """
         conversion_dict = {
             "%a": r"(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun)",
@@ -722,6 +949,14 @@ class timestamps:
     def get_newest(self):
         """
         Fetchest name of the newest file in a folder
+
+        args:
+        ---
+
+        returns:
+        ---
+            Name of the newest file in a folder
+
         """
         files = list(Path(self.path).rglob(f'*{self.file_extension}*'))
         if not files:
@@ -736,9 +971,19 @@ class timestamps:
 
     def extract_date(self, datestring):
         """
-        Extract date from file name
+        Extracts the date from the filename
+
+        args:
+        ---
+            datestring -- str
+                The format of the timestamp in the filename
+
+        returns:
+        ---
+            datetime.datetime
+                timestamp in datetime.datetime format
         """
-        #try: 
+        #try:
         #    date = re.search(self.strftime_to_regex(), datestring).group(0)
         #except AttributeError:
         #    print('Files are found in folder but no matching file found, is the format of the timestamp correct?')
@@ -754,6 +999,14 @@ class timestamps:
     def checkLastDbTimestamp(self):
         """
         Extract latest date from influxDB
+
+        args:
+        ---
+
+        ---
+        returns:
+            lastTs -- datetime.datetime
+                Either the last timestamp in influxdb or season_start from .ini
         """
     # inflxudb query to get the timestamp of the last input
         query = f'from(bucket: "{self.influxdb_dict.get("bucket")}")' \
@@ -783,7 +1036,16 @@ class timestamps:
 
     def check_timestamp(self):
         """
-        Compare timestamps and stop script if there's no new data
+        Compare the start and end timestamps, if start timestamp is
+        older than end timestamp, terminate script as then there's no
+        new data'
+
+        args:
+        ---
+
+        returns:
+        ---
+
         """
         if self.start_timestamp > self.end_timestamp:
             logging.info('No files newer than what is already in the database.')
@@ -794,7 +1056,33 @@ class timestamps:
 
 class zip_open:
     """
-    Opens zip files
+    Opens eddypro .zip files and reads the .csv file inside them
+
+    Attributes
+    ---
+    zip_files -- list
+        List of the .zip_files to read
+    measurement_dict -- dict
+        measurement file part from the .ini
+    path -- str
+        file path
+    names -- list
+        list of the new names for the columns to be read
+    columns -- list
+        List of columns to be read
+    delimiter -- str
+        Delimiter of the .csv file
+    skiprows -- int
+        How many rows to skip from the beginning of file
+    data -- pandas.dataframe
+        Dataframe of the .csv files that are read from inside the
+        eddypro zips
+
+    Methods
+    ---
+    open_eddypro
+        opens zipfiles and reads .csv files inside them
+
     """
     def __init__(self, zip_files, measurement_dict):
         self.zip_files = zip_files
@@ -810,6 +1098,19 @@ class zip_open:
         self.data = self.open_eddypro()
 
     def open_eddypro(self):
+        """
+        Opens eddypro zips and reads the .csv files inside them into
+        pandas.dataframes
+
+        args:
+        ---
+
+        returns:
+        ---
+            ready_data -- pandas.dataframe
+                the .csv files from inside the zip files read into a
+                pandas.dataframe
+        """
         dfList = []
         for i in self.zip_files:
             try:
@@ -842,16 +1143,59 @@ class zip_open:
         return ready_data
 
 class csv_reader:
+    """
+    Reads .csv files into pandas.dataframes
+
+    Attributes
+    ---
+    files -- list
+        list of the .csv files to be read
+    measurement_dict -- dict
+        part of the .ini which defines the .csv file
+    data -- pandas.dataframe
+        the .csv file read into a pandas.dataframe
+
+    Methods
+    ---
+    csv_ini_parser
+        parses the .ini dictionary
+    add_csv_data
+        Reads the .csv defined in the .ini into a pandas.dataframe
+
+    """
     def __init__(self, csv_files, measurement_dict):
         self.files = csv_files
         self.measurement_dict = measurement_dict
         self.data = self.add_csv_data(self.measurement_dict)
         #print(self.files)
-        
+
 
     def csv_ini_parser(self, ini_dict):
         """
-        Parses then aux data dictionary from the .ini
+        Parser the .ini to variables
+
+        args:
+        ---
+            ini_dict -- dictionary
+                The part of the .ini which defines the .csv file
+        returns:
+        ---
+            path -- str
+                path to the file
+            delimiter -- str
+                .csv delimiter
+            skiprows -- int
+                how many rows to skip at beginning of file
+            timestamp_format -- str
+                timestamp format of the .csv timestamp column
+            file_extension -- str
+                file extension of the file to be read
+            columns -- list of ints
+                list of the column numbers which will be read from the .csv
+            names -- list of strings
+                names for the columns that will be read
+            dtypes -- dict
+                columns and names paired into a dict
         """
         dict = ini_dict
         path = dict.get('path')
@@ -872,7 +1216,17 @@ class csv_reader:
 
     def add_csv_data(self, ini_dict):
         """
-        Reads the .csv file as defined in the .ini
+        Reads the .csv files into pandas.dataframes as defined in the .ini
+
+        args:
+        ---
+            ini_dict -- dictionary
+                The part of the .ini file that defines the .csv file
+        returns:
+        ---
+            dfs -- pandas.dataframe
+                All of the .csv files read into a pandas.dataframe
+
         """
         path, delimiter, skiprows, timestamp_format, file_extension, columns, names, dtypes = self.csv_ini_parser(ini_dict)
         tmp = []
