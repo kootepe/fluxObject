@@ -104,7 +104,8 @@ class pusher:
         """
         tag_columns = self.influxdb_dict.get('tag_columns').split(',')
         measurement_columns = self.data.columns
-        # if all items in tag_columns are in measuremeny_columns, return true
+        # checks that all items in list tag_colums exist in list
+        # measurement_columns, if so return true, else return false
         check = any(item in tag_columns for item in measurement_columns)
         if len(tag_columns) == 1 and tag_columns[0] == '':
             logging.warning('No tag columns defined')
