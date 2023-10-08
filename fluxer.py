@@ -475,6 +475,7 @@ class filterer:
                     dirty_data.append(df)
                     dirty_timestamps.append(date)
                     continue
+            # chamber number is the third value in filter_tuple
             df['chamber'] = date[2]
             #print(f'{df = }')
             clean_data.append(df)
@@ -842,6 +843,7 @@ class file_finder:
         filenames = []
         current_date = start_date
 
+        # just initiate this variable for later use
         new_filename = 'init'
         while current_date <= end_date:
             filename = current_date.strftime(self.file_timestamp_format)
@@ -1157,6 +1159,7 @@ class zip_open:
             # them, this should leave only one file
             file = [x for x in files if 'eddypro_exp_full' in x]
             if len(file) == 1:
+                # pop returns current item in loop and removes it from list
                 filename = file.pop()
             else:
                 continue
@@ -1436,8 +1439,8 @@ def push_ac(inifile):
     filtered_measurement = filterer(filter_tuple,
                                     measurement_df.measurement_df)
 
-    # same list as before but the timestamps witno data or invalid data
-    # dropped
+    # same list as before but the timestamps with no data or invalid
+    # data dropped
     filter_tuple = filtered_measurement.clean_filter_tuple
 
     air_temperature_df = filterer(filter_tuple,
