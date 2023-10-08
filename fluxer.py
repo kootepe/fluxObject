@@ -534,7 +534,7 @@ class aux_data_reader:
         """
         dict = ini_dict
         path = dict.get('path')
-        file = (dict.get('file'))
+        #file = (dict.get('file'))
         # unnecessary?
         #file_timestamp_format = dict.get('file_timestamp_format')
         #if file_timestamp_format == '':
