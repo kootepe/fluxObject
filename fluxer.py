@@ -1301,6 +1301,19 @@ class csv_reader:
         dfs = pd.concat(tmp)
         return dfs
 
+def timer(func):
+    """Decorator for printing execution time of function."""
+    @functools.wraps(func)
+    def wrapper_timer(*args, **kwargs):
+        start = timeit.default_timer()
+        value = func(*args, **kwargs)
+        stop = timeit.default_timer()
+        execution_time = stop - start
+        logging.info(f"{func.__name__} executed in +{str(execution_time)}.")
+        return value
+    return wrapper_timer
+
+
 def eddypro_push(inifile):
     """
     Pipeline to handle reading eddypro .zip files, reading the flux
@@ -1481,22 +1494,13 @@ if __name__=="__main__":
     inifile = sys.argv[1]
     mode = sys.argv[2]
     if mode == 'ac':
-        start = timeit.default_timer()
+        @timer
         push_ac(inifile)
-        stop = timeit.default_timer()
-        execution_time = stop - start
-        print("Program Executed in "+str(execution_time))
     if mode == 'man':
         sys.exit(0)
     if mode == 'csv':
-        start = timeit.default_timer()
+        @timer
         csv_push(inifile)
-        stop = timeit.default_timer()
-        execution_time = stop - start
-        print("Program Executed in "+str(execution_time))
     if mode == 'eddypro':
-        start = timeit.default_timer()
+        @timer
         eddypro_push(inifile)
-        stop = timeit.default_timer()
-        execution_time = stop - start
-        print("Program Executed in "+str(execution_time))
