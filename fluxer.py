@@ -742,7 +742,7 @@ class chamber_cycle:
     Methods
     ---
     call_extract
-        Calls date extraction function from the timestamps class
+        Calls date extraction function from the get_start_and_end_time class
     create_chamber_cycle
         Reads date from each filename, and creates dataframe with
         starting and ending times for each measurement
@@ -769,7 +769,7 @@ class chamber_cycle:
         ---
         datetime.datetime
         """
-        return timestamps.extract_date(self, file)
+        return get_start_and_end_time.extract_date(self, file)
 
     def create_chamber_cycle(self):
         """
@@ -910,7 +910,7 @@ class file_finder:
         return files
 
 
-class timestamps:
+class get_start_and_end_time:
     """
     Gets timestamps between which the files that will be calculated
     / uploaded are selected
@@ -1036,11 +1036,11 @@ class timestamps:
         #except AttributeError:
         #    print('Files are found in folder but no matching file found, is the format of the timestamp correct?')
         #    return None
-        if self.file_timestamp_format == timestamps.strftime_to_regex(self):
+        if self.file_timestamp_format == get_start_and_end_time.strftime_to_regex(self):
             logging.info('No strftime formatting in filename, returning current date')
             print(datetime.date.today())
             return datetime.datetime.today()
-        date = re.search(timestamps.strftime_to_regex(self), datestring).group(0)
+        date = re.search(get_start_and_end_time.strftime_to_regex(self), datestring).group(0)
         # class chamber_cycle calls this method and using an instance
         # variable here might cause issues if the timestamp formats
         # should be different
@@ -1355,7 +1355,7 @@ def eddypro_push(inifile):
     influxdb_dict = dict(config.items('influxDB'))
     measurement_dict = dict(config.items('measurement_data'))
 
-    timestamps_values = timestamps(influxdb_dict,
+    timestamps_values = get_start_and_end_time(influxdb_dict,
                           measurement_dict,
                           defaults_dict.get('season_start')
                             )
@@ -1390,7 +1390,7 @@ def csv_push(inifile):
     influxdb_dict = dict(config.items('influxDB'))
     measurement_dict = dict(config.items('measurement_data'))
 
-    timestamps_values = timestamps(influxdb_dict,
+    timestamps_values = get_start_and_end_time(influxdb_dict,
                           measurement_dict,
                           defaults_dict.get('season_start')
                             )
@@ -1430,7 +1430,7 @@ def push_ac(inifile):
     measurement_dict = dict(config.items('measurement_data'))
     get_temp_and_pressure_from_file = int(defaults_dict.get('get_temp_and_pressure_from_file'))
 
-    timestamps_values = timestamps(influxdb_dict,
+    timestamps_values = get_start_and_end_time(influxdb_dict,
                           measurement_dict,
                           defaults_dict.get('season_start')
                             )
