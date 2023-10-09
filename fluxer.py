@@ -959,7 +959,7 @@ class timestamps:
 
     def strftime_to_regex(self):
         """
-        Changes the strftime timestamp to regex format
+        Changes strftime timestamp to regex format
 
         args:
         ---
