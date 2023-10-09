@@ -180,11 +180,11 @@ class calculated_data:
     get_temp_and_pressure_from_file -- bool
         1 to get temp and pressure from files, 0 to use defaults
     chamber_height -- int
-        Height of the measurement chamber, for volume
+        Height of the measurement chamber, for volume, in mm
     chamber_width -- int
-        Width of the measurement chamber, for volume
+        Width of the measurement chamber, for volume, in mm
     chamber_length -- int
-        Length of the measurement chamber, for volume
+        Length of the measurement chamber, for volume, in mm
     filter_tupe -- tuple
         (start_time, end_time, chamber_num), measurement is calculated
         from values between these timestamps,
@@ -418,7 +418,8 @@ class filterer:
         be stored here.
     filter_tuple -- list of tuples
         "Raw" tuples generated from chamber cycle or read from files
-        [(YYYY-MM-DD HH:MM:SS, YYYY-MM-DD HH:MM:SS, chamberNum), (YYYY-MM-DD HH:MM:SS, YYYY-MM-DD HH:MM:SS, chamberNum)]
+        [(YYYY-MM-DD HH:MM:SS, YYYY-MM-DD HH:MM:SS, chamberNum),
+         (YYYY-MM-DD HH:MM:SS, YYYY-MM-DD HH:MM:SS, chamberNum)]
     df -- pandas.dataframe
         Any dataframe
 
