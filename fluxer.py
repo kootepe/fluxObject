@@ -1105,7 +1105,7 @@ class get_start_and_end_time:
             pass
 
 
-class zip_open:
+class handle_eddypro:
     """
     Opens eddypro .zip files and reads the .csv file inside them
 
@@ -1131,7 +1131,7 @@ class zip_open:
 
     Methods
     ---
-    open_eddypro
+    read_eddypro
         opens zipfiles and reads .csv files inside them
 
     """
@@ -1146,9 +1146,9 @@ class zip_open:
         self.delimiter = self.measurement_dict.get('delimiter')
         self.skiprows = int(self.measurement_dict.get('skiprows'))
 
-        self.data = self.open_eddypro()
+        self.data = self.read_eddypro()
 
-    def open_eddypro(self):
+    def read_eddypro(self):
         """
         Opens eddypro zips and reads the .csv files inside them into
         pandas.dataframes
@@ -1365,7 +1365,7 @@ def eddypro_push(inifile):
                                    timestamps_values.start_timestamp,
                                    timestamps_values.end_timestamp
                                     )
-    data = zip_open(measurement_files.measurement_files, measurement_dict)
+    data = handle_eddypro(measurement_files.measurement_files, measurement_dict)
     print(data.data)
     pusher(data.data, influxdb_dict)
 
