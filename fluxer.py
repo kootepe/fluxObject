@@ -664,6 +664,7 @@ class measurement_reader:
         dtypes = dict.get('dtypes').split(',')
         dtypes = {names[i]: dtypes[i] for i in range(len(names))}
 
+        # initiate list where all read dataframes will be stored
         tmp = []
         for f in self.measurement_files:
             try:
@@ -685,7 +686,10 @@ class measurement_reader:
                                  dtype = dtypes,
                                  )
             tmp.append(df)
+        # concatenate all stored dataframes into one big one
         dfs = pd.concat(tmp)
+        # combine individual date and time columns into datetime
+        # column
         dfs['datetime'] = pd.to_datetime(dfs['date'].apply(str)+' '+dfs['time'], format = '%Y-%m-%d %H:%M:%S')
         dfs['ordinal_date'] = pd.to_datetime(dfs['datetime']).map(datetime.datetime.toordinal)
         dfs['ordinal_time'] = dfs.apply(lambda row: self.ordinalTimer(row['time']),axis=1)
@@ -859,6 +863,10 @@ class file_finder:
         new_filename = 'init'
         while current_date <= end_date:
             filename = current_date.strftime(self.file_timestamp_format)
+            # if the filename in current loop is the same as the one
+            # generated in previous loop, it means there's no timestamp
+            # in the filename, assumdely there's only one file that
+            # needs to be read.
             if filename == new_filename:
                 return [filename]
             filenames.append(filename)
