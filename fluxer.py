@@ -1472,16 +1472,17 @@ def push_ac(inifile):
                                    timestamps_values.end_timestamp
                                     )
 
-    air_pressure_files = file_finder(air_pressure_dict,
-                                   int(defaults_dict.get('airdatatimestep')),
-                                   timestamps_values.start_timestamp,
-                                   timestamps_values.end_timestamp
-                                     )
-    air_temperature_files = file_finder(air_temperature_dict,
-                                   int(defaults_dict.get('airdatatimestep')),
-                                   timestamps_values.start_timestamp,
-                                   timestamps_values.end_timestamp
-                                     )
+    if get_temp_and_pressure_from_file == 1:
+        air_pressure_files = file_finder(air_pressure_dict,
+                                       int(defaults_dict.get('airdatatimestep')),
+                                       timestamps_values.start_timestamp,
+                                       timestamps_values.end_timestamp
+                                         )
+        air_temperature_files = file_finder(air_temperature_dict,
+                                       int(defaults_dict.get('airdatatimestep')),
+                                       timestamps_values.start_timestamp,
+                                       timestamps_values.end_timestamp
+                                         )
 
     chamber_cycle_df = chamber_cycle(measurement_dict.get('file_timestamp_format'),
                                      defaults_dict.get('chamber_cycle_file'),
