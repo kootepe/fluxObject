@@ -601,6 +601,7 @@ class aux_data_reader:
         timestamp_format = dict.get('timestamp_format')
         columns = [int(dict.get('timestamp_column')), int(dict.get('measurement_column'))]
         names = [dict.get('timestamp_column_name'), dict.get('measurement_column_name')]
+        # dtypes needs to passed to pandas as a dict
         dtypes = {dict.get('timestamp_column_name'): dict.get('timestamp_column_dtype'), dict.get('measurement_column_name'): dict.get('measurement_column_dtype')}
         return path, delimiter, skiprows, timestamp_format, columns, names, dtypes
 
