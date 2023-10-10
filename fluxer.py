@@ -318,7 +318,7 @@ class calculated_data:
             # ch4 measurement is in ppb, convert to ppm
             conv = 1000
 
-        flux = round((slope / conv) * (60 / 1000000) * (h / 100) * ((m * p) / (r* t)) * 1000, 7)
+        flux = round((slope / conv) * (60 / 1000000) * (h / 100) * ((m * p) / (r * t)) * 1000, 7)
 
         return flux
 
