@@ -1,5 +1,6 @@
 import os
 import re
+import functools
 
 import sys
 import logging
@@ -1361,6 +1362,7 @@ def timer(func):
     return wrapper_timer
 
 
+@timer
 def eddypro_push(inifile):
     """
     Pipeline to handle reading eddypro .zip files, reading the flux
@@ -1397,6 +1399,7 @@ def eddypro_push(inifile):
     pusher(data.data, influxdb_dict)
 
 
+@timer
 def csv_push(inifile):
     """
     Reads .csv files and pushes them to influxdb
@@ -1432,6 +1435,7 @@ def csv_push(inifile):
     #pusher(data.data, influxdb_dict)
 
 
+@timer
 def push_ac(inifile):
     """
     Function to handle flux calculation and influx pushing
@@ -1542,13 +1546,10 @@ if __name__=="__main__":
     inifile = sys.argv[1]
     mode = sys.argv[2]
     if mode == 'ac':
-        @timer
         push_ac(inifile)
     if mode == 'man':
         sys.exit(0)
     if mode == 'csv':
-        @timer
         csv_push(inifile)
     if mode == 'eddypro':
-        @timer
         eddypro_push(inifile)
