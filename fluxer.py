@@ -118,7 +118,8 @@ class pusher:
             if check == True:
                 return tag_columns
             else:
-                logging.warning("Columns labeled for tagging don't exist in dataframe, exiting")
+                logging.info("Columns labeled for tagging don't exist in dataframe")
+                logging.warning("EXITING")
                 sys.exit(0)
 
 
@@ -1036,8 +1037,9 @@ class get_start_and_end_time:
         """
         files = list(Path(self.path).rglob(f'*{self.file_extension}*'))
         if not files:
-            print(f'No files found in {self.path}')
-            return None
+            logging.info(f'No files found in {self.path}')
+            logging.warning('EXITING')
+            sys.exit(0)
 
         # linux only
         #newest_file = str(max([f for f in files], key=lambda item: item.stat().st_ctime))
