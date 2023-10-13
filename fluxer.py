@@ -1519,10 +1519,11 @@ def push_ac(inifile):
     # data dropped
     filter_tuple = filtered_measurement.clean_filter_tuple
 
-    air_temperature_df = filterer(filter_tuple,
-                                  air_temperature_df.aux_data_df)
-    air_pressure_df = filterer(filter_tuple,
-                                  air_pressure_df.aux_data_df)
+    if get_temp_and_pressure_from_file == 1:
+        air_temperature_df = filterer(filter_tuple,
+                                      air_temperature_df.aux_data_df)
+        air_pressure_df = filterer(filter_tuple,
+                                      air_pressure_df.aux_data_df)
 
     snowdepth_df = snowdepth_parser(defaults_dict.get('snowdepth_measurement'),)
 
