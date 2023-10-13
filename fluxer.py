@@ -1363,7 +1363,7 @@ def timer(func):
         value = func(*args, **kwargs)
         stop = timeit.default_timer()
         execution_time = stop - start
-        logging.info(f"{func.__name__} executed in +{str(execution_time)}.")
+        logging.info(f"{func.__name__} executed in {str(round(execution_time,3))}s.")
         return value
     return wrapper_timer
 
