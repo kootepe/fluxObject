@@ -256,7 +256,7 @@ class calculated_data:
             #print(f'{df = }')
             ordinal_time = dfa['ordinal_datetime']
             measurement = dfa[measurement_name]
-            dfa[f'{measurement_name}_slope'] = np.polyfit(ordinal_time, measurement, 1).item(0) / (24*3600)
+            dfa[f'{measurement_name}_slope'] = np.polyfit(ordinal_time, measurement, 1).item(0) / 86400
             if dfa.ch4.isnull().values.any():
                 logging.warning(f'Non-numeric values present from {dfa.index[0]} to {dfa.index[-1]}')
             dfa[f'{measurement_name}_pearsons_r'] = abs(np.corrcoef(ordinal_time, measurement).item(1))
@@ -293,7 +293,7 @@ class calculated_data:
             temperature = df['air_temperature'].mean()
 
         # from mm to m
-        length = self.chamberlength * 0.001
+        length = self.chamber_length * 0.001
         width = self.chamber_width * 0.001
         height = (self.chamber_height * 0.001) - df['snowdepth']
 
@@ -304,7 +304,7 @@ class calculated_data:
         # value to convert ppb to ppm etc.
         conv = 1
         # molar mass of co2. C mass 12 and O mass 16
-        m = 44
+        m = 12 + 16 + 16
         # temperature in K
         t = 273.15 + temperature
         # HPa to Pa
@@ -509,8 +509,9 @@ class filterer:
             # drop all measurements that have any error codes
             if 'error_code' in df.columns:
                 if df['error_code'].sum() != 0:
-                    logging.info(f'Measuring errors between {date[0]} and {date[1]}, dropping measurement.')
-                    logging.info(f'Error codes found {df["error_code"].unique()}')
+                    errors = ', '.join([str(x) for x in df["error_code"].unique()])
+                    #errors = ', '.join(str(df["error_code"].unique())
+                    logging.info(f'Measuring errors {errors} between {date[0]} and {date[1]}, dropping measurement.')
                     dirty_data.append(df)
                     dirty_timestamps.append(date)
                     continue
@@ -722,12 +723,12 @@ class measurement_reader:
         # column
         dfs['datetime'] = pd.to_datetime(dfs['date'].apply(str)+' '+dfs['time'], format = '%Y-%m-%d %H:%M:%S')
         dfs['ordinal_date'] = pd.to_datetime(dfs['datetime']).map(datetime.datetime.toordinal)
-        dfs['ordinal_time'] = dfs.apply(lambda row: self.ordinalTimer(row['time']),axis=1)
+        dfs['ordinal_time'] = dfs.apply(lambda row: self.ordinal_timer(row['time']),axis=1)
         dfs['ordinal_datetime'] = dfs['ordinal_time'] + dfs['ordinal_date']
         dfs.set_index('datetime', inplace=True)
         return dfs
 
-    def ordinalTimer(self, time):
+    def ordinal_timer(self, time):
         """
         Helper function to calculate ordinal time from HH:MM:SS
 
