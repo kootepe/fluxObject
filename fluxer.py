@@ -862,10 +862,10 @@ class file_finder:
     match_files
         Checks that all of the generated filenames can be found
     """
-    def __init__(self, measurement_dict, airdatatimestep, start_timestamp, end_timestamp):
+    def __init__(self, measurement_dict, file_timestep, start_timestamp, end_timestamp):
         self.path = measurement_dict.get('path')
         self.file_timestamp_format = measurement_dict.get('file_timestamp_format')
-        self.file_timestep = airdatatimestep
+        self.file_timestep = file_timestep
         self.start_timestamp = start_timestamp
         self.end_timestamp = end_timestamp
         self.scan_or_generate = int(measurement_dict.get('scan_or_generate'))
@@ -1396,7 +1396,7 @@ def eddypro_push(inifile):
                             )
 
     measurement_files = file_finder(measurement_dict,
-                                   int(defaults_dict.get('airdatatimestep')),
+                                   int(defaults_dict.get('file_timestep')),
                                    timestamps_values.start_timestamp,
                                    timestamps_values.end_timestamp
                                     )
@@ -1473,19 +1473,19 @@ def push_ac(inifile):
                             )
 
     measurement_files = file_finder(measurement_dict,
-                                   int(defaults_dict.get('airdatatimestep')),
+                                   int(defaults_dict.get('file_timestep')),
                                    timestamps_values.start_timestamp,
                                    timestamps_values.end_timestamp
                                     )
 
     if get_temp_and_pressure_from_file == 1:
         air_pressure_files = file_finder(air_pressure_dict,
-                                       int(defaults_dict.get('airdatatimestep')),
+                                       int(defaults_dict.get('file_timestep')),
                                        timestamps_values.start_timestamp,
                                        timestamps_values.end_timestamp
                                          )
         air_temperature_files = file_finder(air_temperature_dict,
-                                       int(defaults_dict.get('airdatatimestep')),
+                                       int(defaults_dict.get('file_timestep')),
                                        timestamps_values.start_timestamp,
                                        timestamps_values.end_timestamp
                                          )
