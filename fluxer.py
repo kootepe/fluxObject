@@ -640,7 +640,10 @@ class aux_data_reader:
             df['datetime'] = pd.to_datetime(df['datetime'], format = timestamp_format)
             df.set_index('datetime', inplace = True)
             tmp.append(df)
-        dfs = pd.concat(tmp)
+        try:
+            dfs = pd.concat(tmp)
+        except ValueError:
+            logging.info("None of the auxiliary data is in the same time range as gas measurement data.")
         return dfs
 
 
