@@ -1605,9 +1605,10 @@ def man_push(inifile):
                                  float(defaults_dict.get('default_temperature'))
                                       )
     (ready_data.upload_ready_data)
+    ready_data.upload_ready_data.to_csv('/home/eerokos/objectFlux/man_data_2023.csv')
 
 @timer
-def push_ac(inifile):
+def ac_push(inifile):
     """
     Function to handle flux calculation and influx pushing
 
@@ -1711,15 +1712,15 @@ def push_ac(inifile):
                                  float(defaults_dict.get('default_pressure')),
                                  float(defaults_dict.get('default_temperature'))
                                       )
-    print(ready_data.upload_ready_data.head())
-    pusher(ready_data.upload_ready_data, influxdb_dict)
+    ready_data.upload_ready_data.to_csv('/home/eerokos/objectFlux/AC_data_2023.csv')
+    #pusher(ready_data.upload_ready_data, influxdb_dict)
 
 
 if __name__=="__main__":
     inifile = sys.argv[1]
     mode = sys.argv[2]
     if mode == 'ac':
-        push_ac(inifile)
+        ac_push(inifile)
     if mode == 'man':
         man_push(inifile)
     if mode == 'csv':
