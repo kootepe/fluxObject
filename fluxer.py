@@ -1357,6 +1357,46 @@ class csv_reader:
         dfs = pd.concat(tmp)
         return dfs
 
+class read_manual_measurement_timestamps:
+    def __init__(self, measurement_dict, measurement_files, measurement_time_dict):
+        self.measurement_dict = measurement_dict
+        self.measurement_path = self.measurement_dict.get('path')
+        self.chamber_close_time = int(measurement_time_dict.get('start_of_measurement'))
+        self.chamber_open_time = int(measurement_time_dict.get('end_of_measurement'))
+        self.measurement_end_time = int(measurement_time_dict.get('end_of_cycle') )
+        self.measurement_files = measurement_files
+        self.filter_tuple, self.manual_measurement_df = self.create_filter_tuple()
+
+    def create_filter_tuple(self):
+        tmp = []
+        for f in self.measurement_files:
+            #with open(f) as f:
+            #    first_line = f.read_line()
+            #date = first_line
+            date = re.search('\d{6}', f)[0]
+            print(f)
+            df = pd.read_csv(Path(self.measurement_path) / f,
+                             skiprows = 10,
+                             names = ['chamber', 'start', 'notes', 'height'],
+                             dtype = {'chamber': 'int', 'start':'str', 'notes':'str', 'height':'float'}
+                             )
+            df['date'] = date
+            df['datetime'] = df['date'] + ' ' + df['start']
+            df['datetime'] = pd.to_datetime(df['datetime'], format = '%y%m%d %H%M')
+            # for the sake of consisteny, even though the manual
+            # measurement doesn't really have a closing time, the
+            # variable is named like this
+            df['start_time'] = df['datetime']
+            df['close_time'] = df['datetime'] + pd.to_timedelta(self.chamber_close_time, unit='S')
+            df['open_time'] = df['datetime'] + pd.to_timedelta(self.chamber_open_time, unit='S')
+            df['end_time'] = df['datetime'] + pd.to_timedelta(self.measurement_end_time, unit = 'S')
+            tmp.append(df)
+        dfs = pd.concat(tmp)
+        filter_tuple = list(zip(dfs['close_time'],
+                                dfs['open_time'] + datetime.timedelta(0,1),
+                                dfs['chamber']))
+        return filter_tuple, dfs
+
 
 def timer(func):
     """Decorator for printing execution time of function."""
@@ -1443,6 +1483,116 @@ def csv_push(inifile):
     print(data.data)
     #pusher(data.data, influxdb_dict)
 
+@timer
+def man_push(inifile):
+    """
+    Function to handle flux calculation and influx pushing
+
+    args:
+    ---
+    inifile -- str
+        path to the .ini file
+
+    returns:
+    ---
+
+    """
+    config = configparser.ConfigParser()
+    config.read(inifile)
+
+    defaults_dict = dict(config.items('defaults'))
+    measurement_time_dict = dict(config.items('chamber_start_stop'))
+    influxdb_dict = dict(config.items('influxDB'))
+    air_pressure_dict = dict(config.items('air_pressure_data'))
+    air_temperature_dict = dict(config.items('air_temperature_data'))
+    measuring_chamber_dict = dict(config.items('measuring_chamber'))
+    measurement_dict = dict(config.items('measurement_data'))
+    get_temp_and_pressure_from_file = int(defaults_dict.get('get_temp_and_pressure_from_file'))
+    manual_measurement_time_data_dict = dict(config.items('manual_measurement_time_data'))
+
+    timestamps_values = get_start_and_end_time(influxdb_dict,
+                          measurement_dict,
+                          defaults_dict.get('season_start')
+                            )
+
+    measurement_files = file_finder(measurement_dict,
+                                   int(defaults_dict.get('file_timestep')),
+                                   timestamps_values.start_timestamp,
+                                   timestamps_values.end_timestamp
+                                    )
+    measurement_times_files = file_finder(manual_measurement_time_data_dict,
+                                          int(defaults_dict.get('file_timestep')),
+                                          timestamps_values.start_timestamp,
+                                          timestamps_values.end_timestamp)
+    print(measurement_files.measurement_files)
+
+    if get_temp_and_pressure_from_file == 1:
+        air_pressure_files = file_finder(air_pressure_dict,
+                                       int(defaults_dict.get('file_timestep')),
+                                       timestamps_values.start_timestamp,
+                                       timestamps_values.end_timestamp
+                                         )
+        air_temperature_files = file_finder(air_temperature_dict,
+                                       int(defaults_dict.get('file_timestep')),
+                                       timestamps_values.start_timestamp,
+                                       timestamps_values.end_timestamp
+                                         )
+
+    manual_measurement_df = read_manual_measurement_timestamps(manual_measurement_time_data_dict,
+                                                               measurement_times_files.measurement_files,
+                                                               measurement_time_dict
+                                                               )
+
+    # should filter tuple just be generated here?
+    measurement_df = measurement_reader(measurement_dict,
+                                        measurement_files.measurement_files)
+
+    if get_temp_and_pressure_from_file == 1:
+        air_temperature_df = aux_data_reader(air_temperature_dict,
+                                      air_pressure_files.measurement_files)
+
+        air_pressure_df = aux_data_reader(air_pressure_dict,
+                                      air_pressure_files.measurement_files)
+
+    # list with three values, start_time, end_time, chamber_num, flux is
+    # calculated from the data between start and end times
+    filter_tuple = manual_measurement_df.filter_tuple
+
+    filtered_measurement = filterer(filter_tuple,
+                                    measurement_df.measurement_df)
+
+    # same list as before but the timestamps with no data or invalid
+    # data dropped
+    filter_tuple = filtered_measurement.clean_filter_tuple
+
+    if get_temp_and_pressure_from_file == 1:
+        air_temperature_df = filterer(filter_tuple,
+                                      air_temperature_df.aux_data_df)
+        air_pressure_df = filterer(filter_tuple,
+                                      air_pressure_df.aux_data_df)
+
+    snowdepth_df = snowdepth_parser(defaults_dict.get('snowdepth_measurement'),)
+
+    if get_temp_and_pressure_from_file == 1:
+        merged_data = merge_data(filtered_measurement.filtered_data,
+                                 air_temperature_df.filtered_data)
+        merged_data = merge_data(merged_data.merged_data,
+                                 air_pressure_df.filtered_data)
+        merged_data = merge_data(merged_data.merged_data,
+                                 snowdepth_df.snowdepth_df)
+    else:
+        merged_data = merge_data(filtered_measurement.filtered_data,
+                                 snowdepth_df.snowdepth_df)
+
+    merged_data.merged_data['snowdepth'] = 0
+
+    ready_data = calculated_data(merged_data.merged_data,
+                                      measuring_chamber_dict, filter_tuple,
+                                      get_temp_and_pressure_from_file,
+                                 float(defaults_dict.get('default_pressure')),
+                                 float(defaults_dict.get('default_temperature'))
+                                      )
+    (ready_data.upload_ready_data)
 
 @timer
 def push_ac(inifile):
@@ -1559,7 +1709,7 @@ if __name__=="__main__":
     if mode == 'ac':
         push_ac(inifile)
     if mode == 'man':
-        sys.exit(0)
+        man_push(inifile)
     if mode == 'csv':
         csv_push(inifile)
     if mode == 'eddypro':
