@@ -1487,7 +1487,7 @@ def csv_push(inifile):
                             )
 
     measurement_files = file_finder(measurement_dict,
-                                   int(defaults_dict.get('airdatatimestep')),
+                                   int(defaults_dict.get('file_timestep')),
                                    timestamps_values.start_timestamp,
                                    timestamps_values.end_timestamp
                                     )
