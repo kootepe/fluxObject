@@ -1355,18 +1355,19 @@ class csv_reader:
             except FileNotFoundError:
                 logging.info(f'File not found at {Path(path) / f}, make sure the .ini is correct')
                 sys.exit()
-            # check if date and time are separate columns
-            check = any(item in date_and_time for item in names)
-            # if date and time are separate, combine them to datetime
-            if check == True:
-                df['datetime'] = pd.to_datetime(df['date'].apply(str)+' '+df['time'], format = timestamp_format)
-            # if they are not separate, there should be a datetime column already
-            else:
-                df['datetime'] = pd.to_datetime(df['datetime'], format = timestamp_format)
-            df.set_index('datetime', inplace = True)
             tmp.append(df)
         dfs = pd.concat(tmp)
-        return dfs
+        # check if date and time are separate columns
+        check = any(item in date_and_time for item in names)
+        # if date and time are separate, combine them to datetime
+        if check == True:
+            dfs['datetime'] = pd.to_datetime(dfs['date'].apply(str)+' '+dfs['time'], format = timestamp_format)
+        # if they are not separate, there should be a datetime column already
+        else:
+            dfs['datetime'] = pd.to_datetime(dfs['datetime'], format = timestamp_format)
+        dfs.set_index('datetime', inplace = True)
+        return dfss
+
 
 class read_manual_measurement_timestamps:
     def __init__(self, measurement_dict, measurement_files, measurement_time_dict):
