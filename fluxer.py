@@ -419,13 +419,19 @@ class merge_data:
         bool
 
         """
+        if not df.index.is_monotonic_increasing:
+            df.sort_index(inplace = True)
+
         if not isinstance(df, pd.DataFrame):
+            logging.info('Not a dataframe.')
             return False
 
         if not isinstance(df.index, pd.DatetimeIndex):
+            logging.info('Index is not a datetimeindex.')
             return False
 
         if df.index.is_monotonic_decreasing:
+            logging.info('Datetimeindex goes backwards.')
             return False
 
         return df.index.is_monotonic_increasing
@@ -494,6 +500,7 @@ class filterer:
         # the loop below raises a false positive warning, disable it
         pd.options.mode.chained_assignment = None
         empty_count = 0
+        logging.info(f"Filtering data with columns:\n{list(data_to_filter.columns)}")
         for date in self.filter_tuple:
             #print(f'{date[0] = }')
             #print(f'{date[1] = }')
