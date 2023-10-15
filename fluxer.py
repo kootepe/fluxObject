@@ -1370,6 +1370,56 @@ class csv_reader:
 
 
 class read_manual_measurement_timestamps:
+    """
+    Class for creating manual measurement timestamps from the manual
+    measurement text files. Formatted as .csv files.
+    For the sake of consistency, measurement starting times are named
+    chamber_close and chamber_open even though that doesn't really
+    happen with manual measurement.
+
+    Manual measurement text file format:
+        filename: YYMMDD.txt
+            ----------------
+            Date,211019
+            Name,ek
+            Sky,cloudy
+            Temp,-1
+            Wind,no wind
+            Precipitation,none
+            ACSnowdepth,
+            FluxAvg,
+            AcFluxAvg,
+            Plot Number,Start Time,Notes,Chamber height
+            71,1014
+            67,1025
+            65,1034
+            ----------------
+
+    Attributes
+    ---
+    measurement_dict -- dict
+        Part of the .ini defining the measurement times
+    meaurement_path -- str
+        The path to the manual measurement time files
+    chamber_close_time -- int
+        Seconds since placing down the chamber
+    chamber_open_time -- int
+        Seconds since placing down the chamber
+    measurement_end_time -- int
+        manual measurement are 5 minutes
+    measurement_files -- list
+        List of the manual measurement time files
+    filter_tuple -- list of tuples
+        List of tuples generated from the measurement timestamps
+
+        [(chamber_close_time, chamber_open_time, chamber_num), ..., ]
+        [(YYYY-MM-DD HH:MM:SS, YYYY-MM-DD HH:MM:SS, chamberNum), ..., ]
+
+    manual_measurement_df -- pandas.dataframe
+
+    Methods
+    ---
+    """
     def __init__(self, measurement_dict, measurement_files, measurement_time_dict):
         self.measurement_dict = measurement_dict
         self.measurement_path = self.measurement_dict.get('path')
