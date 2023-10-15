@@ -631,6 +631,10 @@ class aux_data_reader:
 
         """
         path, delimiter, skiprows, timestamp_format, columns, names, dtypes = self.aux_data_ini_parser(ini_dict)
+        if os.path.exists(path):
+            pass
+        else:
+            sys.exit(f"Path {path} doesn't exist.\nIf you want to read auxiliary data, fix the path, if you want to use default pressure and temperature set get_temp_and_pressure_from_file to 0")
         tmp = []
         for f in self.files:
             try:
