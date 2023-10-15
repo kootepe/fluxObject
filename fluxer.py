@@ -818,14 +818,16 @@ class chamber_cycle:
             starting times and measurement ending times.
         """
         tmp = []
+        # loop through files, read them into a pandas dataframe and
+        # create timestamps
         for file in self.measurement_files:
             df = pd.read_csv(self.chamber_cycle_file,
                               names = ['time', 'chamber'])
             date = self.call_extract(os.path.splitext(file)[0])
             df['date'] = date
             df['datetime'] = pd.to_datetime(df['date'].astype(str)+' '+df['time'].astype(str))
-            df['open_time'] = df['datetime'] + pd.to_timedelta(self.chamber_measurement_start_sec, unit='S')
-            df['close_time'] = df['datetime'] + pd.to_timedelta(self.chamber_measurement_end_sec, unit='S')
+            df['close_time'] = df['datetime'] + pd.to_timedelta(self.chamber_measurement_start_sec, unit='S')
+            df['open_time'] = df['datetime'] + pd.to_timedelta(self.chamber_measurement_end_sec, unit='S')
             tmp.append(df)
         dfs = pd.concat(tmp)
         dfs.set_index('datetime', inplace=True)
@@ -1510,7 +1512,7 @@ def push_ac(inifile):
 
     # list with three values, start_time, end_time, chamber_num, flux is
     # calculated from the data between start and end times
-    filter_tuple = list(zip(chamber_cycle_df.chamber_cycle_df['open_time'],chamber_cycle_df.chamber_cycle_df['close_time'] + datetime.timedelta(0,1),chamber_cycle_df.chamber_cycle_df['chamber']))
+    filter_tuple = list(zip(chamber_cycle_df.chamber_cycle_df['close_time'],chamber_cycle_df.chamber_cycle_df['open_time'] + datetime.timedelta(0,1),chamber_cycle_df.chamber_cycle_df['chamber']))
 
     filtered_measurement = filterer(filter_tuple,
                                     measurement_df.measurement_df)
