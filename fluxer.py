@@ -729,6 +729,7 @@ class measurement_reader:
         dfs['ordinal_time'] = dfs.apply(lambda row: self.ordinal_timer(row['time']),axis=1)
         dfs['ordinal_datetime'] = dfs['ordinal_time'] + dfs['ordinal_date']
         dfs.set_index('datetime', inplace=True)
+        dfs.sort_index(inplace = True)
         return dfs
 
     def ordinal_timer(self, time):
