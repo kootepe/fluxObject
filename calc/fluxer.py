@@ -110,7 +110,7 @@ class pusher:
         check = any(item in tag_columns for item in measurement_columns)
         # if tag_colums length is 1 and the only item is an emoty string,
         # no tag_colums have been defined, return empty list
-        #if len(tag_columns) == 1 and tag_columns[0] == '':
+        # if len(tag_columns) == 1 and tag_columns[0] == '':
         if not tag_columns[0]:
             logging.warning('No tag columns defined')
             return []
@@ -317,8 +317,7 @@ class calculated_data:
             m = 12 + 4
             # ch4 measurement is in ppb, convert to ppm
             conv = 1000
-
-        flux = round((slope / conv) * (60 / 1000000) * (h / 100) * ((m * p) / (r * t)) * 1000, 7)
+        flux = round((slope / conv) * (60 / 1000000) * (h / 100) * ((m * p) / (r * t)) * 1000, 5)
 
         return flux
 
