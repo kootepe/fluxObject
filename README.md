@@ -14,7 +14,7 @@ The ini files will define where to read files, what files to read, what
 data to read in the files and the influxdb instances to push the data
 to.
 
-** examples for flux calculation ** <br>
+**examples for flux calculation** <br>
 [Breakdown of the .ini for automatic chamber measurements.](./AC_sample.ini)<br>
 [Breakdown of the .ini for manual chamber measurements.](./manual_sammple.ini)
 
