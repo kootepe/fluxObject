@@ -240,7 +240,7 @@ class calculated_data:
             same dataframe with additional slope, pearsons_r and
             flux columns
         """
-        tmp = []
+        measurement_list = []
         # following loop raises a false positive warning, disable it
         pd.options.mode.chained_assignment = None
         for date in self.filter_tuple:
@@ -248,19 +248,19 @@ class calculated_data:
             #print(f'{date[1] = }')
             start = df.index.searchsorted(date[0])
             end = df.index.searchsorted(date[1])
-            dfa = df.iloc[start:end]
-            if dfa.empty:
+            measurement_df = df.iloc[start:end]
+            if measurement_df.empty:
                 continue
             #print(f'{df = }')
-            ordinal_time = dfa['ordinal_datetime']
-            measurement = dfa[measurement_name]
-            dfa[f'{measurement_name}_slope'] = np.polyfit(ordinal_time, measurement, 1).item(0) / 86400
-            if dfa.ch4.isnull().values.any():
-                logging.warning(f'Non-numeric values present from {dfa.index[0]} to {dfa.index[-1]}')
-            dfa[f'{measurement_name}_pearsons_r'] = abs(np.corrcoef(ordinal_time, measurement).item(1))
-            dfa[f'{measurement_name}_flux'] = self.calculate_gas_flux(dfa, measurement_name)
-            tmp.append(dfa)
-        dfs = pd.concat(tmp)
+            ordinal_time = measurement_df['ordinal_datetime']
+            measurement = measurement_df[measurement_name]
+            measurement_df[f'{measurement_name}_slope'] = np.polyfit(ordinal_time, measurement, 1).item(0) / 86400
+            if measurement_df.ch4.isnull().values.any():
+                logging.warning(f'Non-numeric values present from {measurement_df.index[0]} to {measurement_df.index[-1]}')
+            measurement_df[f'{measurement_name}_pearsons_r'] = abs(np.corrcoef(ordinal_time, measurement).item(1))
+            measurement_df[f'{measurement_name}_flux'] = self.calculate_gas_flux(measurement_df, measurement_name)
+            tmp.append(measurement_df)
+        all_measurements_df = pd.concat(measurement_list)
         pd.options.mode.chained_assignment = 'warn'
         #pearsons_r = np.corrcoef(ordinal_time, measurement).item(1)
         #return slope, pearsons_r
