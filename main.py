@@ -1,27 +1,12 @@
-import os
-import re
-import functools
-
 import sys
+import functools
 import logging
 import datetime
 import configparser
 import timeit
-import glob
-import timeit
-import pandas as pd
-import numpy as np
-import zipfile as zf
-from zipfile import BadZipFile
-import influxdb_client as ifdb
-from pathlib import Path
 
-from influxdb_client import InfluxDBClient, Point, WriteOptions
-from influxdb_client.client.write_api import SYNCHRONOUS, PointSettings
 
 # modules from this repo
-from calc.filter import date_filter
-from calc.time_funcs import ordinal_timer
 from calc.fluxer import pusher, snowdepth_parser, calculated_data, merge_data, filterer, aux_data_reader, measurement_reader, chamber_cycle, file_finder, get_start_and_end_time, handle_eddypro, csv_reader, read_manual_measurement_timestamps
 
 
