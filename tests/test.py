@@ -1,7 +1,7 @@
 # test_with_unittest discover
-from calc.fluxer import ordinal_timer_test
 from calc.fluxer import measurement_reader
 from calc.fluxer import aux_data_reader
+from calc.time_funcs import ordinal_timer
 import configparser
 import numpy as np
 
@@ -13,14 +13,11 @@ def config_read(inifile):
     return config, aux_dict
 ini, aux_dict = config_read(inifile)
 
-def test_ordinal_timer_test():
-    time = "05:18:36"
-    assert ordinal_timer_test(time) == 0.22125
 
 def test_ordinal_timer():
     time = "05:18:36"
-    self = " self"
-    assert measurement_reader.ordinal_timer(self, time) == 0.22125
+    assert ordinal_timer(time) == 0.22125
+
 
 def test_aux_data_ini_parser():
     self = " self"
