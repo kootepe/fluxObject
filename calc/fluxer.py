@@ -20,8 +20,8 @@ from influxdb_client import InfluxDBClient, Point, WriteOptions
 from influxdb_client.client.write_api import SYNCHRONOUS, PointSettings
 
 # modules from this repo
-from filter import date_filter
-from time_funcs import ordinal_timer
+from calc.filter import date_filter
+from calc.time_funcs import ordinal_timer
 
 #define logging format
 logging.basicConfig(level=logging.INFO,
