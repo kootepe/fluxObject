@@ -1741,26 +1741,6 @@ def ac_push(inifile):
     ready_data.upload_ready_data.to_csv('/home/eerokos/objectFlux/AC_data_2023.csv')
     #pusher(ready_data.upload_ready_data, influxdb_dict)
 
-def ordinal_timer_test(time):
-    """
-    Helper function to calculate ordinal time from HH:MM:SS
-
-    args:
-    ---
-    time -- numpy.array
-        Array of HH:MM:SS string timestamps
-
-    returns:
-    ---
-    time -- numpy.array
-        Array of float timestamps
-    """
-    h,m,s = map(int, time.split(':'))
-    sec = 60
-    secondsInDay = 86400
-    time = (sec*(sec*h)+sec*m+s)/secondsInDay
-    return time
-
 
 if __name__=="__main__":
     inifile = sys.argv[1]
