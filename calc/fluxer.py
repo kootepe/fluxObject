@@ -21,6 +21,7 @@ from influxdb_client.client.write_api import SYNCHRONOUS, PointSettings
 
 # modules from this repo
 from filter import date_filter
+from time_funcs import ordinal_timer
 
 #define logging format
 logging.basicConfig(level=logging.INFO,
@@ -732,31 +733,12 @@ class measurement_reader:
         # column
         dfs['datetime'] = pd.to_datetime(dfs['date'].apply(str)+' '+dfs['time'], format = '%Y-%m-%d %H:%M:%S')
         dfs['ordinal_date'] = pd.to_datetime(dfs['datetime']).map(datetime.datetime.toordinal)
-        dfs['ordinal_time'] = dfs.apply(lambda row: self.ordinal_timer(row['time']),axis=1)
+        dfs['ordinal_time'] = dfs.apply(lambda row: ordinal_timer(row['time']),axis=1)
         dfs['ordinal_datetime'] = dfs['ordinal_time'] + dfs['ordinal_date']
         dfs.set_index('datetime', inplace=True)
         dfs.sort_index(inplace = True)
         return dfs
 
-    def ordinal_timer(self, time):
-        """
-        Helper function to calculate ordinal time from HH:MM:SS
-
-        args:
-        ---
-        time -- numpy.array
-            Array of HH:MM:SS string timestamps
-
-        returns:
-        ---
-        time -- numpy.array
-            Array of float timestamps
-        """
-        h,m,s = map(int, time.split(':'))
-        sec = 60
-        secondsInDay = 86400
-        time = (sec*(sec*h)+sec*m+s)/secondsInDay
-        return time
 
 
 class chamber_cycle:
