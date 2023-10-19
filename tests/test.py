@@ -1,6 +1,7 @@
 # test_with_unittest discover
 from calc.fluxer import measurement_reader
 from calc.fluxer import aux_data_reader
+from calc.fluxer import pusher
 from calc.time_funcs import ordinal_timer
 import configparser
 import numpy as np
@@ -10,8 +11,10 @@ def config_read(inifile):
     config = configparser.ConfigParser()
     config.read(inifile)
     aux_dict = dict(config.items('air_pressure_data'))
-    return config, aux_dict
-ini, aux_dict = config_read(inifile)
+    influx_dict = dict(config.items('influxDB'))
+    meas_dict = dict(config.items('measurement_data'))
+    return config, aux_dict, influx_dict, meas_dict
+ini, aux_dict, influx_dict, meas_dict = config_read(inifile)
 
 
 def test_ordinal_timer():
@@ -23,12 +26,16 @@ def test_aux_data_ini_parser():
     self = " self"
     assert aux_data_reader.aux_data_ini_parser(self, aux_dict) == ('./tests/', ',', 4, '%Y%m%d%H%M', [1, 3], ['datetime', 'air_pressure'], {'datetime':'str', 'air_pressure':'float'})
 
+# def test_pusher():
+#     influx = pusher(df, influx_dict)
+#     assert influx.influx_dict == influx_dict
+
 def test_measurement_reader():
-    config = configparser.ConfigParser()
-    config.read(inifile)
+    # config = configparser.ConfigParser()
+    # config.read(inifile)
     files = [ '210103.DAT' ]
-    mes_dict = dict(config.items('measurement_data'))
-    measurement = measurement_reader(mes_dict, files)
+    # mes_dict = dict(config.items('measurement_data'))
+    measurement = measurement_reader(meas_dict, files)
     measurement_cols = measurement.measurement_df.dtypes.to_dict()
     datatypes = { 'ordinal_date': np.dtype('int64'),
                  'ordinal_time': np.dtype('float64'),
