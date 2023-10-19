@@ -15,14 +15,13 @@ import zipfile as zf
 from zipfile import BadZipFile
 import influxdb_client as ifdb
 from pathlib import Path
-#from influxdb_client import InfluxDBClient, Point, WriteOptions
-#from influxdb_client.client.write_api import SYNCHRONOUS
 
-#import influxdb_client as ifdb
 from influxdb_client import InfluxDBClient, Point, WriteOptions
 from influxdb_client.client.write_api import SYNCHRONOUS, PointSettings
 
+# modules from this repo
 from filter import date_filter
+
 #define logging format
 logging.basicConfig(level=logging.INFO,
                         format='%(asctime)s.%(msecs)03d %(levelname)s:\t%(message)s',
