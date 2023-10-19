@@ -22,6 +22,7 @@ from pathlib import Path
 from influxdb_client import InfluxDBClient, Point, WriteOptions
 from influxdb_client.client.write_api import SYNCHRONOUS, PointSettings
 
+from filter import date_filter
 #define logging format
 logging.basicConfig(level=logging.INFO,
                         format='%(asctime)s.%(msecs)03d %(levelname)s:\t%(message)s',
