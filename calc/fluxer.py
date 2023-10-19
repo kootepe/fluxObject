@@ -246,9 +246,7 @@ class calculated_data:
         for date in self.filter_tuple:
             #print(f'{date[0] = }')
             #print(f'{date[1] = }')
-            start = df.index.searchsorted(date[0])
-            end = df.index.searchsorted(date[1])
-            measurement_df = df.iloc[start:end]
+            measurement_df = date_filter(df, date)
             if measurement_df.empty:
                 continue
             #print(f'{df = }')
@@ -336,9 +334,7 @@ class calculated_data:
         dfList = []
         #data = data[['ch4_flux', 'co2_flux', 'ch4_pearsons_r', 'co2_pearsons_r', 'chamber']]
         for date in self.filter_tuple:
-            start = data.index.searchsorted(date[0])
-            end = data.index.searchsorted(date[1])
-            dfa = data.iloc[start:end]
+            dfa = date_filter(data, date)
             dfList.append(dfa.iloc[:1])
         summary = pd.concat(dfList)
         return summary
@@ -502,9 +498,7 @@ class filterer:
         for date in self.filter_tuple:
             #print(f'{date[0] = }')
             #print(f'{date[1] = }')
-            start = data_to_filter.index.searchsorted(date[0])
-            end = data_to_filter.index.searchsorted(date[1])
-            df = data_to_filter.iloc[start:end]
+            df = date_filter(data_to_filter, date)
             # drop measurements with no data
             if df.empty:
                 logging.info(f'No data between {date[0]} and {date[1]}')
@@ -1656,7 +1650,6 @@ def man_push(inifile):
                                  float(defaults_dict.get('default_temperature'))
                                       )
     (ready_data.upload_ready_data)
-    ready_data.upload_ready_data.to_csv('/home/eerokos/objectFlux/man_data_2023.csv')
 
 @timer
 def ac_push(inifile):
