@@ -1416,8 +1416,8 @@ class read_manual_measurement_timestamps:
             print(f)
             df = pd.read_csv(Path(self.measurement_path) / f,
                              skiprows = 10,
-                             names = ['chamber', 'start', 'notes', 'height'],
-                             dtype = {'chamber': 'int', 'start':'str', 'notes':'str', 'height':'float'}
+                             names = ['chamber', 'start', 'notes', 'height', 'validity'],
+                             dtype = {'chamber': 'int', 'start':'str', 'notes':'str', 'height':'float', 'validity':'str'}
                              )
             df['date'] = date
             df['datetime'] = df['date'] + ' ' + df['start']
