@@ -1127,9 +1127,6 @@ class get_start_and_end_time:
             lastTs = tables[0].records[0]['_time'].replace(tzinfo=None)
             logging.info("Got last timestamp from influxdb.")
         #lastTs = lastTs.strftime('%Y%m%d')
-        except NewConnectionError:
-            logging.warning('No internet, stopping script')
-            sys.exit(0)
         except IndexError:
             #if there's no timestamp, use some default one
             logging.warning("Couldn't get timestamp from influxdb, using season_start from .ini")
