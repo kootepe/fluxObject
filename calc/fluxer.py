@@ -777,6 +777,7 @@ class chamber_cycle:
         self.chamber_measurement_end_sec = chamber_measurement_end_sec
         self.measurement_files = measurement_files
         self.chamber_cycle_df = self.create_chamber_cycle()
+        self.filter_tuple = self.create_filter_tuple()
 
     def call_extract(self, file):
         """
@@ -822,6 +823,9 @@ class chamber_cycle:
         dfs.set_index('datetime', inplace=True)
         return dfs
 
+    def create_filter_tuple(self):
+           filter_tuple = list(zip(self.chamber_cycle_df['close_time'],self.chamber_cycle_df['open_time'] + datetime.timedelta(0,1),self.chamber_cycle_df['chamber']))
+           return filter_tuple
 
 class file_finder:
     """
@@ -1702,7 +1706,7 @@ def ac_push(inifile):
 
     # list with three values, start_time, end_time, chamber_num, flux is
     # calculated from the data between start and end times
-    filter_tuple = list(zip(chamber_cycle_df.chamber_cycle_df['close_time'],chamber_cycle_df.chamber_cycle_df['open_time'] + datetime.timedelta(0,1),chamber_cycle_df.chamber_cycle_df['chamber']))
+    filter_tuple = chamber_cycle_df.filter_tuple
 
     filtered_measurement = filterer(filter_tuple,
                                     measurement_df.measurement_df)

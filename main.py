@@ -275,7 +275,7 @@ def ac_push(inifile):
 
     # list with three values, start_time, end_time, chamber_num, flux is
     # calculated from the data between start and end times
-    filter_tuple = list(zip(chamber_cycle_df.chamber_cycle_df['close_time'],chamber_cycle_df.chamber_cycle_df['open_time'] + datetime.timedelta(0,1),chamber_cycle_df.chamber_cycle_df['chamber']))
+    filter_tuple = chamber_cycle_df.filter_tuple
 
     filtered_measurement = filterer(filter_tuple,
                                     measurement_df.measurement_df)
