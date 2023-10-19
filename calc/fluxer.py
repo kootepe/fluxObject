@@ -186,7 +186,7 @@ class calculated_data:
         Width of the measurement chamber, for volume, in mm
     chamber_length -- int
         Length of the measurement chamber, for volume, in mm
-    filter_tupe -- tuple
+    filter_tuple -- tuple
         (start_time, end_time, chamber_num), measurement is calculated
         from values between these timestamps,
     default_pressure -- int
@@ -826,6 +826,7 @@ class chamber_cycle:
     def create_filter_tuple(self):
            filter_tuple = list(zip(self.chamber_cycle_df['close_time'],self.chamber_cycle_df['open_time'] + datetime.timedelta(0,1),self.chamber_cycle_df['chamber']))
            return filter_tuple
+
 
 class file_finder:
     """

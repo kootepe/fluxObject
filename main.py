@@ -311,7 +311,7 @@ def ac_push(inifile):
                                  float(defaults_dict.get('default_pressure')),
                                  float(defaults_dict.get('default_temperature'))
                                       )
-    ready_data.upload_ready_data.to_csv('/home/eerokos/objectFlux/AC_data_2023.csv')
+    ready_data.upload_ready_data.to_csv('./AC_data_2023.csv')
     #pusher(ready_data.upload_ready_data, influxdb_dict)
 
 
