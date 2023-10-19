@@ -1,1 +1,11 @@
 __pycache__
+*.log
+*.out
+*.fls
+*.pdf
+*.gz
+*.tex
+*.fdb_latexmk
+*.csv
+.jukit
+aux
