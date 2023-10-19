@@ -334,7 +334,7 @@ class calculated_data:
 
         """
         dfList = []
-        data = data[['ch4_flux', 'co2_flux', 'ch4_pearsons_r', 'co2_pearsons_r', 'chamber']]
+        #data = data[['ch4_flux', 'co2_flux', 'ch4_pearsons_r', 'co2_pearsons_r', 'chamber']]
         for date in self.filter_tuple:
             start = data.index.searchsorted(date[0])
             end = data.index.searchsorted(date[1])
@@ -385,6 +385,7 @@ class merge_data:
         df -- pandas.dataframe
             dataframe with aux_data merged into the main gas measurement dataframe
         """
+        measurement_df.to_csv('whatswrong.csv')
         if self.is_dataframe_sorted_by_datetime_index(measurement_df) and self.is_dataframe_sorted_by_datetime_index(aux_df):
             df = pd.merge_asof(measurement_df,
                                     aux_df,
@@ -651,7 +652,9 @@ class aux_data_reader:
         try:
             dfs = pd.concat(tmp)
         except ValueError:
+            print(path)
             logging.info("None of the auxiliary data is in the same time range as gas measurement data.")
+            sys.exit(0)
         return dfs
 
 
@@ -710,6 +713,7 @@ class measurement_reader:
         tmp = []
         for f in self.measurement_files:
             try:
+                print(Path(path) / f)
                 df = pd.read_csv(Path(path) / f,
                                  skiprows = skiprows,
                                  delimiter = '\t',
@@ -1504,7 +1508,7 @@ def eddypro_push(inifile):
                                     )
     data = handle_eddypro(measurement_files.measurement_files, measurement_dict)
     print(data.data)
-    pusher(data.data, influxdb_dict)
+    #pusher(data.data, influxdb_dict)
 
 
 @timer
@@ -1540,7 +1544,7 @@ def csv_push(inifile):
                                     )
     data = csv_reader(measurement_files.measurement_files, measurement_dict)
     print(data.data)
-    #pusher(data.data, influxdb_dict)
+    ##pusher(data.data, influxdb_dict)
 
 @timer
 def man_push(inifile):
@@ -1761,6 +1765,26 @@ def ac_push(inifile):
                                       )
     ready_data.upload_ready_data.to_csv('/home/eerokos/objectFlux/AC_data_2023.csv')
     #pusher(ready_data.upload_ready_data, influxdb_dict)
+
+def ordinal_timer_test(time):
+    """
+    Helper function to calculate ordinal time from HH:MM:SS
+
+    args:
+    ---
+    time -- numpy.array
+        Array of HH:MM:SS string timestamps
+
+    returns:
+    ---
+    time -- numpy.array
+        Array of float timestamps
+    """
+    h,m,s = map(int, time.split(':'))
+    sec = 60
+    secondsInDay = 86400
+    time = (sec*(sec*h)+sec*m+s)/secondsInDay
+    return time
 
 
 if __name__=="__main__":
