@@ -259,12 +259,12 @@ class calculated_data:
                 logging.warning(f'Non-numeric values present from {measurement_df.index[0]} to {measurement_df.index[-1]}')
             measurement_df[f'{measurement_name}_pearsons_r'] = abs(np.corrcoef(ordinal_time, measurement).item(1))
             measurement_df[f'{measurement_name}_flux'] = self.calculate_gas_flux(measurement_df, measurement_name)
-            tmp.append(measurement_df)
+            measurement_list.append(measurement_df)
         all_measurements_df = pd.concat(measurement_list)
         pd.options.mode.chained_assignment = 'warn'
         #pearsons_r = np.corrcoef(ordinal_time, measurement).item(1)
         #return slope, pearsons_r
-        return dfs
+        return all_measurements_df
 
     def calculate_gas_flux(self, df, measurement_name):
         """
