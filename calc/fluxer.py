@@ -20,7 +20,7 @@ from influxdb_client import InfluxDBClient, Point, WriteOptions
 from influxdb_client.client.write_api import SYNCHRONOUS, PointSettings
 
 # modules from this repo
-from calc.filter import date_filter
+from calc.filter import date_filter, create_filter_tuple
 from calc.time_funcs import ordinal_timer
 
 #define logging format
@@ -777,7 +777,7 @@ class chamber_cycle:
         self.chamber_measurement_end_sec = chamber_measurement_end_sec
         self.measurement_files = measurement_files
         self.chamber_cycle_df = self.create_chamber_cycle()
-        self.filter_tuple = self.create_filter_tuple()
+        self.filter_tuple = create_filter_tuple(self.chamber_cycle_df)
 
     def call_extract(self, file):
         """
@@ -822,10 +822,6 @@ class chamber_cycle:
         dfs = pd.concat(tmp)
         dfs.set_index('datetime', inplace=True)
         return dfs
-
-    def create_filter_tuple(self):
-           filter_tuple = list(zip(self.chamber_cycle_df['close_time'],self.chamber_cycle_df['open_time'] + datetime.timedelta(0,1),self.chamber_cycle_df['chamber']))
-           return filter_tuple
 
 
 class file_finder:
@@ -1409,9 +1405,10 @@ class read_manual_measurement_timestamps:
         self.chamber_open_time = int(measurement_time_dict.get('end_of_measurement'))
         self.measurement_end_time = int(measurement_time_dict.get('end_of_cycle') )
         self.measurement_files = measurement_files
-        self.filter_tuple, self.manual_measurement_df = self.create_filter_tuple()
+        self.manual_measurement_df = self.read_manual_measurement_file()
+        self.filter_tuple = create_filter_tuple(self.manual_measurement_df)
 
-    def create_filter_tuple(self):
+    def read_manual_measurement_file(self):
         tmp = []
         for f in self.measurement_files:
             #with open(f) as f:
@@ -1436,10 +1433,7 @@ class read_manual_measurement_timestamps:
             df['end_time'] = df['datetime'] + pd.to_timedelta(self.measurement_end_time, unit = 'S')
             tmp.append(df)
         dfs = pd.concat(tmp)
-        filter_tuple = list(zip(dfs['close_time'],
-                                dfs['open_time'] + datetime.timedelta(0,1),
-                                dfs['chamber']))
-        return filter_tuple, dfs
+        return dfs
 
 
 def timer(func):
