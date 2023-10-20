@@ -7,7 +7,6 @@ import logging
 import datetime
 import configparser
 import timeit
-import glob
 import timeit
 import pandas as pd
 import numpy as np
@@ -16,8 +15,6 @@ from zipfile import BadZipFile
 import influxdb_client as ifdb
 from pathlib import Path
 
-from influxdb_client import InfluxDBClient, Point, WriteOptions
-from influxdb_client.client.write_api import SYNCHRONOUS, PointSettings
 
 # modules from this repo
 from calc.filter import date_filter, create_filter_tuple
@@ -78,7 +75,6 @@ class pusher:
 
         """
         #grouped = df.groupby('chamber')
-        point_settings = PointSettings()
         with ifdb.InfluxDBClient(url = self.influxdb_dict.get('url'),
                                  token = self.influxdb_dict.get('token'),
                                  org = self.influxdb_dict.get('organization'),
@@ -1752,3 +1748,5 @@ if __name__=="__main__":
         csv_push(inifile)
     if mode == 'eddypro':
         eddypro_push(inifile)
+    else:
+        logging.info('Incorrect mode')
