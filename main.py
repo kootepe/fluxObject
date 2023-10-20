@@ -1,7 +1,6 @@
 import sys
 import functools
 import logging
-import datetime
 import configparser
 import timeit
 
@@ -56,7 +55,6 @@ def eddypro_push(inifile):
                                    timestamps_values.end_timestamp
                                     )
     data = handle_eddypro(measurement_files.measurement_files, measurement_dict)
-    print(data.data)
     #pusher(data.data, influxdb_dict)
 
 
@@ -161,10 +159,10 @@ def man_push(inifile):
 
     if get_temp_and_pressure_from_file == 1:
         air_temperature_df = aux_data_reader(air_temperature_dict,
-                                      air_pressure_files.measurement_files)
+                                      air_temperature_files.measurement_files)
 
         air_pressure_df = aux_data_reader(air_pressure_dict,
-                                      air_pressure_files.measurement_files)
+                                          air_pressure_files.measurement_files)
 
     # list with three values, start_time, end_time, chamber_num, flux is
     # calculated from the data between start and end times
@@ -268,7 +266,7 @@ def ac_push(inifile):
 
     if get_temp_and_pressure_from_file == 1:
         air_temperature_df = aux_data_reader(air_temperature_dict,
-                                      air_pressure_files.measurement_files)
+                                      air_temperature_files.measurement_files)
 
         air_pressure_df = aux_data_reader(air_pressure_dict,
                                       air_pressure_files.measurement_files)
