@@ -326,3 +326,5 @@ if __name__=="__main__":
         csv_push(inifile)
     if mode == 'eddypro':
         eddypro_push(inifile)
+    else:
+        logging.info('Incorrect mode')
