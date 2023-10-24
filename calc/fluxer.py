@@ -18,7 +18,8 @@ from influxdb_client.client.write_api import SYNCHRONOUS
 
 # modules from this repo
 from calc.filter import date_filter, create_filter_tuple
-from calc.time_funcs import ordinal_timer
+from calc.time_funcs import ordinal_timer, strftime_to_regex, check_timestamp
+from calc.file_tools import get_newest
 
 # define logging format
 logging.basicConfig(level=logging.INFO,
@@ -51,12 +52,6 @@ class pusher:
     """
 
     def __init__(self, data, influxdb_dict):
-        """
-        args:
-        ---
-        data -- pandas dataframe
-            influxdb_dict -- dictionary from the .ini file with necessary info about influxdb connection
-        """
         self.influxdb_dict = influxdb_dict
         self.data = data
         logging.info('Pushing data to DB')
@@ -988,69 +983,17 @@ class get_start_and_end_time:
         self.path = measurement_dict.get('path')
         self.file_extension = measurement_dict.get('file_extension')
         self.file_timestamp_format = measurement_dict.get('file_timestamp_format')
-        self.start_timestamp = self.check_last_db_timestamp()
-        self.end_timestamp = self.extract_date(self.get_newest())
-        self.check_timestamp()
+        self.start_timestamp = self.get_last_timestamp()
+        self.end_timestamp = self.extract_date(get_newest(self.path,
+                                                          self.file_extension))
 
-    def strftime_to_regex(self):
-        """
-        Changes strftime timestamp to regex format
-
-        args:
-        ---
-
-        returns:
-        ---
-        file_timestamp_format in regex
-
-        """
-        conversion_dict = {
-            "%a": r"(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun)",
-            "%A": r"(?:Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)",
-            "%b": r"(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)",
-            "%B": r"(?:January|February|March|April|May|June|July|August|September|October|November|December)",
-            "%d": r"(?P<day>\d{2})",
-            "%H": r"(?P<hour>\d{2})",
-            "%I": r"(?P<hour>\d{2})",
-            "%m": r"(?P<month>\d{2})",
-            "%M": r"(?P<minute>\d{2})",
-            "%p": r"(?:AM|PM)",
-            "%S": r"(?P<second>\d{2})",
-            "%Y": r"(?P<year>\d{4})",
-            "%y": r"(?P<year>\d{2})",
-            "%%": r"%",
-        }
-
-        regex_pattern = re.sub(
-            r"%[aAbBdHIImMpPSYy%]", lambda m: conversion_dict.get(m.group(), m.group()), self.file_timestamp_format
-        )
-
-        return regex_pattern
-
-    def get_newest(self):
-        """
-        Fetchest name of the newest file in a folder
-
-        args:
-        ---
-
-        returns:
-        ---
-        newest_file -- str
-            Name of the newest file in a folder
-
-        """
-        files = list(Path(self.path).rglob(f'*{self.file_extension}*'))
-        if not files:
-            logging.info(f'No files found in {self.path}')
-            logging.warning('EXITING')
-            sys.exit(0)
-
-        # linux only
-        # newest_file = str(max([f for f in files], key=lambda item: item.stat().st_ctime))
-        # cross platform
-        newest_file = str(max(files, key=os.path.getmtime))
-        return newest_file
+        if check_timestamp(self.start_timestamp, self.end_timestamp):
+                    logging.info("Timestamp in db is older than the oldest file"
+                                 " timestamp, all data is already in db")
+                    logging.info('Exiting.')
+                    sys.exit(0)
+        else:
+            pass
 
     def extract_date(self, datestring):
         """
@@ -1071,17 +1014,16 @@ class get_start_and_end_time:
         # except AttributeError:
         #    print('Files are found in folder but no matching file found, is the format of the timestamp correct?')
         #    return None
-        if self.file_timestamp_format == get_start_and_end_time.strftime_to_regex(self):
+        if self.file_timestamp_format == strftime_to_regex(self.file_timestamp_format):
             logging.info('No strftime formatting in filename, returning current date')
-            print(datetime.date.today())
             return datetime.datetime.today()
-        date = re.search(get_start_and_end_time.strftime_to_regex(self), datestring).group(0)
+        date = re.search(strftime_to_regex(self.file_timestamp_format), datestring).group(0)
         # class chamber_cycle calls this method and using an instance
         # variable here might cause issues if the timestamp formats
         # should be different
         return datetime.datetime.strptime(date, self.file_timestamp_format)
 
-    def check_last_db_timestamp(self):
+    def get_last_timestamp(self):
         """
         Extract latest date from influxDB
 
@@ -1093,51 +1035,15 @@ class get_start_and_end_time:
         lastTs -- datetime.datetime
             Either the last timestamp in influxdb or season_start from .ini
         """
-        # inflxudb query to get the timestamp of the last input
-        query = f'from(bucket: "{self.influxdb_dict.get("bucket")}")' \
-          '|> range(start: 0, stop: now())' \
-          f'|> filter(fn: (r) => r["_measurement"] == "{self.influxdb_dict.get("measurement_name")}")' \
-          '|> keep(columns: ["_time"])' \
-          '|> sort(columns: ["_time"], desc: false)' \
-          '|> last(column: "_time")'
 
-        client = ifdb.InfluxDBClient(url=self.influxdb_dict.get('url'),
-                             token=self.influxdb_dict.get('token'),
-                             org=self.influxdb_dict.get('organization'),
-                             )
-        tables = client.query_api().query(query=query)
-        # Get last timestamp from influxDB and if it doesn't exist, use
-        # one defined in the .ini
-        try:
-            # removes timezone info from data, will this have implications in the future?
-            lastTs = tables[0].records[0]['_time'].replace(tzinfo=None)
-            logging.info("Got last timestamp from influxdb.")
-        # lastTs = lastTs.strftime('%Y%m%d')
-        except IndexError:
-            # if there's no timestamp, use some default one
-            logging.warning("Couldn't get timestamp from influxdb, using season_start from .ini")
-            lastTs = datetime.datetime.strptime(self.season_start, self.influxdb_dict.get('influxdb_timestamp_format'))
-        return lastTs
-
-    def check_timestamp(self):
-        """
-        Compare the start and end timestamps, if start timestamp is
-        older than end timestamp, terminate script as then there's no
-        new data
-
-        args:
-        ---
-
-        returns:
-        ---
-
-        """
-        if self.start_timestamp > self.end_timestamp:
-            logging.info('No files newer than what is already in the database.')
-            logging.info('Exiting.')
-            sys.exit(0)
-        else:
-            pass
+        last_ts = check_last_db_timestamp(self.influxdb_dict)
+        if last_ts is None:
+            logging.warning("Couldn't get timestamp from influxdb,"
+                            " using season_start from .ini")
+            last_ts = datetime.datetime.strptime(self.season_start,
+                                                 self.influxdb_dict.get(
+                                                 'influxdb_timestamp_format'))
+        return last_ts
 
 
 class handle_eddypro:
