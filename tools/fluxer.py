@@ -8,7 +8,6 @@ import datetime
 import configparser
 import timeit
 import pandas as pd
-import numpy as np
 import zipfile as zf
 from zipfile import BadZipFile
 from pathlib import Path
@@ -16,7 +15,7 @@ from pathlib import Path
 
 # modules from this repo
 from tools.filter import date_filter, create_filter_tuple
-from tools.time_funcs import ordinal_timer, strftime_to_regex, check_timestamp
+from tools.time_funcs import ordinal_timer, strftime_to_regex, check_timestamp, extract_date
 from tools.influxdb_funcs import influx_push, check_last_db_timestamp
 from tools.file_tools import get_newest
 from tools.gas_funcs import calculate_gas_flux, calculate_pearsons_r, calculate_slope
@@ -231,7 +230,7 @@ class calculated_data:
                                 f'{measurement_df.index[-1]}')
 
             measurement_df[f'{mr}_pearsons_r'] = calculate_pearsons_r(time_array, gas_array)
-            measurement_df[f'{mr}_flux'] = calculate_gas_flux(df, mr,
+            measurement_df[f'{mr}_flux'] = calculate_gas_flux(measurement_df, mr,
                                                               self.chamber_height,
                                                               self.default_pressure, self.default_temperature )
             measurement_list.append(measurement_df)
@@ -675,7 +674,6 @@ class measurement_reader:
         """
         path = dict.get('path')
         skiprows = int(dict.get('skiprows'))
-        delimiter = dict.get('delimiter')
         names = dict.get('names').split(',')
         columns = list(map(int, dict.get('columns').split(',')))
         # oulanka has data from old licor software version which has no remark column
@@ -742,37 +740,21 @@ class chamber_cycle:
 
     Methods
     ---
-    call_extract
-        Calls date extraction function from the get_start_and_end_time class
     create_chamber_cycle
         Reads date from each filename, and creates dataframe with
         starting and ending times for each measurement
 
     """
 
-    def __init__(self, file_timestamp_format, chamber_cycle_file, chamber_measurement_start_sec, chamber_measurement_end_sec, measurement_files):
-        self.file_timestamp_format = file_timestamp_format
-        self.chamber_cycle_file = chamber_cycle_file
-        self.chamber_measurement_start_sec = chamber_measurement_start_sec
-        self.chamber_measurement_end_sec = chamber_measurement_end_sec
+    def __init__(self, measurement_dict, defaults_dict,
+                 measurement_time_dict, measurement_files):
+        self.file_timestamp_format = measurement_dict.get(' file_timestamp_format')
+        self.chamber_cycle_file = defaults_dict.get(' chamber_cycle_file')
+        self.chamber_measurement_start_sec = measurement_time_dict.get('chamber_measurement_start_sec')
+        self.chamber_measurement_end_sec = measurement_time_dict.get(' chamber_measurement_end_sec')
         self.measurement_files = measurement_files
         self.chamber_cycle_df = self.create_chamber_cycle()
         self.filter_tuple = create_filter_tuple(self.chamber_cycle_df)
-
-    def call_extract(self, file):
-        """
-        calls date extraction function from another class
-
-        args:
-        ---
-        file -- str
-            file name
-
-        returns:
-        ---
-        datetime.datetime
-        """
-        return get_start_and_end_time.extract_date(self, file)
 
     def create_chamber_cycle(self):
         """
@@ -793,7 +775,7 @@ class chamber_cycle:
         for file in self.measurement_files:
             df = pd.read_csv(self.chamber_cycle_file,
                               names=['time', 'chamber'])
-            date = self.call_extract(os.path.splitext(file)[0])
+            date = extract_date(self.file_timestamp_format, os.path.splitext(file)[0])
             df['date'] = date
             df['datetime'] = pd.to_datetime(df['date'].astype(str)+' '+df['time'].astype(str))
             df['close_time'] = df['datetime'] + pd.to_timedelta(self.chamber_measurement_start_sec, unit='S')
@@ -838,7 +820,7 @@ class file_finder:
     def __init__(self, measurement_dict, file_timestep, start_timestamp, end_timestamp):
         self.path = measurement_dict.get('path')
         self.file_timestamp_format = measurement_dict.get('file_timestamp_format')
-        self.file_timestep = file_timestep
+        self.file_timestep = int(file_timestep)
         self.start_timestamp = start_timestamp
         self.end_timestamp = end_timestamp
         self.scan_or_generate = int(measurement_dict.get('scan_or_generate'))
@@ -1111,7 +1093,7 @@ class handle_eddypro:
                              skiprows=self.skiprows,
                              names=self.names,
                              na_values='NaN'
-                            )
+                             )
             # this file should only have one row, skip if there's more
             if len(ec) != 1:
                 continue
