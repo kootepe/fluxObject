@@ -1,3 +1,32 @@
+import influxdb_client as ifdb
+from influxdb_client.client.write_api import SYNCHRONOUS
+import logging
+
+def influx_push(df, influxdb_dict, tag_columns):
+    """
+    Push data to InfluxDB
+
+    args:
+    ---
+    df -- pandas dataframe
+        data to be pushed into influxdb
+
+    returns:
+    ---
+
+    """
+    with ifdb.InfluxDBClient(url=influxdb_dict.get('url'),
+                                token=influxdb_dict.get('token'),
+                                org=influxdb_dict.get('organization'),
+                                ) as client:
+        write_api = client.write_api(write_options=SYNCHRONOUS)
+        write_api.write(bucket=influxdb_dict.get('bucket'), record=df,
+                        data_frame_measurement_name=influxdb_dict.get('measurement_name'),
+                        data_frame_timestamp_timezone=influxdb_dict.get('timezone'),
+                        data_frame_tag_columns=tag_columns,
+                        debug=True)
+    logging.info('Pushed data to DB')
+
 
 def check_last_db_timestamp(influxdb_dict):
     """

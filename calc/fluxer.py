@@ -11,14 +11,13 @@ import pandas as pd
 import numpy as np
 import zipfile as zf
 from zipfile import BadZipFile
-import influxdb_client as ifdb
 from pathlib import Path
 
-from influxdb_client.client.write_api import SYNCHRONOUS
 
 # modules from this repo
 from calc.filter import date_filter, create_filter_tuple
 from calc.time_funcs import ordinal_timer, strftime_to_regex, check_timestamp
+from calc.influxdb_funcs import influx_push, check_last_db_timestamp
 from calc.file_tools import get_newest
 
 # define logging format
@@ -56,32 +55,8 @@ class pusher:
         self.data = data
         logging.info('Pushing data to DB')
         self.tag_columns = self.read_tag_columns()
-        self.influxPush(self.data)
+        influx_push(self.data, self.influxdb_dict, self.tag_columns)
 
-    def influxPush(self, df):
-        """
-        Push data to InfluxDB
-
-        args:
-        ---
-        df -- pandas dataframe
-            data to be pushed into influxdb
-
-        returns:
-        ---
-
-        """
-        with ifdb.InfluxDBClient(url=self.influxdb_dict.get('url'),
-                                 token=self.influxdb_dict.get('token'),
-                                 org=self.influxdb_dict.get('organization'),
-                                 ) as client:
-            write_api = client.write_api(write_options=SYNCHRONOUS)
-            write_api.write(bucket=self.influxdb_dict.get('bucket'), record=df,
-                            data_frame_measurement_name=self.influxdb_dict.get('measurement_name'),
-                            data_frame_timestamp_timezone=self.influxdb_dict.get('timezone'),
-                            data_frame_tag_columns=self.tag_columns,
-                            debug=True)
-        logging.info('Pushed data to DB')
 
     def read_tag_columns(self):
         """
