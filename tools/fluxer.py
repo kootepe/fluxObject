@@ -189,7 +189,6 @@ class calculated_data:
         self.filter_tuple = filter_tuple
         self.default_pressure = float(defaults_dict.get('default_pressure'))
         self.default_temperature = float(defaults_dict.get('default_temperature'))
-        self.gases = ['ch4', 'co2']
         self.calculated_data = self.calculate_slope_pearsons_r(self.measured_data, 'ch4')
         self.calculated_data = self.calculate_slope_pearsons_r(self.calculated_data, 'co2')
         self.upload_ready_data = self.summarize(self.calculated_data)
