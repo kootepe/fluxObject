@@ -582,7 +582,8 @@ class aux_data_reader:
         columns = [int(dict.get('timestamp_column')), int(dict.get('measurement_column'))]
         names = [dict.get('timestamp_column_name'), dict.get('measurement_column_name')]
         # dtypes needs to passed to pandas as a dict
-        dtypes = {dict.get('timestamp_column_name'): dict.get('timestamp_column_dtype'), dict.get('measurement_column_name'): dict.get('measurement_column_dtype')}
+        dtypes = {dict.get('timestamp_column_name'): dict.get('timestamp_column_dtype'),
+                  dict.get('measurement_column_name'): dict.get('measurement_column_dtype')}
         return path, delimiter, skiprows, timestamp_format, columns, names, dtypes
 
     def add_aux_data(self, ini_dict):
@@ -604,7 +605,10 @@ class aux_data_reader:
         if os.path.exists(path):
             pass
         else:
-            sys.exit(f"Path {path} doesn't exist.\nIf you want to read auxiliary data, fix the path, if you want to use default pressure and temperature set get_temp_and_pressure_from_file to 0")
+            sys.exit(f"Path {path} doesn't exist.\nIf you want to read"
+                     " auxiliary data, fix the path, if you want to use"
+                     " default pressure and temperature set"
+                     " get_temp_and_pressure_from_file to 0")
         tmp = []
         for f in self.files:
             try:
@@ -748,10 +752,10 @@ class chamber_cycle:
 
     def __init__(self, measurement_dict, defaults_dict,
                  measurement_time_dict, measurement_files):
-        self.file_timestamp_format = measurement_dict.get(' file_timestamp_format')
-        self.chamber_cycle_file = defaults_dict.get(' chamber_cycle_file')
-        self.chamber_measurement_start_sec = measurement_time_dict.get('chamber_measurement_start_sec')
-        self.chamber_measurement_end_sec = measurement_time_dict.get(' chamber_measurement_end_sec')
+        self.file_timestamp_format = measurement_dict.get('file_timestamp_format')
+        self.chamber_cycle_file = defaults_dict.get('chamber_cycle_file')
+        self.chamber_measurement_start_sec = int(measurement_time_dict.get('start_of_measurement'))
+        self.chamber_measurement_end_sec = int(measurement_time_dict.get('end_of_measurement'))
         self.measurement_files = measurement_files
         self.chamber_cycle_df = self.create_chamber_cycle()
         self.filter_tuple = create_filter_tuple(self.chamber_cycle_df)
