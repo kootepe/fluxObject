@@ -19,6 +19,7 @@ from tools.filter import date_filter, create_filter_tuple
 from tools.time_funcs import ordinal_timer, strftime_to_regex, check_timestamp
 from tools.influxdb_funcs import influx_push, check_last_db_timestamp
 from tools.file_tools import get_newest
+from tools.gas_funcs import calculate_gas_flux, calculate_pearsons_r, calculate_slope
 
 # define logging format
 logging.basicConfig(level=logging.INFO,
@@ -179,17 +180,16 @@ class calculated_data:
 
     """
 
-    def __init__(self, measured_data, measuring_chamber_dict, filter_tuple,
-                 get_temp_and_pressure_from_file, default_pressure,
-                 default_temperature):
+    def __init__(self, measured_data, measuring_chamber_dict, filter_tuple, defaults_dict):
         self.measured_data = measured_data
-        self.get_temp_and_pressure_from_file = get_temp_and_pressure_from_file
+        self.get_temp_and_pressure_from_file = int(defaults_dict.get('get_temp_and_pressure_from_file'))
         self.chamber_height = int(measuring_chamber_dict.get('chamber_height'))
         self.chamber_width = int(measuring_chamber_dict.get('chamber_width'))
         self.chamber_length = int(measuring_chamber_dict.get('chamber_length'))
         self.filter_tuple = filter_tuple
-        self.default_pressure = default_pressure
-        self.default_temperature = default_temperature
+        self.default_pressure = float(defaults_dict.get('default_pressure'))
+        self.default_temperature = float(defaults_dict.get('default_temperature'))
+        self.gases = ['ch4', 'co2']
         self.calculated_data = self.calculate_slope_pearsons_r(self.measured_data, 'ch4')
         self.calculated_data = self.calculate_slope_pearsons_r(self.calculated_data, 'co2')
         self.upload_ready_data = self.summarize(self.calculated_data)
@@ -209,27 +209,32 @@ class calculated_data:
 
         returns:
         ---
-        dfs -- pandas.dataframe
+        all_measurements_df -- pandas.dataframe
             same dataframe with additional slope, pearsons_r and
             flux columns
         """
+        mr = measurement_name
         measurement_list = []
         # following loop raises a false positive warning, disable it
         pd.options.mode.chained_assignment = None
         for date in self.filter_tuple:
-            # print(f'{date[0] = }')
-            # print(f'{date[1] = }')
             measurement_df = date_filter(df, date)
             if measurement_df.empty:
                 continue
-            # print(f'{df = }')
-            ordinal_time = measurement_df['ordinal_datetime']
-            measurement = measurement_df[measurement_name]
-            measurement_df[f'{measurement_name}_slope'] = np.polyfit(ordinal_time, measurement, 1).item(0) / 86400
+            time_array = measurement_df['ordinal_datetime']
+            gas_array = measurement_df[mr]
+
+            measurement_df[f'{mr}_slope'] = calculate_slope(time_array, gas_array)
+
             if measurement_df.ch4.isnull().values.any():
-                logging.warning(f'Non-numeric values present from {measurement_df.index[0]} to {measurement_df.index[-1]}')
-            measurement_df[f'{measurement_name}_pearsons_r'] = abs(np.corrcoef(ordinal_time, measurement).item(1))
-            measurement_df[f'{measurement_name}_flux'] = self.calculate_gas_flux(measurement_df, measurement_name)
+                logging.warning('Non-numeric values present from'
+                                f' {measurement_df.index[0]} to '
+                                f'{measurement_df.index[-1]}')
+
+            measurement_df[f'{mr}_pearsons_r'] = calculate_pearsons_r(time_array, gas_array)
+            measurement_df[f'{mr}_flux'] = calculate_gas_flux(df, mr,
+                                                              self.chamber_height,
+                                                              self.default_pressure, self.default_temperature )
             measurement_list.append(measurement_df)
         all_measurements_df = pd.concat(measurement_list)
         pd.options.mode.chained_assignment = 'warn'
@@ -254,9 +259,8 @@ class calculated_data:
             one column for the dataframe with the calculated gas
             flux
         """
-        if self.get_temp_and_pressure_from_file == 0:
-            pressure = df['air_pressure'] = self.default_pressure
-            temperature = df['air_temperature'] = self.default_temperature
+        pressure = df['air_pressure'] = self.default_pressure
+        temperature = df['air_temperature'] = self.default_temperature
         if self.get_temp_and_pressure_from_file == 1:
             pressure = df['air_pressure'].mean()
             temperature = df['air_temperature'].mean()
