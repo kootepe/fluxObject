@@ -15,10 +15,10 @@ from pathlib import Path
 
 
 # modules from this repo
-from calc.filter import date_filter, create_filter_tuple
-from calc.time_funcs import ordinal_timer, strftime_to_regex, check_timestamp
-from calc.influxdb_funcs import influx_push, check_last_db_timestamp
-from calc.file_tools import get_newest
+from tools.filter import date_filter, create_filter_tuple
+from tools.time_funcs import ordinal_timer, strftime_to_regex, check_timestamp
+from tools.influxdb_funcs import influx_push, check_last_db_timestamp
+from tools.file_tools import get_newest
 
 # define logging format
 logging.basicConfig(level=logging.INFO,
