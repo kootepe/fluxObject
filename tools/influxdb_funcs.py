@@ -56,7 +56,6 @@ def check_last_db_timestamp(influxdb_dict):
         last_ts = tables[0].records[0]['_time'].replace(tzinfo=None)
     except IndexError:
         # if there's no timestamp, return None
-        logging.warning("Couldn't get timestamp from influxdb, using season_start from .ini")
         last_ts = None
     return last_ts
 

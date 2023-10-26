@@ -1002,11 +1002,12 @@ class get_start_and_end_time:
 
         last_ts = check_last_db_timestamp(self.influxdb_dict)
         if last_ts is None:
-            logging.warning("Couldn't get timestamp from influxdb,"
-                            " using season_start from .ini")
-            last_ts = datetime.datetime.strptime(self.season_start,
-                                                 self.influxdb_dict.get(
-                                                 'influxdb_timestamp_format'))
+            logging.warning(
+                "Couldn't get timestamp from influxdb," " using season_start from .ini"
+            )
+            last_ts = datetime.datetime.strptime(
+                self.season_start, self.influxdb_dict.get("influxdb_timestamp_format")
+            )
         return last_ts
 
 
