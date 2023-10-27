@@ -325,16 +325,14 @@ def ac_push(inifile):
     #pusher(ready_data.upload_ready_data, influxdb_dict)
 
 
-if __name__=="__main__":
+if __name__ == "__main__":
     inifile = sys.argv[1]
     mode = sys.argv[2]
-    if mode == 'ac':
+    if mode == "ac":
         ac_push(inifile)
-        if mode == 'man':
-            man_push(inifile)
-            if mode == 'csv':
-                csv_push(inifile)
-                if mode == 'eddypro':
-                    eddypro_push(inifile)
-    else:
-        logging.info('Incorrect mode')
+    if mode == "man":
+        man_push(inifile)
+    if mode == "csv":
+        csv_push(inifile)
+    if mode == "eddypro":
+        eddypro_push(inifile)
