@@ -181,18 +181,24 @@ class calculated_data:
 
     def __init__(self, measured_data, measuring_chamber_dict, filter_tuple, defaults_dict):
         self.measured_data = measured_data
-        self.get_temp_and_pressure_from_file = int(defaults_dict.get('get_temp_and_pressure_from_file'))
-        self.chamber_height = int(measuring_chamber_dict.get('chamber_height'))
-        self.chamber_width = int(measuring_chamber_dict.get('chamber_width'))
-        self.chamber_length = int(measuring_chamber_dict.get('chamber_length'))
+        self.get_temp_and_pressure_from_file = defaults_dict.get(
+            "get_temp_and_pressure_from_file"
+        )
+        self.chamber_height = float(measuring_chamber_dict.get("chamber_height"))
+        self.chamber_width = float(measuring_chamber_dict.get("chamber_width"))
+        self.chamber_length = float(measuring_chamber_dict.get("chamber_length"))
         self.filter_tuple = filter_tuple
-        self.default_pressure = float(defaults_dict.get('default_pressure'))
-        self.default_temperature = float(defaults_dict.get('default_temperature'))
-        self.calculated_data = self.calculate_slope_pearsons_r(self.measured_data, 'ch4')
-        self.calculated_data = self.calculate_slope_pearsons_r(self.calculated_data, 'co2')
+        self.default_pressure = float(defaults_dict.get("default_pressure"))
+        self.default_temperature = float(defaults_dict.get("default_temperature"))
+        self.calculated_data = self.calculate_slope_pearsons_r(
+            self.measured_data, "ch4"
+        )
+        self.calculated_data = self.calculate_slope_pearsons_r(
+            self.calculated_data, "co2"
+        )
         self.upload_ready_data = self.summarize(self.calculated_data)
 
-    def calculate_slope_pearsons_r(self, df, measurement_name):
+    def calculate_slope_pearsons_r(self, data, measurement_name):
         """
         Calculates Pearsons R (correlation) and the slope of
         the CH4 flux.
@@ -213,84 +219,36 @@ class calculated_data:
         """
         mr = measurement_name
         measurement_list = []
-        # following loop raises a false positive warning, disable it
-        pd.options.mode.chained_assignment = None
+        df = data
+
+        if self.get_temp_and_pressure_from_file == "1":
+            pressure = df["air_pressure"].mean()
+            temperature = df["air_temperature"].mean()
+        else:
+            pressure = df["air_pressure"] = self.default_pressure
+            temperature = df["air_temperature"] = self.default_temperature
+
         for date in self.filter_tuple:
-            measurement_df = date_filter(df, date)
+            measurement_df = date_filter(df, date).copy()
             if measurement_df.empty:
                 continue
-            time_array = measurement_df['ordinal_datetime']
-            gas_array = measurement_df[mr]
 
-            measurement_df[f'{mr}_slope'] = calculate_slope(time_array, gas_array)
+            measurement_df[f"{mr}_slope"] = calculate_slope(df, date, mr)
 
             if measurement_df.ch4.isnull().values.any():
-                logging.warning('Non-numeric values present from'
-                                f' {measurement_df.index[0]} to '
-                                f'{measurement_df.index[-1]}')
+                logging.warning(
+                    "Non-numeric values present from" f" {date[0]} to " f"{date[1]}"
+                )
 
-            measurement_df[f'{mr}_pearsons_r'] = calculate_pearsons_r(time_array, gas_array)
-            measurement_df[f'{mr}_flux'] = calculate_gas_flux(measurement_df, mr,
-                                                              self.chamber_height,
-                                                              self.default_pressure, self.default_temperature )
+            measurement_df[f"{mr}_pearsons_r"] = calculate_pearsons_r(df, date, mr)
+            measurement_df[f"{mr}_flux"] = calculate_gas_flux(
+                measurement_df,
+                mr,
+                self.chamber_height,
+            )
             measurement_list.append(measurement_df)
         all_measurements_df = pd.concat(measurement_list)
-        pd.options.mode.chained_assignment = 'warn'
-        # pearsons_r = np.corrcoef(ordinal_time, measurement).item(1)
-        # return slope, pearsons_r
         return all_measurements_df
-
-    def calculate_gas_flux(self, df, measurement_name):
-        """
-        Calculates gas flux
-
-        args:
-        ---
-        df -- pandas.dataframe
-            dataframe with slope calculated.
-        measurement_name -- str
-            name of the gas that flux is going to be calculated for
-
-        returns:
-        ---
-        flux -- numpy.array
-            one column for the dataframe with the calculated gas
-            flux
-        """
-        pressure = df['air_pressure'] = self.default_pressure
-        temperature = df['air_temperature'] = self.default_temperature
-        if self.get_temp_and_pressure_from_file == 1:
-            pressure = df['air_pressure'].mean()
-            temperature = df['air_temperature'].mean()
-
-        # from mm to m
-        length = self.chamber_length * 0.001
-        width = self.chamber_width * 0.001
-        height = (self.chamber_height * 0.001) - df['snowdepth']
-
-        # slope of the linear fit of the measurement
-        slope = df[f'{measurement_name}_slope']
-        # chamber height in cm
-        h = height * 100
-        # value to convert ppb to ppm etc.
-        conv = 1
-        # molar mass of co2. C mass 12 and O mass 16
-        m = 12 + 16 + 16
-        # temperature in K
-        t = 273.15 + temperature
-        # HPa to Pa
-        p = pressure * 100
-        # universal gas constant
-        r = 8.314
-
-        if measurement_name == 'ch4':
-            # molar mass of CH4, C mass is 12 and H mass is 1
-            m = 12 + 4
-            # ch4 measurement is in ppb, convert to ppm
-            conv = 1000
-        flux = round((slope / conv) * (60 / 1000000) * (h / 100) * ((m * p) / (r * t)) * 1000, 5)
-
-        return flux
 
     def summarize(self, data):
         """
@@ -510,7 +468,7 @@ class filterer:
         self.empty_timestamps = empty_timestamps
         # loop raises false positive error which was turned off before,
         # turn it on
-        pd.options.mode.chained_assignment = 'warn'
+        pd.options.mode.chained_assignment = "warn"
         return clean_df
 
 
