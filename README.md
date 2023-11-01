@@ -49,7 +49,7 @@ the docker container, so that the data is visible for the container.
 The format of the `.env` file is like this, it's used to define the
 filepaths that will be mounted inside the container.
 
-```
+```.env
 AUTOCHAMBER_DIR=/path/to/autochamber/data
 EDDY_DIR=/path/to/eddycovariance/data
 MANUAL_DIR=/path/to/manual/measurement/data
