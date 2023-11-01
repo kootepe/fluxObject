@@ -1,8 +1,8 @@
 # Instructions for setting up automated flux calculations with docker
-1. Setting up .ini files
-2. Setting up .env
-3. Setting up docker-compose.yml
-4. Setting up crontab
+1. Setting up .env
+2. Setting up docker-compose.yml
+3. Setting up crontab
+4. Setting up .ini files
 
 
 ## Rundown
@@ -56,3 +56,10 @@ Left side is the directory on the computer hosting the docker container
 and right side is where the contents of that folder will appear inside
 the docker container. `:ro` means that the contents of the mapped folder
 are read only in the container.
+
+## Setting up the .ini files
+
+
+### Autochamber .ini
+
+
