@@ -8,8 +8,6 @@ RUN git clone -b main https://github.com/kootepe/fluxObject.git
 
 COPY run.sh .
 
-COPY ACstart.txt .
-
 COPY requirements.txt .
 
 RUN pip install -r ./requirements.txt
