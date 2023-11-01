@@ -1,32 +1,58 @@
-# Instructions for setting up
+# Instructions for setting up automated flux calculations with docker
 1. Setting up .ini files
 2. Setting up .env
-3. Setting up docker-compose
+3. Setting up docker-compose.yml
 4. Setting up crontab
 
-# Setting up
-Ini files will define what files to read, and their paths. the
-directories where the data is will be in the .env file, where the
-docker-compose file will take them and mount the folders into the
-docker container so that the python script can read them. 
+
+## Rundown
+
+The docker image is built as defined in the `dockerfile`, the base image
+is a small debian linux image with a stripped down version of python. On
+top of that are installed `cron` for timing scripts, `vim` for text editing,
+this github repo is copied into it for the python scripts, and then
+the `inifiles` folder from the host machine is copied. `docker-compose.yml`
+is used to define how the docker image is launched, it will mount the
+data folders defined in the `.env` file into to docker container, so
+that the python scripts have access to the data.
 
 
-## ini files
-The ini files will define where to read files, what files to read, what
-data to read in the files and the influxdb instances to push the data
-to.
+In the `docker-compose.yml` `volumes` part
+are defined the folders inside your machine that will be mounted inside
+the docker container, so that the data is visible for running the
+scripts.
 
-**examples for flux calculation** <br>
-[Breakdown of the .ini for automatic chamber measurements.](./AC_sample.ini)<br>
-[Breakdown of the .ini for manual chamber measurements.](./manual_sammple.ini)
+The format of the `.env` file is like this, it's used to define the
+paths that will be mounted inside the container.
 
-Timestamps in the ini need to be in [strftime](https://strftime.org/)
-format. eg. 2023-01-01 00:00:00 would be %Y-%m-%d %H:%M:%S. And in the
-.ini needs to be written with doubled '%' marks, as %%Y-%%m-%%d
-%%H:%%M:%%S.
+```.env
+AUTOCHAMBER_DIR=/path/to/autochamber/data
+EDDY_DIR=/path/to/eddycovariance/data
+MANUAL_DIR=/path/to/manual/measurement/data
+MANUAL_TIMES_DIR=/path/to/manual/measurement/times/
 ```
-timestamp:
-2023-01-01 00:00:00
-in ini:
-%%Y-%%m-%%d %%H:%%M:%%S
+
+These paths are mapped into the docker container with the
+`docker-compose.yml` which looks like this:
+
+```yml
+version: "3.4"
+services:
+  python:
+    build: 
+      context: ./
+      dockerfile: ./dockerfile
+    volumes:
+      - $(AUTOCHAMBER_DIR):/data/AC_Oulanka:ro
+      - $(EDDY_DIR):/data/EC_Oulanka:ro
+      - $(MANUAL_TIMES_DIR):/data/manual_times_data:ro
+      - $(MANUAL_DIR):/data/manual_data:ro
+    entrypoint:
+      ["/run.sh"]
 ```
+
+The value pairs defined in the `.env` are mapped in the `volumes` part.
+Left side is the directory on the computer hosting the docker container
+and right side is where the contents of that folder will appear inside
+the docker container. `:ro` means that the contents of the mapped folder
+are read only in the container.
