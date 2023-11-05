@@ -230,7 +230,7 @@ def man_push(inifile):
             filtered_measurement.filtered_data, snowdepth_df.snowdepth_df
         )
 
-    merged_data.merged_data["snowdepth"] = 0
+    # merged_data.merged_data["snowdepth"] = 0
 
     ready_data = calculated_data(
         merged_data.merged_data, measuring_chamber_dict, filter_tuple, defaults_dict
@@ -341,18 +341,31 @@ def ac_push(inifile):
         defaults_dict.get("snowdepth_measurement"),
     )
 
+    data_with_temp = False
+    data_with_temp_pressure = False
+    data_with_temp_pressure_snow = False
     if air_pressure_df is not None and air_temperature_df is not None:
-        merged_data = merge_data(
+        data_with_temp = merge_data(
             filtered_measurement.filtered_data, air_temperature_df.filtered_data
         )
-        merged_data = merge_data(merged_data.merged_data, air_pressure_df.filtered_data)
-        merged_data = merge_data(merged_data.merged_data, snowdepth_df.snowdepth_df)
+        data_with_temp_pressure = merge_data(
+            data_with_temp.merged_data, air_pressure_df.filtered_data
+        )
+        data_with_temp_pressure_snow = merge_data(
+            data_with_temp_pressure.merged_data, snowdepth_df.snowdepth_df, True
+        )
     else:
-        merged_data = merge_data(
-            filtered_measurement.filtered_data, snowdepth_df.snowdepth_df
+        data_with_snow = merge_data(
+            filtered_measurement.filtered_data,
+            snowdepth_df.snowdepth_df,
+            True,
         )
 
     merged_data.merged_data["snowdepth"] = 0
+    if data_with_temp_pressure_snow is True:
+        merged_data = data_with_temp_pressure_snow
+    else:
+        merged_data = data_with_snow
 
     ready_data = calculated_data(
         merged_data.merged_data, measuring_chamber_dict, filter_tuple, defaults_dict
