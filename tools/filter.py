@@ -1,3 +1,4 @@
+import pandas as pd
 
 
 def date_filter_list(data_to_filter, filter_tuple_list):
