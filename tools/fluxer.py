@@ -183,6 +183,7 @@ class calculated_data:
     def __init__(
         self, measured_data, measuring_chamber_dict, filter_tuple, defaults_dict
     ):
+        self.filter_tuple = filter_tuple
         self.measured_data = measured_data
         self.get_temp_and_pressure_from_file = defaults_dict.get(
             "get_temp_and_pressure_from_file"
@@ -190,7 +191,6 @@ class calculated_data:
         self.chamber_height = float(measuring_chamber_dict.get("chamber_height"))
         self.chamber_width = float(measuring_chamber_dict.get("chamber_width"))
         self.chamber_length = float(measuring_chamber_dict.get("chamber_length"))
-        self.filter_tuple = filter_tuple
         self.default_pressure = float(defaults_dict.get("default_pressure"))
         self.default_temperature = float(defaults_dict.get("default_temperature"))
         self.calculated_data = self.calculate_slope_pearsons_r(
@@ -222,7 +222,7 @@ class calculated_data:
         """
         mr = measurement_name
         measurement_list = []
-        df = data
+        df = data.copy()
 
         if self.get_temp_and_pressure_from_file == "1":
             pressure = df["air_pressure"].mean()
