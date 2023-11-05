@@ -300,6 +300,54 @@ class merge_data:
 
     def __init__(self, measurement_df, aux_df):
         self.merged_data = self.merge_aux_data(measurement_df, aux_df)
+    def __init__(self, measurement_df, aux_df, snowdepth=None):
+        self.measurement_df = measurement_df
+        self.aux_df = aux_df
+        self.snowdepth = snowdepth
+        if self.aux_df is not None:
+            if self.snowdepth is not None:
+                self.merged_data = self.merge_aux_by_column(measurement_df, aux_df)
+            else:
+                self.merged_data = self.merge_aux_data(measurement_df, aux_df)
+        else:
+            pass
+
+
+    def merge_aux_by_column(self, measurement_df, aux_df):
+        """
+        Function mainly meant to add snowdepth to automatic chamber
+        measurements
+        """
+        main_df = measurement_df
+        other_df = aux_df
+        dflist = []
+        for _, group in other_df.groupby("chamber"):
+            if self.is_dataframe_sorted_by_datetime_index(
+                measurement_df
+            ) and self.is_dataframe_sorted_by_datetime_index(aux_df):
+                main_df = main_df.copy()
+                other_df = group.copy()
+                chamberNum = other_df.chamber.mean()
+                mask = main_df["chamber"] == chamberNum
+                other_df = other_df.drop(columns=["chamber"])
+                df = pd.merge_asof(
+                    main_df[mask],
+                    other_df,
+                    left_on="datetime",
+                    right_on="datetime",
+                    tolerance=pd.Timedelta("1000d"),
+                    direction="nearest",
+                    suffixes=("", "_y"),
+                )
+                df.drop(df.filter(regex="_y$").columns, axis=1, inplace=True)
+                df.set_index("datetime", inplace=True)
+                df["snowdepth"] = df["snowdepth"].fillna(0)
+                dflist.append(df)
+            else:
+                logging.info("Dataframes are not properly sorted by datetimeindex")
+                sys.exit(0)
+        df = pd.concat(dflist)
+        return df
 
     def merge_aux_data(self, measurement_df, aux_df):
         """
@@ -318,7 +366,6 @@ class merge_data:
         df -- pandas.dataframe
             dataframe with aux_data merged into the main gas measurement dataframe
         """
-        measurement_df.to_csv("whatswrong.csv")
         if self.is_dataframe_sorted_by_datetime_index(
             measurement_df
         ) and self.is_dataframe_sorted_by_datetime_index(aux_df):
