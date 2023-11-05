@@ -133,25 +133,9 @@ class snowdepth_parser:
 
         """
         if self.snowdepth_measurement:
-            snowdepth = pd.read_excel(self.snowdepth_measurement)
-            snowdepth["datetime"] = pd.to_datetime(snowdepth["datetime"])
-            snowdepth.set_index("datetime", inplace=True)
-        else:
-            logging.warning(
-                "No snow depth measurements found, snow depth "
-                "set at zero for all measurements"
+            snowdepth = tools.snow_height.read_snow_measurement(
+                self.snowdepth_measurement
             )
-            # if theres no measurements of snow depth, set it as 0
-            d = {
-                "datetime": ["01-01-2023", "02-01-2023"],
-                "snowdepth1": [0, 0],
-                "snowdepth2": [0, 0],
-            }
-            snowdepth = pd.DataFrame(data=d)
-            snowdepth["datetime"] = pd.to_datetime(
-                snowdepth["datetime"], format="%d-%m-%Y"
-            )
-            snowdepth.set_index("datetime", inplace=True)
             print(snowdepth)
         return snowdepth
 
