@@ -333,9 +333,6 @@ def ac_push(inifile):
     if air_pressure_df is not None and air_temperature_df is not None:
         air_temperature_df = filterer(filter_tuple, air_temperature_df.aux_data_df)
         air_pressure_df = filterer(filter_tuple, air_pressure_df.aux_data_df)
-    else:
-        air_temperature_df = None
-        air_pressure_df = None
 
     snowdepth_df, set_snow_to_zero = snowdepth_parser(
         defaults_dict.get("snowdepth_measurement"),
