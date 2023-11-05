@@ -337,7 +337,7 @@ def ac_push(inifile):
         air_temperature_df = None
         air_pressure_df = None
 
-    snowdepth_df = snowdepth_parser(
+    snowdepth_df, set_snow_to_zero = snowdepth_parser(
         defaults_dict.get("snowdepth_measurement"),
     )
 
@@ -361,17 +361,17 @@ def ac_push(inifile):
             True,
         )
 
-    merged_data.merged_data["snowdepth"] = 0
     if data_with_temp_pressure_snow is True:
         merged_data = data_with_temp_pressure_snow
     else:
         merged_data = data_with_snow
 
+
+    if set_snow_to_zero is True:
+        merged_data.merged_data["snowdepth"] = 0
     ready_data = calculated_data(
         merged_data.merged_data, measuring_chamber_dict, filter_tuple, defaults_dict
     )
-
-
 
     # ready_data.upload_ready_data.to_csv('./AC_data_2023.csv')
     # pusher(ready_data.upload_ready_data, influxdb_dict)
