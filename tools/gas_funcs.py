@@ -23,7 +23,6 @@ def calculate_gas_flux(data, measurement_name, chamber_height):
 
     df = data.copy()
     # from mm to m
-    height = (chamber_height * 0.001) - df["snowdepth"]
     height = (chamber_height * 0.001) - (df["snowdepth"].mean() / 100)
 
     # slope of the linear fit of the measurement
