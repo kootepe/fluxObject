@@ -1,0 +1,14 @@
+Date,210104
+Name,ek
+Sky,cloudy
+Temp,-1
+Wind,no wind
+Precipitation,none
+ACSnowdepth,
+FluxAvg,
+AcFluxAvg,
+Plot Number,Start Time,Notes,Chamber height
+71,0105
+67,0120
+41,0135
+43,0150

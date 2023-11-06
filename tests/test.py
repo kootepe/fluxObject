@@ -5,26 +5,53 @@ import sys
 # test_with_unittest discover
 import main
 
-inifile = "tests/test_ini.ini"
+# ini file with test data
+ac_ini = "tests/test_inis/test_ini_ac.ini"
 
-cols = pd.read_csv("tests/test_results.csv")
-cols["datetime"] = pd.to_datetime(cols["datetime"], format="%Y-%m-%d %H:%M:%S")
-cols.set_index("datetime", inplace=True)
-cols = cols.columns.to_list()
 
-csv = pd.read_csv("tests/test_results.csv")
+# csv with correct data
+csv = pd.read_csv("tests/test_data/test_results_ac.csv")
 csv["datetime"] = pd.to_datetime(csv["datetime"], format="%Y-%m-%d %H:%M:%S")
 csv.set_index("datetime", inplace=True)
 
-data_to_test = main.ac_push(inifile, 1)
+ac_cols = csv.columns.to_list()
+
+# run main py with test flag to return classes
+ac_data_to_test = main.ac_push(ac_ini, 1)
 
 
-@pytest.mark.parametrize("test_input", cols)
-def test_main_defaults(test_input):
+@pytest.mark.parametrize("test_input", ac_cols)
+def test_main_ac_defaults(test_input):
     input = test_input
     correct = csv
-    test = data_to_test
+    test = ac_data_to_test
     if input == "chamber_close" or input == "chamber_open":
         correct[input] = pd.to_datetime(correct[input], format="%Y-%m-%d %H:%M:%S")
     # assert correct.snowdepth.tolist() == test.upload_ready_data.snowdepth.tolist()
     assert correct[input].tolist() == test.upload_ready_data[input].tolist()
+
+
+man_ini = "tests/test_inis/test_ini_man.ini"
+
+man_csv = pd.read_csv("tests/test_data/test_results_man.csv")
+man_csv["datetime"] = pd.to_datetime(man_csv["datetime"], format="%Y-%m-%d %H:%M:%S")
+man_csv.set_index("datetime", inplace=True)
+
+man_cols = man_csv.columns.to_list()
+
+# run main py with test flag to return classes
+man_data_to_test = main.man_push(man_ini, 1)
+# man_data_to_test.upload_ready_data.to_csv("tests/test_data/test_results_man.csv")
+# sys.exit()
+
+
+@pytest.mark.parametrize("test_input", man_cols)
+def test_main_manual_defaults(test_input):
+    input = test_input
+    correct = man_csv
+    test = man_data_to_test
+    if input == "chamber_close" or input == "chamber_open":
+        correct[input] = pd.to_datetime(correct[input], format="%Y-%m-%d %H:%M:%S")
+    # assert correct.snowdepth.tolist() == test.upload_ready_data.snowdepth.tolist()
+    assert correct[input].tolist() == test.upload_ready_data[input].tolist()
+    pass
