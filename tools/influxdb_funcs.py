@@ -1,6 +1,7 @@
 import influxdb_client as ifdb
 from influxdb_client.client.write_api import SYNCHRONOUS
 import logging
+from urllib3.exceptions import NewConnectionError
 
 def influx_push(df, influxdb_dict, tag_columns):
     """
@@ -51,7 +52,12 @@ def check_last_db_timestamp(influxdb_dict):
                             token=influxdb_dict.get('token'),
                             org=influxdb_dict.get('organization'),
                             )
-    tables = client.query_api().query(query=query)
+    try:
+        tables = client.query_api().query(query=query)
+    except NewConnectionError:
+        logging.info(f"Couldn't connect to database at " f"{influxdb_dict.get('url')}")
+        last_ts = None
+        return last_ts
     try:
         last_ts = tables[0].records[0]['_time'].replace(tzinfo=None)
     except IndexError:
