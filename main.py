@@ -232,6 +232,9 @@ def man_push(inifile, test_mode=0):
 
     # merged_data.merged_data["snowdepth"] = 0
 
+    merged_data.merged_data["snowdepth"] = merged_data.merged_data["snowdepth"].fillna(
+        0
+    )
     ready_data = calculated_data(
         merged_data.merged_data, measuring_chamber_dict, filter_tuple, defaults_dict
     )
