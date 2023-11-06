@@ -46,13 +46,16 @@ def calculate_gas_flux(data, measurement_name, chamber_height):
         # ch4 measurement is in ppb, convert to ppm
         conv = df["conv"] = 1000
 
-    flux = (
-        (slope / conv)
-        * (60 / 1000000)
-        * (h)
-        * ((m * (p * 100)) / (r * (273.15 + t)))
-        * 1000
-        * 60
+    flux = round(
+        (
+            (slope / conv)
+            * (60 / 1000000)
+            * (h)
+            * ((m * (p * 100)) / (r * (273.15 + t)))
+            * 1000
+            * 60
+        ),
+        6,
     )
 
     return flux
@@ -68,7 +71,7 @@ def calculate_pearsons_r(df, date, measurement_name):
     time_array = date_filter(df["ordinal_datetime"], filter_tuple)
     gas_array = date_filter(df[measurement_name], filter_tuple)
 
-    pearsons_r = abs(np.corrcoef(time_array, gas_array).item(1))
+    pearsons_r = round(abs(np.corrcoef(time_array, gas_array).item(1)), 8)
     return pearsons_r
 
 
@@ -76,11 +79,13 @@ def calculate_slope(df, date, measurement_name):
     """Calculate slope from the middle 50% of the measurement"""
     time_difference = (date[1] - date[0]).seconds
     time_to_remove = pd.to_timedelta(time_difference * 0.25, "S")
-    start = date[0] + time_to_remove
-    end = date[1] - time_to_remove
+    start = date[0] + pd.to_timedelta(2, "min")
+    end = date[1] - pd.to_timedelta(3, "min")
+    # start = date[0] + time_to_remove
+    # end = date[1] - time_to_remove
     filter_tuple = (start, end)
     time_array = date_filter(df["ordinal_datetime"], filter_tuple)
     gas_array = date_filter(df[measurement_name], filter_tuple)
 
-    slope = np.polyfit(time_array, gas_array, 1).item(0) / 86400
+    slope = round(np.polyfit(time_array, gas_array, 1).item(0) / 86400, 8)
     return slope
