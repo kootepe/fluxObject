@@ -240,7 +240,7 @@ def man_push(inifile):
 
 
 @timer
-def ac_push(inifile):
+def ac_push(inifile, test_mode=None):
     """
     Function to handle flux calculation and influx pushing
 
@@ -372,6 +372,8 @@ def ac_push(inifile):
 
     # ready_data.upload_ready_data.to_csv('./AC_data_2023.csv')
     # pusher(ready_data.upload_ready_data, influxdb_dict)
+    if test_mode:
+        return ready_data
 
 
 if __name__ == "__main__":
