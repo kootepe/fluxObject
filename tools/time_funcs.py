@@ -2,6 +2,7 @@ import datetime
 import re
 import logging
 
+
 def ordinal_timer(time):
     """
     Helper function to calculate ordinal time from HH:MM:SS
@@ -16,10 +17,10 @@ def ordinal_timer(time):
     time -- numpy.array
         Array of float timestamps
     """
-    h,m,s = map(int, time.split(':'))
+    h, m, s = map(int, time.split(":"))
     sec = 60
     secondsInDay = 86400
-    ordinal_time = (sec*(sec*h)+sec*m+s)/secondsInDay
+    ordinal_time = round((sec * (sec * h) + sec * m + s) / secondsInDay, 10)
     return ordinal_time
 
 
@@ -52,10 +53,13 @@ def strftime_to_regex(file_timestamp_format):
         "%%": r"%",
     }
     regex_pattern = re.sub(
-        r"%[aAbBdHIImMpPSYy%]", lambda m: conversion_dict.get(m.group(), m.group()), file_timestamp_format
+        r"%[aAbBdHIImMpPSYy%]",
+        lambda m: conversion_dict.get(m.group(), m.group()),
+        file_timestamp_format,
     )
 
     return regex_pattern
+
 
 def check_timestamp(start_timestamp, end_timestamp):
     """
@@ -96,11 +100,10 @@ def extract_date(file_timestamp_format, datestring):
     #    print('Files are found in folder but no matching file found, is the format of the timestamp correct?')
     #    return None
     if file_timestamp_format == strftime_to_regex(file_timestamp_format):
-        logging.info('No strftime formatting in filename, returning current date')
+        logging.info("No strftime formatting in filename, returning current date")
         return datetime.datetime.today()
     date = re.search(strftime_to_regex(file_timestamp_format), datestring).group(0)
     # class chamber_cycle calls this method and using an instance
     # variable here might cause issues if the timestamp formats
     # should be different
     return datetime.datetime.strptime(date, file_timestamp_format)
-
