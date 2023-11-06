@@ -79,10 +79,8 @@ def calculate_slope(df, date, measurement_name):
     """Calculate slope from the middle 50% of the measurement"""
     time_difference = (date[1] - date[0]).seconds
     time_to_remove = pd.to_timedelta(time_difference * 0.25, "S")
-    start = date[0] + pd.to_timedelta(2, "min")
-    end = date[1] - pd.to_timedelta(3, "min")
-    # start = date[0] + time_to_remove
-    # end = date[1] - time_to_remove
+    start = date[0] + time_to_remove
+    end = date[1] - time_to_remove
     filter_tuple = (start, end)
     time_array = date_filter(df["ordinal_datetime"], filter_tuple)
     gas_array = date_filter(df[measurement_name], filter_tuple)
