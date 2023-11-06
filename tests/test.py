@@ -5,11 +5,10 @@ import sys
 # test_with_unittest discover
 import main
 
-# ini file with test data
+# initialize data for AC test
 ac_ini = "tests/test_inis/test_ini_ac.ini"
 
 
-# csv with correct data
 csv = pd.read_csv("tests/test_data/test_results_ac.csv")
 csv["datetime"] = pd.to_datetime(csv["datetime"], format="%Y-%m-%d %H:%M:%S")
 csv.set_index("datetime", inplace=True)
@@ -31,6 +30,7 @@ def test_main_ac_defaults(test_input):
     assert correct[input].tolist() == test.upload_ready_data[input].tolist()
 
 
+# initialize data for manual test
 man_ini = "tests/test_inis/test_ini_man.ini"
 
 man_csv = pd.read_csv("tests/test_data/test_results_man.csv")
@@ -54,4 +54,3 @@ def test_main_manual_defaults(test_input):
         correct[input] = pd.to_datetime(correct[input], format="%Y-%m-%d %H:%M:%S")
     # assert correct.snowdepth.tolist() == test.upload_ready_data.snowdepth.tolist()
     assert correct[input].tolist() == test.upload_ready_data[input].tolist()
-    pass
