@@ -334,9 +334,10 @@ def ac_push(inifile, test_mode=None):
         air_temperature_df = filterer(filter_tuple, air_temperature_df.aux_data_df)
         air_pressure_df = filterer(filter_tuple, air_pressure_df.aux_data_df)
 
-    snowdepth_df, set_snow_to_zero = snowdepth_parser(
+    snowdepth_df = snowdepth_parser(
         defaults_dict.get("snowdepth_measurement"),
     )
+    set_snow_to_zero = snowdepth_df.set_to_zero
 
     data_with_temp = False
     data_with_temp_pressure = False
