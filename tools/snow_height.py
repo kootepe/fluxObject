@@ -9,6 +9,7 @@ def read_snow_measurement(snow_depth_file):
         snowdepth["datetime"] = pd.to_datetime(snowdepth["datetime"], format="%d/%m/%Y")
         snowdepth.set_index("datetime", inplace=True)
     else:
+        snowdepth = None
         set_to_zero = 1
     return snowdepth, set_to_zero
 
