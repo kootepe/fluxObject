@@ -112,7 +112,7 @@ def csv_push(inifile):
 
 
 @timer
-def man_push(inifile):
+def man_push(inifile, test_mode=0):
     """
     Function to handle flux calculation and influx pushing
 
@@ -236,7 +236,8 @@ def man_push(inifile):
         merged_data.merged_data, measuring_chamber_dict, filter_tuple, defaults_dict
     )
 
-    (ready_data.upload_ready_data)
+    if test_mode == 1:
+        return ready_data
 
 
 @timer
