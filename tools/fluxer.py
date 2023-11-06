@@ -300,8 +300,6 @@ class merge_data:
         that the index is ascending.
     """
 
-    def __init__(self, measurement_df, aux_df):
-        self.merged_data = self.merge_aux_data(measurement_df, aux_df)
     def __init__(self, measurement_df, aux_df, snowdepth=None):
         self.measurement_df = measurement_df
         self.aux_df = aux_df
