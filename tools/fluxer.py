@@ -116,7 +116,9 @@ class snowdepth_parser:
 
     def __init__(self, snowdepth_measurement):
         self.snowdepth_measurement = snowdepth_measurement
-        self.snowdepth_df = self.add_snowdepth()
+        self.snowdepth_df, self.set_to_zero = tools.snow_height.read_snow_measurement(
+            self.snowdepth_measurement
+        )
 
     def add_snowdepth(self):
         """
@@ -133,7 +135,7 @@ class snowdepth_parser:
 
         """
         if self.snowdepth_measurement:
-            snowdepth = tools.snow_height.read_snow_measurement(
+            snowdepth, set_to_zero = tools.snow_height.read_snow_measurement(
                 self.snowdepth_measurement
             )
             print(snowdepth)
