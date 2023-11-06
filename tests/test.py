@@ -1,10 +1,11 @@
 # test_with_unittest discover
-from calc.fluxer import measurement_reader
-from calc.fluxer import aux_data_reader
-from calc.fluxer import pusher
-from calc.time_funcs import ordinal_timer
+from tools.fluxer import measurement_reader
+from tools.fluxer import aux_data_reader
+from tools.fluxer import pusher
+from tools.time_funcs import ordinal_timer
 import configparser
 import numpy as np
+import main
 
 inifile = 'tests/test_ini.ini'
 def config_read(inifile):
@@ -49,3 +50,10 @@ def test_measurement_reader():
                  }
     assert measurement.measurement_files == ['210103.DAT']
     assert measurement.measurement_df.dtypes.to_dict() == datatypes
+
+def test_main_py():
+    main.ac_push(inifile)
+
+    # if __name__ == "__main__":
+    #     inifile = 'tests/test_ini.ini'
+    #     test_main_py()
