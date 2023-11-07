@@ -39,3 +39,13 @@ def date_filter(data_to_filter, filter_tuple):
 def create_filter_tuple(df):
     filter_tuple = list(zip(df["close_time"], df["open_time"], df["chamber"]))
     return filter_tuple
+
+
+def add_time_to_filter_tuple(filter_tuple, percentage):
+    """Remove percentage from both ends of the filter tuple"""
+    time_difference = (filter_tuple[1] - filter_tuple[0]).seconds
+    time_to_remove = pd.to_timedelta(time_difference * (percentage / 100), "S")
+    start = filter_tuple[0] + time_to_remove
+    end = filter_tuple[1] - time_to_remove
+    tuple = (start, end, filter_tuple[2])
+    return tuple

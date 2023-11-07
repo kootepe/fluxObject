@@ -15,7 +15,12 @@ from pathlib import Path
 
 
 # modules from this repo
-from tools.filter import date_filter, date_filter_list, create_filter_tuple
+from tools.filter import (
+    date_filter,
+    date_filter_list,
+    create_filter_tuple,
+    add_time_to_filter_tuple,
+)
 from tools.time_funcs import (
     ordinal_timer,
     strftime_to_regex,
@@ -238,14 +243,18 @@ class calculated_data:
             if measurement_df.empty:
                 continue
 
-            measurement_df[f"{mr}_slope"] = calculate_slope(df, date, mr)
+            slope_dates = add_time_to_filter_tuple(date, 25)
+            measurement_df[f"{mr}_slope"] = calculate_slope(df, slope_dates, mr)
 
             if measurement_df.ch4.isnull().values.any():
                 logging.warning(
                     "Non-numeric values present from" f" {date[0]} to " f"{date[1]}"
                 )
 
-            measurement_df[f"{mr}_pearsons_r"] = calculate_pearsons_r(df, date, mr)
+            pearsons_dates = add_time_to_filter_tuple(date, 25)
+            measurement_df[f"{mr}_pearsons_r"] = calculate_pearsons_r(
+                df, pearsons_dates, mr
+            )
             measurement_df[f"{mr}_flux"] = calculate_gas_flux(
                 measurement_df,
                 mr,
