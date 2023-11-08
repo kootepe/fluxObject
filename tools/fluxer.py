@@ -19,6 +19,7 @@ from tools.filter import (
     date_filter,
     date_filter_list,
     create_filter_tuple,
+    create_filter_tuple_extra,
     add_time_to_filter_tuple,
 )
 from tools.time_funcs import (
@@ -812,9 +813,15 @@ class chamber_cycle:
         self.chamber_measurement_end_sec = int(
             measurement_time_dict.get("end_of_measurement")
         )
+        self.end_of_cycle = int(
+            measurement_time_dict.get("end_of_cycle")
+        )
         self.measurement_files = measurement_files
         self.chamber_cycle_df = self.create_chamber_cycle()
         self.filter_tuple = create_filter_tuple(self.chamber_cycle_df)
+        self.whole_cycle_tuple = create_filter_tuple_extra(
+            self.chamber_cycle_df, "cycle_start", "cycle_end"
+        )
 
     def create_chamber_cycle(self):
         """
@@ -844,6 +851,10 @@ class chamber_cycle:
             )
             df["open_time"] = df["datetime"] + pd.to_timedelta(
                 self.chamber_measurement_end_sec, unit="S"
+            )
+            df["cycle_start"] = df["datetime"]
+            df["cycle_end"] = df["datetime"] + pd.to_timedelta(
+                self.end_of_cycle, unit="S"
             )
             tmp.append(df)
         dfs = pd.concat(tmp)
