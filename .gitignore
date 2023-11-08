@@ -9,4 +9,6 @@ __pycache__
 # *.csv
 .jukit
 aux
+figs
+inifiles
 *.aux
