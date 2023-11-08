@@ -32,6 +32,7 @@ from tools.influxdb_funcs import influx_push, check_last_db_timestamp
 from tools.file_tools import get_newest
 from tools.gas_funcs import calculate_gas_flux, calculate_pearsons_r, calculate_slope
 import tools.snow_height
+from tools.merging import merge_aux_by_column, is_dataframe_sorted_by_datetime_index
 
 # define logging format
 logging.basicConfig(
@@ -377,9 +378,9 @@ class merge_data:
         df -- pandas.dataframe
             dataframe with aux_data merged into the main gas measurement dataframe
         """
-        if self.is_dataframe_sorted_by_datetime_index(
+        if is_dataframe_sorted_by_datetime_index(
             measurement_df
-        ) and self.is_dataframe_sorted_by_datetime_index(aux_df):
+        ) and is_dataframe_sorted_by_datetime_index(aux_df):
             df = pd.merge_asof(
                 measurement_df,
                 aux_df,
