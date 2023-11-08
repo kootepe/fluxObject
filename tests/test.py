@@ -1,5 +1,6 @@
 import pytest
 import pandas as pd
+import numpy as np
 import sys
 
 # test_with_unittest discover
@@ -35,16 +36,18 @@ def test_main_ac_defaults(test_input):
 # initialize data for manual test
 man_ini = "tests/test_inis/test_ini_man.ini"
 
-man_csv = pd.read_csv("tests/test_data/test_results_man.csv")
+man_csv = pd.read_csv(
+    "tests/test_data/test_results_man.csv", dtype={"start": "str", "notes": "str"}
+)
 man_csv["datetime"] = pd.to_datetime(man_csv["datetime"], format="%Y-%m-%d %H:%M:%S")
 man_csv.set_index("datetime", inplace=True)
+man_csv["notes"] = man_csv["notes"].fillna("")
+man_csv["validity"] = man_csv["validity"].fillna("")
 
 man_cols = man_csv.columns.to_list()
 
 # run main py with test flag to return classes
 man_data_to_test = main.man_push(man_ini, 1)
-# man_data_to_test.upload_ready_data.to_csv("tests/test_data/test_results_man.csv")
-# sys.exit()
 
 
 @pytest.mark.parametrize("test_input", man_cols)
@@ -52,10 +55,18 @@ def test_main_manual_defaults(test_input):
     input = test_input
     correct = man_csv
     test = man_data_to_test
-    if input == "chamber_close" or input == "chamber_open":
+    if input in [
+        "chamber_close",
+        "chamber_open",
+        "end_time",
+        "close_time",
+        "open_time",
+        "start_time",
+    ]:
         correct[input] = pd.to_datetime(correct[input], format="%Y-%m-%d %H:%M:%S")
-    # assert correct.snowdepth.tolist() == test.upload_ready_data.snowdepth.tolist()
     assert correct[input].tolist() == test.upload_ready_data[input].tolist()
+
+
 main_snow_test_df = pd.read_csv("tests/snow_test_function.csv")
 main_snow_test_df["datetime"] = pd.to_datetime(
     main_snow_test_df["datetime"], format="%Y-%m-%d %H:%M:%S"
