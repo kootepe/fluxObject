@@ -41,6 +41,12 @@ def create_filter_tuple(df):
     return filter_tuple
 
 
+def create_filter_tuple_extra(df, start_col, end_col):
+    """create filter tuple from given column names"""
+    filter_tuple = list(zip(df[start_col], df[end_col]))
+    return filter_tuple
+
+
 def add_time_to_filter_tuple(filter_tuple, percentage):
     """Remove percentage from both ends of the filter tuple"""
     time_difference = (filter_tuple[1] - filter_tuple[0]).seconds
