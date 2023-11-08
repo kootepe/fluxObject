@@ -23,14 +23,19 @@ def influx_push(df, influxdb_dict, tag_columns):
         org=influxdb_dict.get("organization"),
     ) as client:
         write_api = client.write_api(write_options=SYNCHRONOUS)
-        write_api.write(
-            bucket=influxdb_dict.get("bucket"),
-            record=df,
-            data_frame_measurement_name=influxdb_dict.get("measurement_name"),
-            data_frame_timestamp_timezone=influxdb_dict.get("timezone"),
-            data_frame_tag_columns=tag_columns,
-            debug=True,
-        )
+        try:
+            write_api.write(
+                bucket=influxdb_dict.get("bucket"),
+                record=df,
+                data_frame_measurement_name=influxdb_dict.get("measurement_name"),
+                data_frame_timestamp_timezone=influxdb_dict.get("timezone"),
+                data_frame_tag_columns=tag_columns,
+                debug=True,
+            )
+        except NewConnectionError:
+            logging.info(f"Couldn't connect to database at " f"{influxdb_dict.get('url')}")
+            pass
+
     logging.info("Pushed data to DB")
 
 
