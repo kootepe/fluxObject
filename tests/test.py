@@ -4,6 +4,8 @@ import sys
 
 # test_with_unittest discover
 import main
+from tools.merging import merge_aux_by_column
+from tools.snow_height import read_snow_measurement
 
 # initialize data for AC test
 ac_ini = "tests/test_inis/test_ini_ac.ini"
@@ -54,3 +56,17 @@ def test_main_manual_defaults(test_input):
         correct[input] = pd.to_datetime(correct[input], format="%Y-%m-%d %H:%M:%S")
     # assert correct.snowdepth.tolist() == test.upload_ready_data.snowdepth.tolist()
     assert correct[input].tolist() == test.upload_ready_data[input].tolist()
+main_snow_test_df = pd.read_csv("tests/snow_test_function.csv")
+main_snow_test_df["datetime"] = pd.to_datetime(
+    main_snow_test_df["datetime"], format="%Y-%m-%d %H:%M:%S"
+)
+main_snow_test_df.set_index("datetime", inplace=True)
+
+aux_snow_test_df, _ = read_snow_measurement("tests/snow_test_for_function.xlsx")
+
+
+def test_ac_snowdepth():
+    snow_df = merge_aux_by_column(main_snow_test_df, aux_snow_test_df)
+
+    correct_seq = [5, 5, 1, 0, 3, 2, 5, 4, 7, 6, 7, 6, 7, 6]
+    assert correct_seq == snow_df.snowdepth.tolist()
