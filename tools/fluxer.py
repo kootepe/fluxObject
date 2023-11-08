@@ -1329,7 +1329,7 @@ class csv_reader:
         # check if date and time are separate columns
         check = any(item in date_and_time for item in names)
         # if date and time are separate, combine them to datetime
-        if check == True:
+        if check is True:
             dfs["datetime"] = pd.to_datetime(
                 dfs["date"].apply(str) + " " + dfs["time"], format=timestamp_format
             )
