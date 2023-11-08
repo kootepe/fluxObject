@@ -1419,12 +1419,12 @@ class read_manual_measurement_timestamps:
             df = pd.read_csv(
                 Path(self.measurement_path) / f,
                 skiprows=10,
-                names=["chamber", "start", "notes", "height", "validity"],
+                names=["chamber", "start", "notes", "snowdepth", "validity"],
                 dtype={
                     "chamber": "int",
                     "start": "str",
                     "notes": "str",
-                    "height": "float",
+                    "snowdepth": "float",
                     "validity": "str",
                 },
             )
