@@ -1426,6 +1426,11 @@ class read_manual_measurement_timestamps:
             df["end_time"] = df["datetime"] + pd.to_timedelta(
                 self.measurement_end_time, unit="S"
             )
+            df["snowdepth"] = df["snowdepth"].fillna(0)
             tmp.append(df)
         dfs = pd.concat(tmp)
+        dfs.set_index("datetime", inplace=True)
+        dfs["notes"] = dfs["notes"].fillna("")
+        dfs["validity"] = dfs["notes"].fillna("")
+        dfs.sort_index(inplace=True)
         return dfs
