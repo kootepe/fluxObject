@@ -232,6 +232,8 @@ class calculated_data:
         """
         mr = measurement_name
         measurement_list = []
+        slope_times_list = []
+        pearsons_r_times_list = []
         df = data.copy()
 
         if self.get_temp_and_pressure_from_file == "1":
@@ -264,7 +266,11 @@ class calculated_data:
                 self.chamber_height,
             )
             measurement_list.append(measurement_df)
+            slope_times_list.append(slope_dates)
+            pearsons_r_times_list.append(pearsons_dates)
         all_measurements_df = pd.concat(measurement_list)
+        self.pearsons_r_times_list = pearsons_r_times_list
+        self.slope_times_list = slope_times_list
         return all_measurements_df
 
     def summarize(self, data):
