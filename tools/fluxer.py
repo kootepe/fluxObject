@@ -324,17 +324,17 @@ class merge_data:
         self.snowdepth = snowdepth
         if self.aux_df is not None:
             if self.snowdepth is not None:
-                self.merged_data = self.merge_aux_by_column(measurement_df, aux_df)
+                self.merged_data = merge_aux_by_column(measurement_df, aux_df)
             else:
                 self.merged_data = self.merge_aux_data(measurement_df, aux_df)
         else:
             pass
 
-
-    def merge_aux_by_column(self, measurement_df, aux_df):
+    def merge_aux_by_column2(self, measurement_df, aux_df):
         """
-        Function mainly meant to add snowdepth to automatic chamber
-        measurements
+        This sole use of this function is to merge AC chamber snowdepth
+        measurement into the main dataframe.
+        Its a bit of a mess.
         """
         main_df = measurement_df
         other_df = aux_df
