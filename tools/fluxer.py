@@ -68,7 +68,8 @@ class pusher:
         self.data = data
         logging.info("Pushing data to DB")
         self.tag_columns = self.read_tag_columns()
-        influx_push(self.data, self.influxdb_dict, self.tag_columns)
+        for date, group in self.data.groupby(pd.Grouper(freq='D')):
+            influx_push(group, self.influxdb_dict, self.tag_columns)
 
     def read_tag_columns(self):
         """
