@@ -20,6 +20,7 @@ from tools.fluxer import (
     handle_eddypro,
     csv_reader,
     read_manual_measurement_timestamps,
+    excel_creator
 )
 
 
@@ -379,6 +380,9 @@ def ac_push(inifile, test_mode=None):
 
     # ready_data.upload_ready_data.to_csv('./AC_data_2023.csv')
     # pusher(ready_data.upload_ready_data, influxdb_dict)
+    excel_creator(merged_data.merged_data, ready_data.upload_ready_data,
+                  filter_tuple)
+
     if test_mode:
         return ready_data
 

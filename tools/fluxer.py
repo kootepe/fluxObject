@@ -1,6 +1,8 @@
 import os
 import re
 import functools
+import glob
+import shutil
 
 import sys
 import logging
@@ -1452,3 +1454,27 @@ class read_manual_measurement_timestamps:
         dfs["validity"] = dfs["notes"].fillna("")
         dfs.sort_index(inplace=True)
         return dfs
+class excel_creator:
+    def __init__(self, all_data, summarized_data, filter_tuple):
+        self.all_data = all_data
+        self.summarized_data = summarized_data
+        self.filter_tuple = filter_tuple
+        self.create_xlsx()
+        # files = glob.glob("figs")
+
+    def create_xlsx(self):
+        fig_dir = "figs/"
+        exists = os.path.exists(fig_dir)
+        if not exists:
+            os.mkdir(fig_dir)
+        daylist = []
+        for date in self.filter_tuple:
+            data = date_filter(self.all_data, date).copy()
+            day = date[0].date()
+            if day not in daylist:
+                daylist.append(day)
+            create_sparkline(data[['ch4']], date[0])
+        for day in daylist:
+            data = self.summarized_data[self.summarized_data.index.date == day]
+            create_excel(data, str(day))
+        shutil.rmtree(fig_dir)
