@@ -400,19 +400,30 @@ def list_inis(ini_path):
     return filtered_files
 
 
+def custom_logger(logger_name, level=logging.INFO):
+    """Custom logger that has .ini name in the logging message"""
+    logger = logging.getLogger(logger_name)
+    logger.setLevel(level)
+    format_string = (
+        f"%(asctime)s.%(msecs)03d %(levelname)s {logger_name}:\t" "%(message)s"
+    )
+    date_format = "%Y-%m-%d %H:%M:%S"
+    log_format = logging.Formatter(format_string, date_format)
+    console_handler = logging.StreamHandler(sys.stdout)
+    console_handler.setFormatter(log_format)
+    logger.addHandler(console_handler)
+
+    return logger
+
+
 if __name__ == "__main__":
     ini_path = sys.argv[1]
     # mode = sys.argv[2]
     ini_files = list_inis(ini_path)
     for inifile in ini_files:
         file_name = Path(inifile).name
-        # define logging format
-        logging.basicConfig(
-            level=logging.INFO,
-            format=f"%(asctime)s.%(msecs)03d {file_name} %(levelname)s:\t"
-            "%(message)s",
-            datefmt="%Y-%m-%d %H:%M:%S",
-        )
+        # define custom logger
+        logger = custom_logger(file_name)
         config = configparser.ConfigParser(allow_no_value=True)
         config.read(inifile)
         # active = dict(config.items("defaults")).getboolean("active")
