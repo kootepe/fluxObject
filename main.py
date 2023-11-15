@@ -417,24 +417,41 @@ def custom_logger(logger_name, level=logging.INFO):
 
 
 if __name__ == "__main__":
+    """
+    TODO: logging is a hack
+    """
     ini_path = sys.argv[1]
     # mode = sys.argv[2]
     ini_files = list_inis(ini_path)
+    # logger = custom_logger(ini_files[0].name)
     for inifile in ini_files:
         file_name = Path(inifile).name
         # define custom logger
-        logger = custom_logger(file_name)
+        filehandler = logging.FileHandler(file_name, "a")
+        formatter = logging.Formatter(
+            f"%(asctime)s.%(msecs)03d %(levelname)s {file_name}:\t" "%(message)s"
+        )
+        date_format = "%Y-%m-%d %H:%M:%S"
+        filehandler.setFormatter(formatter)
+        logger = logging.getLogger()
+        for hdlr in logger.handlers[:]:
+            if isinstance(hdlr, logging.FileHandler):
+                logger.removeHandler(hdlr)
+        logger.addHandler(filehandler)
+        logger.setLevel(logging.INFO)
+        logger = logging.getLogger()
+        logging.basicConfig(
+            format=f"%(asctime)s.%(msecs)03d %(levelname)s {file_name}:\t"
+            "%(message)s",
+            force=True,
+        )
+        # logger = custom_logger(file_name)
         config = configparser.ConfigParser(allow_no_value=True)
         config.read(inifile)
-        # active = dict(config.items("defaults")).getboolean("active")
-        try:
-            active = config.getboolean("defaults", "active")
-        except configparser.NoOptionError:
-            logging.warning("Option Active not set in .ini, skipping")
-            continue
+        active = config.getboolean("defaults", "active")
         if active:
             mode = dict(config.items("defaults")).get("mode")
-            logging.info(f"Running {inifile}.")
+            logger.info(f"Running {inifile}.")
             if mode == "ac":
                 ac_push(str(inifile))
             if mode == "man":
@@ -443,3 +460,4 @@ if __name__ == "__main__":
                 csv_push(inifile)
             if mode == "eddypro":
                 eddypro_push(inifile)
+        logger.removeHandler(file_name)

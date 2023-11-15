@@ -1,6 +1,9 @@
 import numpy as np
 import pandas as pd
 from tools.filter import date_filter
+import logging
+
+logging = logging.getLogger("__main__")
 
 
 def calculate_gas_flux(data, measurement_name, chamber_height):

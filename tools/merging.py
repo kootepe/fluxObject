@@ -2,6 +2,8 @@ import logging
 import sys
 import pandas as pd
 
+logging = logging.getLogger("__main__")
+
 
 def merge_aux_by_column(measurement_df, aux_df):
     """

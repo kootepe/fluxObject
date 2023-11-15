@@ -38,6 +38,8 @@ from tools.merging import merge_aux_by_column, is_dataframe_sorted_by_datetime_i
 
 from tools.create_excel import create_excel, create_sparkline
 
+logging = logging.getLogger("__main__")
+
 
 class pusher:
     """

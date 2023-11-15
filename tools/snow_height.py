@@ -3,6 +3,8 @@ import logging
 import pandas as pd
 from pathlib import Path
 
+logging = logging.getLogger("__main__")
+
 
 def read_snow_measurement(snow_depth_file):
     set_to_zero = 0

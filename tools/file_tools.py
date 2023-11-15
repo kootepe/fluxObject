@@ -3,6 +3,9 @@ import logging
 import os
 import sys
 
+logging = logging.getLogger("__main__")
+
+
 def get_newest(path: str, file_extension: str):
     """
     Fetchest name of the newest file in a folder

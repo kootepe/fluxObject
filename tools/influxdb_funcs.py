@@ -3,6 +3,8 @@ from influxdb_client.client.write_api import SYNCHRONOUS
 import logging
 from urllib3.exceptions import NewConnectionError
 
+logging = logging.getLogger("__main__")
+
 
 def influx_push(df, influxdb_dict, tag_columns):
     """

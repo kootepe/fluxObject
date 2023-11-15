@@ -3,6 +3,10 @@ from openpyxl.utils.dataframe import dataframe_to_rows
 from openpyxl import Workbook
 import matplotlib.pyplot as plt
 import os
+import logging
+
+logging = logging.getLogger("__main__")
+
 
 def create_excel(df, name):
     wb = Workbook()

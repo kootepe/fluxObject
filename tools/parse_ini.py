@@ -1,4 +1,7 @@
 import configparser
+import logging
+
+logging = logging.getLogger("__main__")
 
 
 def parse_ini_to_dicts(ini_file):
