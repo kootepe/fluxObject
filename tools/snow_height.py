@@ -1,16 +1,25 @@
 import sys
+import logging
 import pandas as pd
+from pathlib import Path
 
 
 def read_snow_measurement(snow_depth_file):
     set_to_zero = 0
-    if snow_depth_file:
+    if bool(snow_depth_file) is False:
+        logging.info("No snowdepth measurement, setting snowdepth to 0")
+        snowdepth = None
+        set_to_zero = 1
+        return snowdepth, set_to_zero
+    if not Path(snow_depth_file).is_file():
+        logging.info(
+            f"Snowdepth measurement is defined as {snow_depth_file} but the file is not found, exiting."
+        )
+        sys.exit(0)
+    else:
         snowdepth = pd.read_excel(snow_depth_file)
         snowdepth["datetime"] = pd.to_datetime(snowdepth["datetime"], format="%d/%m/%Y")
         snowdepth.set_index("datetime", inplace=True)
-    else:
-        snowdepth = None
-        set_to_zero = 1
     return snowdepth, set_to_zero
 
 
