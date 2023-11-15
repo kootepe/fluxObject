@@ -389,14 +389,38 @@ def ac_push(inifile, test_mode=None):
         return ready_data
 
 
+def list_inis(ini_path):
+    """
+    List files ending in .ini in given directory
+    """
+    folder = Path(ini_path)
+    files = [file for file in folder.glob("*") if file.is_file()]
+    filtered_files = [file for file in files if ".ini" in file.name]
+
+    return filtered_files
+
+
 if __name__ == "__main__":
-    inifile = sys.argv[1]
-    mode = sys.argv[2]
-    if mode == "ac":
-        ac_push(inifile)
-    if mode == "man":
-        man_push(inifile)
-    if mode == "csv":
-        csv_push(inifile)
-    if mode == "eddypro":
-        eddypro_push(inifile)
+    ini_path = sys.argv[1]
+    # mode = sys.argv[2]
+    ini_files = list_inis(ini_path)
+    for inifile in ini_files:
+        config = configparser.ConfigParser(allow_no_value=True)
+        config.read(inifile)
+        # active = dict(config.items("defaults")).getboolean("active")
+        try:
+            active = config.getboolean("defaults", "active")
+        except configparser.NoOptionError:
+            logging.warning("Option Active not set in .ini, skipping")
+            continue
+        if active:
+            mode = dict(config.items("defaults")).get("mode")
+            logging.info(f"Running {inifile}.")
+            if mode == "ac":
+                ac_push(str(inifile))
+            if mode == "man":
+                man_push(inifile)
+            if mode == "csv":
+                csv_push(inifile)
+            if mode == "eddypro":
+                eddypro_push(inifile)
