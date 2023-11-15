@@ -37,12 +37,6 @@ import tools.snow_height
 from tools.merging import merge_aux_by_column, is_dataframe_sorted_by_datetime_index
 
 from tools.create_excel import create_excel, create_sparkline
-# define logging format
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s.%(msecs)03d %(levelname)s:\t" "%(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S",
-)
 
 
 class pusher:

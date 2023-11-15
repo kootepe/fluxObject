@@ -405,6 +405,14 @@ if __name__ == "__main__":
     # mode = sys.argv[2]
     ini_files = list_inis(ini_path)
     for inifile in ini_files:
+        file_name = Path(inifile).name
+        # define logging format
+        logging.basicConfig(
+            level=logging.INFO,
+            format=f"%(asctime)s.%(msecs)03d {file_name} %(levelname)s:\t"
+            "%(message)s",
+            datefmt="%Y-%m-%d %H:%M:%S",
+        )
         config = configparser.ConfigParser(allow_no_value=True)
         config.read(inifile)
         # active = dict(config.items("defaults")).getboolean("active")
