@@ -7,11 +7,11 @@ logging = logging.getLogger("__main__")
 
 
 def read_snow_measurement(snow_depth_file):
-    set_to_zero = 0
+    set_to_zero = False
     if bool(snow_depth_file) is False:
         logging.info("No snowdepth measurement, setting snowdepth to 0")
         snowdepth = None
-        set_to_zero = 1
+        set_to_zero = True
         return snowdepth, set_to_zero
     if not Path(snow_depth_file).is_file():
         logging.info(
