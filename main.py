@@ -217,9 +217,13 @@ def man_push(inifile, test_mode=0):
         air_temperature_df = None
         air_pressure_df = None
 
+    merged_data = merge_data(
+        filtered_measurement.filtered_data,
+        manual_measurement_time_df.manual_measurement_df,
+    )
     if air_pressure_df is not None and air_temperature_df is not None:
         merged_data = merge_data(
-            filtered_measurement.filtered_data, air_temperature_df.filtered_data
+            merged_data.merged_data, air_temperature_df.filtered_data
         )
         merged_data = merge_data(merged_data.merged_data, air_pressure_df.filtered_data)
     else:
