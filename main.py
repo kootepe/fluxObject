@@ -363,9 +363,12 @@ def ac_push(inifile, test_mode=None):
         data_with_temp_pressure = merge_data(
             data_with_temp.merged_data, air_pressure_df.filtered_data
         )
-        data_with_temp_pressure_snow = merge_data(
-            data_with_temp_pressure.merged_data, snowdepth_df.snowdepth_df, True
-        )
+        if set_snow_to_zero is False:
+            data_with_temp_pressure = merge_data(
+                data_with_temp_pressure.merged_data, snowdepth_df.snowdepth_df, True
+            )
+        data_with_snow = False
+        merged_data = data_with_temp_pressure
     else:
         data_with_snow = merge_data(
             filtered_measurement.filtered_data,
@@ -373,14 +376,9 @@ def ac_push(inifile, test_mode=None):
             True,
         )
 
-    if data_with_temp_pressure_snow is True:
-        merged_data = data_with_temp_pressure_snow
-    else:
+    if data_with_snow:
         merged_data = data_with_snow
 
-
-    if set_snow_to_zero is True:
-        merged_data.merged_data["snowdepth"] = 0
     ready_data = calculated_data(
         merged_data.merged_data, measuring_chamber_dict, filter_tuple, defaults_dict
     )
