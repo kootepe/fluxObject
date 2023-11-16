@@ -352,6 +352,8 @@ def ac_push(inifile, test_mode=None):
         defaults_dict.get("snowdepth_measurement"),
     )
     set_snow_to_zero = snowdepth_df.set_to_zero
+    if set_snow_to_zero is True:
+        filtered_measurement.filtered_data["snowdepth"] = 0
 
     data_with_temp = False
     data_with_temp_pressure = False
