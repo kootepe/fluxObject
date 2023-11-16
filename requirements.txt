@@ -1,5 +1,4 @@
 influxdb_client==1.38.0
-matplotlib==3.5.1
 numpy
 openpyxl==3.0.9
 pandas==1.5.1
