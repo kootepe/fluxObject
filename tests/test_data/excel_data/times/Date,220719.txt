@@ -1,0 +1,28 @@
+Date,220719
+Name,ek
+Sky,cloudy
+Temp,-1
+Wind,no wind
+Precipitation,none
+ACSnowdepth,
+FluxAvg,
+AcFluxAvg,
+Plot Number,Start Time,Notes,Chamber height
+68,1050,,3
+70,1102,,3
+72,1056,,4
+66,1110,,4
+64,1116,,3
+56,1122,,2
+58,1129,,1
+60,1135,,2
+62,1141,,4
+38,1237,,2
+50,1231
+52,1225,,3
+54,1219,,2
+40,1213,,2
+42,1207
+44,1201,,1
+46,1155,,1
+48,1149,,1
