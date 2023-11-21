@@ -482,8 +482,6 @@ class filterer:
         empty_count = 0
         logging.info(f"Filtering data with columns:\n{list(data_to_filter.columns)}")
         for date in self.filter_tuple:
-            # print(f'{date[0] = }')
-            # print(f'{date[1] = }')
             df = date_filter(data_to_filter, date)
             # drop measurements with no data
             if df.empty:
@@ -506,7 +504,6 @@ class filterer:
             df["chamber"] = date[2]
             df["chamber_close"] = date[0]
             df["chamber_open"] = date[1]
-            # print(f'{df = }')
             clean_data.append(df)
             clean_timestamps.append(date)
         if len(self.filter_tuple) == empty_count:
@@ -659,7 +656,6 @@ class aux_data_reader:
         try:
             dfs = pd.concat(tmp)
         except ValueError:
-            print(path)
             logging.info(
                 "None of the auxiliary data is in the same time range as gas measurement data."
             )
@@ -722,7 +718,6 @@ class measurement_reader:
         tmp = []
         for f in self.measurement_files:
             try:
-                print(Path(path) / f)
                 df = pd.read_csv(
                     Path(path) / f,
                     skiprows=skiprows,
@@ -1037,7 +1032,7 @@ class get_start_and_end_time:
         # try:
         #    date = re.search(self.strftime_to_regex(), datestring).group(0)
         # except AttributeError:
-        #    print('Files are found in folder but no matching file found, is the format of the timestamp correct?')
+        # logging.info('Files are found in folder but no matching file found, is the format of the timestamp correct?')
         #    return None
         if self.file_timestamp_format == strftime_to_regex(self.file_timestamp_format):
             logging.info("No strftime formatting in filename, returning current date")
@@ -1208,7 +1203,6 @@ class csv_reader:
         self.files = csv_files
         self.measurement_dict = measurement_dict
         self.data = self.add_csv_data(self.measurement_dict)
-        # print(self.files)
 
     def csv_ini_parser(self, ini_dict):
         """
@@ -1291,9 +1285,6 @@ class csv_reader:
         date_and_time = ["date", "time"]
         for f in self.files:
             try:
-                print(names)
-                print(columns)
-                print(dtypes)
                 f = f + file_extension
                 df = pd.read_csv(
                     Path(path) / f,
@@ -1399,7 +1390,6 @@ class read_manual_measurement_timestamps:
             #    first_line = f.read_line()
             # date = first_line
             date = re.search("\d{6}", f)[0]
-            print(f)
             df = pd.read_csv(
                 Path(self.measurement_path) / f,
                 skiprows=10,
