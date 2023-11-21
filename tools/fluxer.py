@@ -638,7 +638,7 @@ class aux_data_reader:
         for f in self.files:
             try:
                 df = pd.read_csv(
-                    Path(path) / f,
+                    f,
                     skiprows=skiprows,
                     delimiter=delimiter,
                     usecols=columns,
@@ -719,7 +719,7 @@ class measurement_reader:
         for f in self.measurement_files:
             try:
                 df = pd.read_csv(
-                    Path(path) / f,
+                    f,
                     skiprows=skiprows,
                     delimiter="\t",
                     usecols=columns,
@@ -730,7 +730,7 @@ class measurement_reader:
             # this handles those
             except ValueError:
                 df = pd.read_csv(
-                    Path(path) / f,
+                    f,
                     skiprows=skiprows,
                     delimiter="\t",
                     usecols=columns_alternative,
@@ -945,7 +945,7 @@ class file_finder:
                 try:
                     file = p.rglob(filestr)
                     file = [x for x in file if x.is_file()]
-                    file = os.path.basename(str(file[0]))
+                    file = file[0]
                 except IndexError:
                     continue
                 files.append(file)
@@ -1389,9 +1389,9 @@ class read_manual_measurement_timestamps:
             # with open(f) as f:
             #    first_line = f.read_line()
             # date = first_line
-            date = re.search("\d{6}", f)[0]
+            date = re.search("\d{6}", str(f.name))[0]
             df = pd.read_csv(
-                Path(self.measurement_path) / f,
+                f,
                 skiprows=10,
                 names=["chamber", "start", "notes", "snowdepth", "validity"],
                 dtype={

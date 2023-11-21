@@ -19,10 +19,11 @@ def get_newest(path: str, file_extension: str):
         Name of the newest file in a folder
 
     """
-    files = list(Path(path).rglob(f'*{file_extension}*'))
+    logging.info(f"Getting first timestamp from {path}")
+    files = list(Path(path).rglob(f"*{file_extension}*"))
     if not files:
-        logging.info(f'No files found in {path}')
-        logging.warning('EXITING')
+        logging.info(f"No files found in {path}")
+        logging.warning("EXITING")
         sys.exit(0)
 
     # linux only
