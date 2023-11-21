@@ -123,30 +123,10 @@ class snowdepth_parser:
 
     def __init__(self, snowdepth_measurement):
         self.snowdepth_measurement = snowdepth_measurement
+        # NOTE: does doing this little require it's own class?
         self.snowdepth_df, self.set_to_zero = tools.snow_height.read_snow_measurement(
             self.snowdepth_measurement
         )
-
-    def add_snowdepth(self):
-        """
-        Creates a dataframe from snowdepth measurements. If there's no
-        measurement, it will create an empty one.
-
-        args:
-        ---
-        snowdepth_measurement -- .xlsx file
-
-        returns:
-        ---
-        snowdepth -- df
-
-        """
-        if self.snowdepth_measurement:
-            snowdepth, set_to_zero = tools.snow_height.read_snow_measurement(
-                self.snowdepth_measurement
-            )
-            print(snowdepth)
-        return snowdepth
 
 
 class calculated_data:
