@@ -109,7 +109,6 @@ def csv_push(inifile):
         timestamps_values.end_timestamp,
     )
     data = csv_reader(measurement_files.measurement_files, measurement_dict)
-    print(data.data)
     ##pusher(data.data, influxdb_dict)
 
 
