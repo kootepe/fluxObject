@@ -421,16 +421,14 @@ def custom_logger(logger_name, level=logging.INFO):
 
 
 if __name__ == "__main__":
-    """
-    TODO: logging is a hack
-    """
     ini_path = sys.argv[1]
     # mode = sys.argv[2]
     ini_files = list_inis(ini_path)
     # logger = custom_logger(ini_files[0].name)
     for inifile in ini_files:
         file_name = Path(inifile).name
-        # define custom logger
+
+        # HACK: this logging is a hack
         filehandler = logging.FileHandler(file_name, "a")
         formatter = logging.Formatter(
             f"%(asctime)s.%(msecs)03d %(levelname)s {file_name}:\t" "%(message)s"
@@ -444,12 +442,12 @@ if __name__ == "__main__":
         logger.addHandler(filehandler)
         logger.setLevel(logging.INFO)
         logger = logging.getLogger()
+        logging.Formatter.default_msec_format = "%s.%03d"
         logging.basicConfig(
-            format=f"%(asctime)s.%(msecs)03d %(levelname)s {file_name}:\t"
-            "%(message)s",
+            format=f"%(asctime)s %(levelname)s {file_name}:\t" "%(message)s",
             force=True,
         )
-        # logger = custom_logger(file_name)
+
         config = configparser.ConfigParser(allow_no_value=True)
         config.read(inifile)
         active = config.getboolean("defaults", "active")
