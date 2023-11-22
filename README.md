@@ -35,11 +35,11 @@ in ini:
 
 The docker image is built with the `docker-compose.yml` file. To avoid
 having any paths in the codebase here, they are defined with a `.env`
-file. 
+file.
 
-The docker image is built from the dockerfile, it builds an image which
-has cron for timing script runs, vim for text the editor and copies this
-github repo inside the container. In the docker-compose `volumes` part
+The docker image is built from the `dockerfile`, it builds an image which
+has `cron` for timing script runs, `vim` for text the editor and copies this
+`github` repo inside the container. In the docker-compose `volumes` part
 are defined the folders inside your machine that will be mounted inside
 the docker container, so that the data is visible for the container.
 
@@ -50,10 +50,20 @@ The format of the `.env` file is like this, it's used to define the
 filepaths that will be mounted inside the container.
 
 ```.env
-AUTOCHAMBER_DIR=/path/to/autochamber/data
-EDDY_DIR=/path/to/eddycovariance/data
-MANUAL_DIR=/path/to/manual/measurement/data
-MANUAL_TIMES_DIR=/path/to/manual/measurement/times/
+INI_DIR=/path/to/inis
+INI_DIR_PATH=/data/inis
+AUTOCHAMBER_DIR=/path/to/ac/data
+AUTOCHAMBER_DIR_PATH=/data/autochamber_measurement
+MANUAL_DIR=/path/to/manual/data
+MANUAL_DIR_PATH=/data/manual_measurement
+MANUAL_TIMES_DIR=/path/to/manual/times
+MANUAL_TIMES_DIR_PATH=/data/manual_measurement_times
+AIR_DATA_DIR=/path/to/air/data
+AIR_DATA_DIR_PATH=/data/air_data
+SNOW_MEASUREMENT=/path/to/snow/measurement
+SNOW_MEASUREMENT_PATH=/data/snow_measurement
+EXCEL_DIR=/path/to/excels
+EXCEL_DIR_PATH=/data/excel_summaries
 ```
 
 These paths are mapped into the docker container with the
@@ -66,11 +76,15 @@ services:
     build: 
       context: ./
       dockerfile: ./dockerfile
+    env_file: ./.env
     volumes:
-      - $(AUTOCHAMBER_DIR):/data/AC_Oulanka:ro
-      - $(EDDY_DIR):/data/EC_Oulanka:ro
-      - $(MANUAL_TIMES_DIR):/data/manual_times_data:ro
-      - $(MANUAL_DIR):/data/manual_data:ro
+      - ${AIR_DATA_DIR}:${AIR_DATA_DIR_PATH}
+      - ${INI_DIR}:${INI_DIR_PATH}
+      - ${AUTOCHAMBER_DIR}:${AUTOCHAMBER_DIR_PATH}:ro
+      - ${MANUAL_DIR}:${MANUAL_DIR_PATH}:ro
+      - ${MANUAL_TIMES_DIR}:${MANUAL_TIMES_DIR_PATH}
+      - ${SNOW_MEASUREMENT}:${SNOW_MEASUREMENT_PATH}
+      - ${EXCEL_DIR}:${EXCEL_DIR_PATH}
     entrypoint:
       ["/run.sh"]
 ```
