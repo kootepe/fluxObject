@@ -246,7 +246,7 @@ def man_push(inifile, test_mode=0):
         ready_data = calculated_data(
             merged_data.merged_data, measuring_chamber_dict, filter_tuple, defaults_dict
         )
-    if influxdb_dict.get("url") is not "":
+    if influxdb_dict.get("url"):
         pusher(ready_data.upload_ready_data, influxdb_dict)
     if defaults_dict.get("create_excel") == "1":
         logging.info("Excel creation enabled, keep and eye on your memory")
@@ -397,7 +397,7 @@ def ac_push(inifile, test_mode=None):
 
     # ready_data.upload_ready_data.to_csv('./AC_data_2023.csv')
     # if there's no URL defined, skip pushing to influxdb
-    if influxdb_dict.get("url") is not "":
+    if influxdb_dict.get("url"):
         pusher(ready_data.upload_ready_data, influxdb_dict)
     if defaults_dict.get("create_excel") == "1":
         logging.info("Excel creation enabled, keep and eye on your memory")
