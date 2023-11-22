@@ -1,3 +1,4 @@
+import os
 import sys
 from pathlib import Path
 import functools
@@ -55,7 +56,7 @@ def eddypro_push(inifile):
     ---
 
     """
-    config = configparser.ConfigParser()
+    config = configparser.ConfigParser(os.environ)
     config.read(inifile)
 
     defaults_dict = dict(config.items("defaults"))
@@ -91,7 +92,7 @@ def csv_push(inifile):
     ---
 
     """
-    config = configparser.ConfigParser()
+    config = configparser.ConfigParser(os.environ)
     config.read(inifile)
 
     defaults_dict = dict(config.items("defaults"))
@@ -126,7 +127,7 @@ def man_push(inifile, test_mode=0):
     ---
 
     """
-    config = configparser.ConfigParser()
+    config = configparser.ConfigParser(os.environ)
     config.read(inifile)
 
     defaults_dict = dict(config.items("defaults"))
@@ -468,7 +469,7 @@ if __name__ == "__main__":
             force=True,
         )
 
-        config = configparser.ConfigParser(allow_no_value=True)
+        config = configparser.ConfigParser(os.environ, allow_no_value=True)
         config.read(inifile)
         active = config.getboolean("defaults", "active")
         if active:
