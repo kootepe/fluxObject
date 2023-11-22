@@ -64,7 +64,7 @@ def eddypro_push(inifile):
     measurement_dict = dict(config.items("measurement_data"))
 
     timestamps_values = get_start_and_end_time(
-        influxdb_dict, measurement_dict, defaults_dict.get("season_start")
+        influxdb_dict, measurement_dict, defaults_dict
     )
 
     measurement_files = file_finder(
@@ -100,7 +100,7 @@ def csv_push(inifile):
     measurement_dict = dict(config.items("measurement_data"))
 
     timestamps_values = get_start_and_end_time(
-        influxdb_dict, measurement_dict, defaults_dict.get("season_start")
+        influxdb_dict, measurement_dict, defaults_dict
     )
 
     measurement_files = file_finder(
@@ -145,7 +145,7 @@ def man_push(inifile, test_mode=0):
     )
 
     timestamps_values = get_start_and_end_time(
-        influxdb_dict, measurement_dict, defaults_dict.get("season_start")
+        influxdb_dict, measurement_dict, defaults_dict
     )
 
     measurement_files = file_finder(
@@ -293,7 +293,7 @@ def ac_push(inifile, test_mode=None):
     )
 
     timestamps_values = get_start_and_end_time(
-        influxdb_dict, measurement_dict, defaults_dict.get("season_start")
+        influxdb_dict, measurement_dict, defaults_dict
     )
 
     measurement_files = file_finder(

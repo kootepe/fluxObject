@@ -994,9 +994,10 @@ class get_start_and_end_time:
         end_timestamp, it means that there's no new data to push to db
     """
 
-    def __init__(self, influxdb_dict, measurement_dict, season_start):
+    def __init__(self, influxdb_dict, measurement_dict, defaults_dict):
         self.influxdb_dict = influxdb_dict
-        self.season_start = season_start
+        self.defaults_dict = defaults_dict
+        self.season_start = self.defaults_dict.get("season_start")
         self.path = measurement_dict.get("path")
         self.file_extension = measurement_dict.get("file_extension")
         self.file_timestamp_format = measurement_dict.get("file_timestamp_format")
@@ -1005,6 +1006,9 @@ class get_start_and_end_time:
         self.end_timestamp = self.extract_date(
             get_newest(self.path, self.file_extension)
         )
+        if self.defaults_dict.get("limit_data"):
+            to_add = int(self.defaults_dict.get("limit_data"))
+            self.end_timestamp = self.start_timestamp + datetime.timedelta(days=to_add)
 
         if check_timestamp(self.start_timestamp, self.end_timestamp):
             if self.used_ini_date == 1:
