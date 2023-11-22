@@ -253,7 +253,6 @@ def man_push(inifile, test_mode=0):
         excel_creator(
             merged_data.merged_data,
             filter_tuple,
-            filter_tuple,
             defaults_dict.get("excel_directory"),
         )
     else:
