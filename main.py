@@ -56,7 +56,7 @@ def eddypro_push(inifile):
     ---
 
     """
-    config = configparser.ConfigParser(os.environ)
+    config = configparser.ConfigParser(env_vars)
     config.read(inifile)
 
     defaults_dict = dict(config.items("defaults"))
@@ -92,7 +92,7 @@ def csv_push(inifile):
     ---
 
     """
-    config = configparser.ConfigParser(os.environ)
+    config = configparser.ConfigParser(env_vars)
     config.read(inifile)
 
     defaults_dict = dict(config.items("defaults"))
@@ -127,7 +127,7 @@ def man_push(inifile, test_mode=0):
     ---
 
     """
-    config = configparser.ConfigParser(os.environ)
+    config = configparser.ConfigParser(env_vars)
     config.read(inifile)
 
     defaults_dict = dict(config.items("defaults"))
@@ -276,7 +276,7 @@ def ac_push(inifile, test_mode=None):
     ---
 
     """
-    config = configparser.ConfigParser()
+    config = configparser.ConfigParser(env_vars)
     config.read(inifile)
 
     defaults_dict = dict(config.items("defaults"))
@@ -445,6 +445,7 @@ if __name__ == "__main__":
     # mode = sys.argv[2]
     ini_files = list_inis(ini_path)
     # logger = custom_logger(ini_files[0].name)
+    env_vars = os.environ
     for inifile in ini_files:
         file_name = Path(inifile).name
 
@@ -468,7 +469,7 @@ if __name__ == "__main__":
             force=True,
         )
 
-        config = configparser.ConfigParser(os.environ, allow_no_value=True)
+        config = configparser.ConfigParser(env_vars, allow_no_value=True)
         config.read(inifile)
         active = config.getboolean("defaults", "active")
         if active:
