@@ -35,10 +35,14 @@ def influx_push(df, influxdb_dict, tag_columns):
                 debug=True,
             )
         except NewConnectionError:
-            logging.info(f"Couldn't connect to database at " f"{influxdb_dict.get('url')}")
+            logging.info(
+                f"Couldn't connect to database at " f"{influxdb_dict.get('url')}"
+            )
             pass
 
-    logging.info("Pushed data to DB")
+        first = str(df.index[0])
+        last = str(df.index[-1])
+        logging.info(f"Pushed data between {first}-{last} to DB")
 
 
 def check_last_db_timestamp(influxdb_dict):
@@ -70,12 +74,15 @@ def check_last_db_timestamp(influxdb_dict):
     try:
         tables = client.query_api().query(query=query)
     except NewConnectionError:
-        logging.info(f"Couldn't connect to database at " f"{influxdb_dict.get('url')}")
+        logging.warning(f"Couldn't connect to database at {influxdb_dict.get('url')}")
         last_ts = None
         return last_ts
     try:
         last_ts = tables[0].records[0]["_time"].replace(tzinfo=None)
     except IndexError:
+        logging.warning(
+            "Couldn't get timestamp from influxdb, using season_start from .ini"
+        )
         # if there's no timestamp, return None
         last_ts = None
 
