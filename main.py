@@ -56,7 +56,7 @@ def eddypro_push(inifile):
     ---
 
     """
-    config = configparser.ConfigParser(env_vars)
+    config = configparser.ConfigParser(env_vars, allow_no_value=True)
     config.read(inifile)
 
     defaults_dict = dict(config.items("defaults"))
@@ -397,7 +397,7 @@ def ac_push(inifile, test_mode=None):
 
     # ready_data.upload_ready_data.to_csv('./AC_data_2023.csv')
     # if there's no URL defined, skip pushing to influxdb
-    if influxdb_dict.get("url") is not None:
+    if influxdb_dict.get("url") is not "":
         pusher(ready_data.upload_ready_data, influxdb_dict)
     if defaults_dict.get("create_excel") == "1":
         logging.info("Excel creation enabled, keep and eye on your memory")
