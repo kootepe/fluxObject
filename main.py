@@ -92,7 +92,7 @@ def csv_push(inifile):
     ---
 
     """
-    config = configparser.ConfigParser(env_vars)
+    config = configparser.ConfigParser(env_vars, allow_no_value=True)
     config.read(inifile)
 
     defaults_dict = dict(config.items("defaults"))
@@ -127,7 +127,7 @@ def man_push(inifile, test_mode=0):
     ---
 
     """
-    config = configparser.ConfigParser(env_vars)
+    config = configparser.ConfigParser(env_vars, allow_no_value=True)
     config.read(inifile)
 
     defaults_dict = dict(config.items("defaults"))
@@ -246,7 +246,7 @@ def man_push(inifile, test_mode=0):
         ready_data = calculated_data(
             merged_data.merged_data, measuring_chamber_dict, filter_tuple, defaults_dict
         )
-    if influxdb_dict.get("url") is not None:
+    if influxdb_dict.get("url") is not "":
         pusher(ready_data.upload_ready_data, influxdb_dict)
     if defaults_dict.get("create_excel") == "1":
         logging.info("Excel creation enabled, keep and eye on your memory")
@@ -277,7 +277,7 @@ def ac_push(inifile, test_mode=None):
     ---
 
     """
-    config = configparser.ConfigParser(env_vars)
+    config = configparser.ConfigParser(env_vars, allow_no_value=True)
     config.read(inifile)
 
     defaults_dict = dict(config.items("defaults"))
