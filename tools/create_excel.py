@@ -31,6 +31,9 @@ def create_excel(df, name, path):
         img = opxl.drawing.image.Image(f"{plotDir}/{plots[j]}")
         ws1.add_image(img, anchorString)
         row += 1
+    exists = os.path.exists(path)
+    if not exists:
+        os.makedirs(path)
     xlsxName = f"{path}/{name}.xlsx"
     wb.save(xlsxName)
 
