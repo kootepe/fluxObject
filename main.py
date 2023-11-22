@@ -21,7 +21,7 @@ from tools.fluxer import (
     handle_eddypro,
     csv_reader,
     read_manual_measurement_timestamps,
-    excel_creator
+    excel_creator,
 )
 
 
@@ -247,6 +247,13 @@ def man_push(inifile, test_mode=0):
         )
     if influxdb_dict.get("influxdb_url") is not None:
         pusher(ready_data.upload_ready_data, influxdb_dict)
+    if defaults_dict.get("create_excel") == "1":
+        logging.info("Excel creation enabled, keep and eye on your memory")
+        excel_creator(
+            merged_data.merged_data, ready_data.upload_ready_data, filter_tuple
+        )
+    else:
+        logging.info("Excel creation disabled in .ini, skipping")
 
     if test_mode == 1:
         return ready_data
@@ -388,6 +395,13 @@ def ac_push(inifile, test_mode=None):
     # if there's no URL defined, skip pushing to influxdb
     if influxdb_dict.get("influxdb_url") is not None:
         pusher(ready_data.upload_ready_data, influxdb_dict)
+    if defaults_dict.get("create_excel") == "1":
+        logging.info("Excel creation enabled, keep and eye on your memory")
+        excel_creator(
+            merged_data.merged_data, ready_data.upload_ready_data, filter_tuple
+        )
+    else:
+        logging.info("Excel creation disabled in .ini, skipping")
 
     if test_mode:
         return ready_data
