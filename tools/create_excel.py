@@ -8,7 +8,7 @@ import logging
 logging = logging.getLogger("__main__")
 
 
-def create_excel(df, name):
+def create_excel(df, name, path):
     wb = Workbook()
     ws1 = wb.active
     ws1.title = "Fluxes"
@@ -31,7 +31,7 @@ def create_excel(df, name):
         img = opxl.drawing.image.Image(f"{plotDir}/{plots[j]}")
         ws1.add_image(img, anchorString)
         row += 1
-    xlsxName = f"{name}.xlsx"
+    xlsxName = f"{path}/{name}.xlsx"
     wb.save(xlsxName)
 
 

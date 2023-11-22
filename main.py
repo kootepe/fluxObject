@@ -250,7 +250,10 @@ def man_push(inifile, test_mode=0):
     if defaults_dict.get("create_excel") == "1":
         logging.info("Excel creation enabled, keep and eye on your memory")
         excel_creator(
-            merged_data.merged_data, ready_data.upload_ready_data, filter_tuple
+            merged_data.merged_data,
+            filter_tuple,
+            filter_tuple,
+            defaults_dict.get("excel_directory"),
         )
     else:
         logging.info("Excel creation disabled in .ini, skipping")
@@ -398,7 +401,10 @@ def ac_push(inifile, test_mode=None):
     if defaults_dict.get("create_excel") == "1":
         logging.info("Excel creation enabled, keep and eye on your memory")
         excel_creator(
-            merged_data.merged_data, ready_data.upload_ready_data, filter_tuple
+            merged_data.merged_data,
+            ready_data.upload_ready_data,
+            filter_tuple,
+            defaults_dict.get("excel_directory"),
         )
     else:
         logging.info("Excel creation disabled in .ini, skipping")
