@@ -1058,7 +1058,7 @@ class get_start_and_end_time:
             Either the last timestamp in influxdb or season_start from .ini
         """
 
-        if self.influxdb_dict.get("influxdb_url") is None:
+        if self.influxdb_dict.get("url") is None:
             last_ts = datetime.datetime.strptime(
                 self.season_start, self.influxdb_dict.get("influxdb_timestamp_format")
             )
