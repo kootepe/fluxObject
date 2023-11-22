@@ -1427,10 +1427,11 @@ class read_manual_measurement_timestamps:
         dfs.sort_index(inplace=True)
         return dfs
 class excel_creator:
-    def __init__(self, all_data, summarized_data, filter_tuple):
+    def __init__(self, all_data, summarized_data, filter_tuple, excel_path):
         self.all_data = all_data
         self.summarized_data = summarized_data
         self.filter_tuple = filter_tuple
+        self.excel_path = excel_path
         self.create_xlsx()
         # files = glob.glob("figs")
 
@@ -1445,8 +1446,8 @@ class excel_creator:
             day = date[0].date()
             if day not in daylist:
                 daylist.append(day)
-            create_sparkline(data[['ch4']], date[0])
+            create_sparkline(data[["ch4"]], date[0])
         for day in daylist:
             data = self.summarized_data[self.summarized_data.index.date == day]
-            create_excel(data, str(day))
+            create_excel(data, str(day), self.excel_path)
         shutil.rmtree(fig_dir)
