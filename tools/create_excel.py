@@ -14,31 +14,26 @@ def create_excel(df, name):
     ws1.title = "Fluxes"
 
     num = 1
-    ws1.column_dimensions["A"].width=13
+    ws1.column_dimensions["A"].width = 13
     for r in dataframe_to_rows(df, index=False, header=True):
         ws1.append(r)
-        ws1.row_dimensions[num].height=20
+        ws1.row_dimensions[num].height = 20
         num += 1
 
     ws1.insert_cols(1)
     row = 2
     plotDir = f"figs/{name}/"
     plots = os.listdir(plotDir)
-    print(plots)
     plots = sorted(plots)
-    print(plots)
     for j in range(len(plots)):
         anchorString = "A" + str(row)
         # img = opxl.drawing.image.Image(plotDir / plots[j])
         img = opxl.drawing.image.Image(f"{plotDir}/{plots[j]}")
         ws1.add_image(img, anchorString)
         row += 1
-    # if mode == "ac":
-    #     xlsxName = "fluxSummaryAC.xlsx"
-    # if mode == "man":
-    #     xlsxName = "fluxSummaryManual.xlsx"
     xlsxName = f"{name}.xlsx"
     wb.save(xlsxName)
+
 
 def create_sparkline(df, filename):
     day = str(filename.date())
