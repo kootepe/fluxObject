@@ -1,3 +1,5 @@
 #!/bin/bash
 
-cron -f;
+printenv | grep -v "no_proxy" >>/etc/environment
+
+cron -f
