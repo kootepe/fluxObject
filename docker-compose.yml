@@ -4,8 +4,14 @@ services:
     build: 
       context: ./
       dockerfile: ./dockerfile
+    env_file: ./.env
     volumes:
-      - $(AUTOCHAMBER_DIR):/data/AC_Oulanka:ro
-      - $(EDDY_DIR):/data/EC_Oulanka:ro
+      - ${AIR_DATA_DIR}:${AIR_DATA_DIR_PATH}
+      - ${INI_DIR}:${INI_DIR_PATH}
+      - ${AUTOCHAMBER_DIR}:${AUTOCHAMBER_DIR_PATH}:ro
+      - ${MANUAL_DIR}:${MANUAL_DIR_PATH}:ro
+      - ${MANUAL_TIMES_DIR}:${MANUAL_TIMES_DIR_PATH}
+      - ${SNOW_MEASUREMENT}:${SNOW_MEASUREMENT_PATH}
+      - ${EXCEL_DIR}:${EXCEL_DIR_PATH}
     entrypoint:
       ["/run.sh"]
