@@ -1001,6 +1001,7 @@ class get_start_and_end_time:
         self.file_extension = measurement_dict.get("file_extension")
         self.file_timestamp_format = measurement_dict.get("file_timestamp_format")
         self.start_timestamp = self.get_last_timestamp()
+        self.used_ini_date = 0
         self.end_timestamp = self.extract_date(
             get_newest(self.path, self.file_extension)
         )
