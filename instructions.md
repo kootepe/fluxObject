@@ -1,4 +1,7 @@
-# Instrucions on manual measurements
+# Instructions on manual measurements
+
+These instructions will cover how to run the script via Docker, since
+that's the most foolproof solution for doing this.
 
 ## Collecting manual measurement timestamps
 The manual measurement files have a bit of an odd format since the file is
@@ -9,7 +12,8 @@ Templates for the manual measurement timestamp files can be found
 [here]( https://github.com/kootepe/fluxObject/tree/main/manual_measurement_template ). I found [this](https://play.google.com/store/apps/details?id=com.farmerbb.notepad) android app quite good for collecting the measurements. It's just a very simple text editing app without any ads.
 
 
-Everything above row 11 will discarded, they were used to mark data
+Regarding the file:<br>
+everything above row 11 will discarded, these rows were used to mark data
 about the weather when this was all on paper, you can fill them if you
 like. There's enough time for that at least.
 
@@ -18,9 +22,10 @@ so if you have something in notes column, you shouldn't use commas.
 
 Here in the example there are rows with just the plot number, so in
 those there would be no measurement, they should be removed when done
-measuring.
+measuring. You can see an example of file that would be ready for use
+below.
 
-And it doesn't matter what plots are measurement in a file, I did the
+And it doesn't matter what plots are measured in a file, I did the
 measurements so that every other day I did odd plots and every other
 evens. You can make your own templates if you have your own method.
 
@@ -36,7 +41,7 @@ Precipitation,
 ACSnowdepth,
 FluxAvg,
 AcFluxAvg,
-Plot Number,Start Time,Notes,Chamber height
+Plot Number,Start Time,Notes,snow depth
 2,1030,,5
 4,1036,,6
 6,1042,,2
@@ -77,12 +82,23 @@ Plot Number,Start Time,Notes,Chamber height
 10,1059
 12,1107,something happened here too,5
 ```
+
+## LICOR gas measurement data
+
+When you download data from the LICOR, the file is automatically given a
+name with the starting date of the data downloaded.
+
+There should only be data from one day in a single file, even just the
+data from during the measurements is fine. But it doesn't matter if you
+have the whole days data in a single file, the script'll just be
+slightly slower. 
+
 ## Quick instructions on running in docker
 
 Clone the repo from [here](https://github.com/kootepe/fluxObject).
 Extract into whatever directory you prefer.
 
-Create a file called .env inside the fluxObject directory, paste the
+Create a file called `.env` inside the `fluxObject` directory, paste the
 template below into it. Now you need to fill the empty value pairs with
 the paths on your own computer. Fill `INI_DIR=`, `MANUAL_DIR=`,
 `MANUAL_TIMES_DIR=` with the paths where you place data that will be
@@ -132,3 +148,9 @@ EXCEL_DIR_PATH=/data/excel_summaries
 
 
 ```
+I haven't added any ready to use .ini files into the repo, but they can
+be gotten from me directly.
+
+Once you have set up the paths in the `.env` file and have all the
+necessary data in those folders, it should be as easy as going to the
+`fluxObject` directory via terminal and running `docker compose up`.
