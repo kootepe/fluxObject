@@ -26,7 +26,7 @@ evens. You can make your own templates if you have your own method.
 
 File should be saved as YYMMDD.txt, eg. 230812.txt, 231224.txt. 
 
-```language
+```.csv
 Date,
 Name,
 Sky,
@@ -59,7 +59,7 @@ Plot Number,Start Time,Notes,Chamber height
 
 An example of a file that would be ready for calculation:
 
-```language
+```.csv
 Date,230812
 Name,EK
 Sky,clear
@@ -93,7 +93,7 @@ the script is ran,<br> `MANUAL_DIR` is the path to the licor gas measurement
 data,<br> `MANUAL_TIME_DIR` is the path to the timestamp file which were
 instructed above.
 
-```language
+```.env
 # directory on the host with the ini files
 INI_DIR=
 # directory on the host with the autochamber measurement data files
