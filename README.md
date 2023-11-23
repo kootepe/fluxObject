@@ -44,25 +44,26 @@ are defined the folders inside your machine that will be mounted inside
 the docker container, so that the data is visible for the container.
 
 
-`Docker-compose.yml` is used to define how the build the docker image.
+`docker-compose.yml` is used to define how the build the docker image.
 
 The format of the `.env` file is like this, it's used to define the
 filepaths that will be mounted inside the container.
 
 ```.env
 INI_DIR=/path/to/inis
-INI_DIR_PATH=/data/inis
 AUTOCHAMBER_DIR=/path/to/ac/data
-AUTOCHAMBER_DIR_PATH=/data/autochamber_measurement
 MANUAL_DIR=/path/to/manual/data
-MANUAL_DIR_PATH=/data/manual_measurement
 MANUAL_TIMES_DIR=/path/to/manual/times
-MANUAL_TIMES_DIR_PATH=/data/manual_measurement_times
 AIR_DATA_DIR=/path/to/air/data
-AIR_DATA_DIR_PATH=/data/air_data
 SNOW_MEASUREMENT=/path/to/snow/measurement
-SNOW_MEASUREMENT_PATH=/data/snow_measurement
 EXCEL_DIR=/path/to/excels
+
+INI_DIR_PATH=/data/inis
+AUTOCHAMBER_DIR_PATH=/data/autochamber_measurement
+MANUAL_DIR_PATH=/data/manual_measurement
+MANUAL_TIMES_DIR_PATH=/data/manual_measurement_times
+AIR_DATA_DIR_PATH=/data/air_data
+SNOW_MEASUREMENT_PATH=/data/snow_measurement
 EXCEL_DIR_PATH=/data/excel_summaries
 ```
 
