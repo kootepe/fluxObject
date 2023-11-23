@@ -74,8 +74,7 @@ def eddypro_push(inifile):
         timestamps_values.end_timestamp,
     )
     data = handle_eddypro(measurement_files.measurement_files, measurement_dict)
-    data.data.to_csv("./eddypro_outa.csv")
-    # pusher(data.data, influxdb_dict)
+    pusher(data.data, influxdb_dict)
 
 
 @timer
