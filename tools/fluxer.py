@@ -272,7 +272,9 @@ class calculated_data:
 
         """
         dfList = []
-        # data = data[['ch4_flux', 'co2_flux', 'ch4_pearsons_r', 'co2_pearsons_r', 'chamber']]
+        data = data[
+            ["ch4_flux", "co2_flux", "ch4_pearsons_r", "co2_pearsons_r", "chamber"]
+        ]
         for date in self.filter_tuple:
             dfa = date_filter(data, date)
             dfList.append(dfa.iloc[:1])
