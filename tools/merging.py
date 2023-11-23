@@ -40,6 +40,7 @@ def merge_aux_by_column(measurement_df, aux_df):
             df.drop(df.filter(regex="_y$").columns, axis=1, inplace=True)
             df.set_index("datetime", inplace=True)
             df["snowdepth"] = df["snowdepth"].fillna(0)
+            df["snowdepth"].astype("float")
             dflist.append(df)
         else:
             logging.info("Dataframes are not properly sorted by datetimeindex")
