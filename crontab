@@ -1,4 +1,4 @@
 # more here
 # text here
-2 * * * * /usr/local/bin/python /fluxObject/main.py /data/inis/ >> /cronlog 2>&1
+*/2 * * * * /usr/local/bin/python /fluxObject/main.py inis/ >> /logs/cronlog 2>&1
 # this extra line makes it a valid cron
