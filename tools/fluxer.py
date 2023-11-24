@@ -1134,6 +1134,8 @@ class handle_eddypro:
         self.path = self.measurement_dict.get("path")
         self.names = self.measurement_dict.get("names").split(",")
         self.columns = list(map(int, self.measurement_dict.get("columns").split(",")))
+        self.dtypes = self.measurement_dict.get("dtypes").split(",")
+        self.dtypes = {self.names[i]: self.dtypes[i] for i in range(len(self.names))}
         # self.columns = self.measurement_dict.get('columns')
         # columns = list(map(int, dict.get('columns').split(',')))
         self.delimiter = self.measurement_dict.get("delimiter")
@@ -1158,12 +1160,7 @@ class handle_eddypro:
         dfList = []
         for i in self.zip_files:
             try:
-                # creates a list of the matched files
-                zip_file_list = Path(self.path).rglob(i)
-                # cheks that everything that matched is file, not a
-                # folder
-                zip_file_list = [x for x in zip_file_list if x.is_file()]
-                zip_file = str(zip_file_list[0])
+                zip_file = Path(i)
                 archive = zf.ZipFile(zip_file, "r")
             # skip zips that have errors
             except BadZipFile:
@@ -1184,6 +1181,7 @@ class handle_eddypro:
                 usecols=self.columns,
                 skiprows=self.skiprows,
                 names=self.names,
+                dtype=self.dtypes,
                 na_values="NaN",
             )
             # this file should only have one row, skip if there's more
