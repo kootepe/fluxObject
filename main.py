@@ -476,10 +476,15 @@ if __name__ == "__main__":
         config = configparser.ConfigParser(env_vars, allow_no_value=True)
         config.read(inifile)
         active = config.getboolean("defaults", "active")
-        use_dotenv = config.getboolean("defaults", "use_dotenv")
-        if use_dotenv:
-            env_vars = dotenv_values()
         if active:
+            use_dotenv = config.get("defaults", "use_dotenv")
+            if use_dotenv == "1":
+                # get environment variables from dotenv
+                env_vars = dotenv_values()
+                # reread the .ini file and pass env_vars to parser
+                # pass env_vars to parser and reread .ini
+                config = configparser.ConfigParser(env_vars, allow_no_value=True)
+                config.read(inifile)
             mode = dict(config.items("defaults")).get("mode")
             logger.info(f"Running {inifile}.")
             if mode == "ac":
