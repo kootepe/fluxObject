@@ -9,7 +9,10 @@ just a straight up copy of the paper that was used to collect the
 timestamps before.
 
 Templates for the manual measurement timestamp files can be found
-[here]( https://github.com/kootepe/fluxObject/tree/main/manual_measurement_template ). I found [this](https://play.google.com/store/apps/details?id=com.farmerbb.notepad) android app quite good for collecting the measurements. It's just a very simple text editing app without any ads.
+[here]( https://github.com/kootepe/fluxObject/tree/main/manual_measurement_template ).
+I found [this](https://play.google.com/store/apps/details?id=com.farmerbb.notepad)
+android app quite good for collecting the measurements. It's just a very
+simple text editing app without any ads.
 
 
 Regarding the file:<br>
@@ -95,6 +98,7 @@ slightly slower.
 
 ## Quick instructions on running in docker
 
+First things first, install docker/docker desktop on Windows.
 Clone the repo from [here](https://github.com/kootepe/fluxObject).
 Extract into whatever directory you prefer.
 
@@ -105,7 +109,7 @@ the paths on your own computer. Fill `INI_DIR=`, `MANUAL_DIR=`,
 processed. 
 
 `INI_DIR` is the path to the .ini file which defines how to
-the script is ran,<br> `MANUAL_DIR` is the path to the licor gas measurement
+the script is ran, you can get this file directly from me<br> `MANUAL_DIR` is the path to the licor gas measurement
 data,<br> `MANUAL_TIME_DIR` is the path to the timestamp file which were
 instructed above.
 
@@ -153,4 +157,26 @@ be gotten from me directly.
 
 Once you have set up the paths in the `.env` file and have all the
 necessary data in those folders, it should be as easy as going to the
-`fluxObject` directory via terminal and running `docker compose up`.
+`fluxObject` directory via terminal and running `docker compose up`. If
+you are on Windows, the container should soon appear in the `docker
+desktop` app.
+
+## Quick instructions on running without docker
+
+Install python for your OS.
+
+Copy [this repo.](https://github.com/kootepe/fluxPipeline) Click the
+green code button to download zip, or if you are using git you know what
+to do.
+
+Extract wherever you'd like to run the script.
+
+Go the to the extracted `fluxObject` directory and run `pip install -r
+requirements.txt` to install the required packages. Because of how
+docker needs to handle `matplotlib`, it's not listed in requirements.
+Run `pip install matplotlib` to install.
+
+Unzip the downloaded zip and go to the `fluxObject` directory
+
+Prepare `.ini ` file. And place it in folder inside `fluxObject`.  
+
