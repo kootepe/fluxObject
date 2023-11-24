@@ -881,10 +881,11 @@ class file_finder:
         Checks that all of the generated filenames can be found
     """
 
-    def __init__(self, measurement_dict, file_timestep, start_timestamp, end_timestamp):
+    def __init__(self, measurement_dict, defaults_dict, start_timestamp, end_timestamp):
         self.path = measurement_dict.get("path")
         self.file_timestamp_format = measurement_dict.get("file_timestamp_format")
-        self.file_timestep = int(file_timestep)
+        self.defaults_dict = defaults_dict
+        self.file_timestep = int(self.defaults_dict.get("file_timestep"))
         self.start_timestamp = start_timestamp
         self.end_timestamp = end_timestamp
         self.scan_or_generate = int(measurement_dict.get("scan_or_generate"))

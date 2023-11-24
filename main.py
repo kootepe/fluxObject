@@ -69,7 +69,7 @@ def eddypro_push(inifile):
 
     measurement_files = file_finder(
         measurement_dict,
-        defaults_dict.get("file_timestep"),
+        defaults_dict,
         timestamps_values.start_timestamp,
         timestamps_values.end_timestamp,
     )
@@ -106,7 +106,7 @@ def csv_push(inifile):
 
     measurement_files = file_finder(
         measurement_dict,
-        defaults_dict.get("file_timestep"),
+        defaults_dict,
         timestamps_values.start_timestamp,
         timestamps_values.end_timestamp,
     )
@@ -153,13 +153,13 @@ def man_push(inifile, test_mode=0):
 
     measurement_files = file_finder(
         measurement_dict,
-        defaults_dict.get("file_timestep"),
+        defaults_dict,
         timestamps_values.start_timestamp,
         timestamps_values.end_timestamp,
     )
     measurement_times_files = file_finder(
         manual_measurement_time_data_dict,
-        defaults_dict.get("file_timestep"),
+        defaults_dict,
         timestamps_values.start_timestamp,
         timestamps_values.end_timestamp,
     )
@@ -167,13 +167,13 @@ def man_push(inifile, test_mode=0):
     if get_temp_and_pressure_from_file == "1":
         air_pressure_files = file_finder(
             air_pressure_dict,
-            defaults_dict.get("file_timestep"),
+            defaults_dict,
             timestamps_values.start_timestamp,
             timestamps_values.end_timestamp,
         )
         air_temperature_files = file_finder(
             air_temperature_dict,
-            defaults_dict.get("file_timestep"),
+            defaults_dict,
             timestamps_values.start_timestamp,
             timestamps_values.end_timestamp,
         )
@@ -301,7 +301,7 @@ def ac_push(inifile, test_mode=None):
 
     measurement_files = file_finder(
         measurement_dict,
-        defaults_dict.get("file_timestep"),
+        defaults_dict,
         timestamps_values.start_timestamp,
         timestamps_values.end_timestamp,
     )
@@ -309,13 +309,13 @@ def ac_push(inifile, test_mode=None):
     if get_temp_and_pressure_from_file == "1":
         air_pressure_files = file_finder(
             air_pressure_dict,
-            defaults_dict.get("file_timestep"),
+            defaults_dict,
             timestamps_values.start_timestamp,
             timestamps_values.end_timestamp,
         )
         air_temperature_files = file_finder(
             air_temperature_dict,
-            defaults_dict.get("file_timestep"),
+            defaults_dict,
             timestamps_values.start_timestamp,
             timestamps_values.end_timestamp,
         )
