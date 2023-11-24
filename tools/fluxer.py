@@ -1015,7 +1015,8 @@ class get_start_and_end_time:
             get_newest(self.path, self.file_extension)
         )
         if self.defaults_dict.get("limit_data"):
-            to_add = int(self.defaults_dict.get("limit_data"))
+            if int(self.defaults_dict.get("limit_data")) > 0:
+                to_add = int(self.defaults_dict.get("limit_data"))
             self.end_timestamp = self.start_timestamp + datetime.timedelta(days=to_add)
 
         if check_timestamp(self.start_timestamp, self.end_timestamp):
@@ -1079,6 +1080,7 @@ class get_start_and_end_time:
         """
 
         if not self.influxdb_dict.get("url"):
+            # if self.influxdb_dict.get("url") is "":
             last_ts = datetime.datetime.strptime(
                 self.season_start, self.influxdb_dict.get("influxdb_timestamp_format")
             )
