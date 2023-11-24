@@ -111,7 +111,6 @@ def csv_push(inifile):
         timestamps_values.end_timestamp,
     )
     data = csv_reader(measurement_files.measurement_files, measurement_dict)
-    ##pusher(data.data, influxdb_dict)
     if influxdb_dict.get("url"):
         pusher(data.data, influxdb_dict)
 
