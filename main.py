@@ -75,6 +75,8 @@ def eddypro_push(inifile):
     )
     data = handle_eddypro(measurement_files.measurement_files, measurement_dict)
     pusher(data.data, influxdb_dict)
+    if influxdb_dict.get("url"):
+        pusher(data.data, influxdb_dict)
 
 
 @timer
@@ -110,6 +112,8 @@ def csv_push(inifile):
     )
     data = csv_reader(measurement_files.measurement_files, measurement_dict)
     ##pusher(data.data, influxdb_dict)
+    if influxdb_dict.get("url"):
+        pusher(data.data, influxdb_dict)
 
 
 @timer
