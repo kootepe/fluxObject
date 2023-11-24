@@ -13,5 +13,7 @@ services:
       - ${MANUAL_TIMES_DIR}:${MANUAL_TIMES_DIR_PATH}
       - ${SNOW_MEASUREMENT}:${SNOW_MEASUREMENT_PATH}
       - ${EXCEL_DIR}:${EXCEL_DIR_PATH}
+      - ${EDDY_DIR}:${EDDY_DIR_PATH}
+      - ./logs/:/logs/
     entrypoint:
       ["/run.sh"]
