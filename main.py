@@ -5,6 +5,7 @@ import functools
 import logging
 import configparser
 import timeit
+from dotenv import dotenv_values
 
 
 # modules from this repo
@@ -475,6 +476,9 @@ if __name__ == "__main__":
         config = configparser.ConfigParser(env_vars, allow_no_value=True)
         config.read(inifile)
         active = config.getboolean("defaults", "active")
+        use_dotenv = config.getboolean("defaults", "use_dotenv")
+        if use_dotenv:
+            env_vars = dotenv_values()
         if active:
             mode = dict(config.items("defaults")).get("mode")
             logger.info(f"Running {inifile}.")
@@ -486,4 +490,7 @@ if __name__ == "__main__":
                 csv_push(inifile)
             if mode == "eddypro":
                 eddypro_push(inifile)
-        logger.removeHandler(file_name)
+            logger.removeHandler(file_name)
+        else:
+            logging.info(f"Active set  0, skipped {inifile}")
+            logger.removeHandler(file_name)
