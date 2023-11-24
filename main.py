@@ -448,8 +448,18 @@ if __name__ == "__main__":
     ini_path = sys.argv[1]
     # mode = sys.argv[2]
     ini_files = list_inis(ini_path)
-    # logger = custom_logger(ini_files[0].name)
+    # get environment variables
     env_vars = os.environ
+    # python does not like % signs, remove them from keys and values
+    filtered_env = {
+        key: value
+        for key, value in env_vars.items()
+        if "%" not in key and "%" not in value
+    }
+
+    # Update os.environ with the filtered dictionary
+    env_vars.clear()
+    env_vars.update(filtered_env)
     for inifile in ini_files:
         file_name = Path(inifile).name
 
@@ -477,7 +487,7 @@ if __name__ == "__main__":
         config.read(inifile)
         active = config.getboolean("defaults", "active")
         if active:
-            use_dotenv = config.get("defaults", "use_dotenv")
+            use_dotenv = dict(config.items("defaults")).get("use_dotenv")
             if use_dotenv == "1":
                 # get environment variables from dotenv
                 env_vars = dotenv_values()
@@ -487,7 +497,7 @@ if __name__ == "__main__":
             mode = dict(config.items("defaults")).get("mode")
             logger.info(f"Running {inifile}.")
             if mode == "ac":
-                ac_push(str(inifile))
+                ac_push(inifile)
             if mode == "man":
                 man_push(inifile)
             if mode == "csv":
