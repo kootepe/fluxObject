@@ -109,25 +109,27 @@ the paths on your own computer. Fill `INI_DIR=`, `MANUAL_DIR=`,
 processed. 
 
 `INI_DIR` is the path to the .ini file which defines how to
-the script is ran, you can get this file directly from me<br> `MANUAL_DIR` is the path to the licor gas measurement
-data,<br> `MANUAL_TIME_DIR` is the path to the timestamp file which were
+the script is ran, you can get this file [here](https://github.com/kootepe/fluxObject/blob/main/usable_manual_sample_docker.ini),<br>
+`MANUAL_DIR` is the path to the licor gas measurement
+data,<br>
+`MANUAL_TIME_DIR` is the path to the timestamp file which were
 instructed above.
 
 ```.env
 # directory on the host with the ini files
 INI_DIR=
 # directory on the host with the autochamber measurement data files
-AUTOCHAMBER_DIR= .\
+AUTOCHAMBER_DIR=.\
 # directory on the host with the manual measurement data files
 MANUAL_DIR=
 # directory on the host with the manual measurement timestamp files
 MANUAL_TIMES_DIR=
 # directory on the host with the airtemp and airpressure data files
-AIR_DATA_DIR= .\
+AIR_DATA_DIR=.\
 # directory on the host with the snowdepth measurement excel
-SNOW_MEASUREMENT= .\
+SNOW_MEASUREMENT=.\
 # directory on the host where the excel summaries will be placed
-EXCEL_DIR= .\excel_outputs
+EXCEL_DIR=.\excel_outputs
 
 # no need to change these
 # name of the folder the inis will be in the container
@@ -185,4 +187,4 @@ the timestamp files there.
 Create `manual_measurement` directory in `fluxObject` and place
 the gas measurement files there.
 
-Now you should be able to run `python main.py inis/` to run the script.
+Now you should be able to run `python main.py inis/` or `python3 main.py inis/` via terminal/cmd inside the `fluxObject` directory to execute the script.
