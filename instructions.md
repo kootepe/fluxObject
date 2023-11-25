@@ -169,14 +169,20 @@ Copy [this repo.](https://github.com/kootepe/fluxPipeline) Click the
 green code button to download zip, or if you are using git you know what
 to do.
 
-Extract wherever you'd like to run the script.
+Extract wherever you'd like and go to the `fluxObject` directory. 
 
-Go the to the extracted `fluxObject` directory and run `pip install -r
+In the `fluxObject` directory run `pip install -r
 requirements.txt` to install the required packages. Because of how
-docker needs to handle `matplotlib`, it's not listed in requirements.
-Run `pip install matplotlib` to install.
+docker needs to handle `matplotlib`, it's not listed in
+`requirements.txt` . So
+you'll need to install it by running `pip install matplotlib`.
 
-Unzip the downloaded zip and go to the `fluxObject` directory
+Grab a working `.ini` from [here](https://github.com/kootepe/fluxObject/blob/main/usable_manual_sample.ini) and place it in `inis` directory inside `fluxObject`.
 
-Prepare `.ini ` file. And place it in folder inside `fluxObject`.  
+Create manual_measurement_timestamps directory in `fluxObject ` and place
+the timestamp files there.
 
+Create manual_measurement directory in `fluxObject ` and place
+the gas measurement files there.
+
+Now you should be able to run `python main.py inis/` to run the script.
