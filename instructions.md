@@ -179,10 +179,10 @@ you'll need to install it by running `pip install matplotlib`.
 
 Grab a working `.ini` from [here](https://github.com/kootepe/fluxObject/blob/main/usable_manual_sample.ini) and place it in `inis` directory inside `fluxObject`.
 
-Create manual_measurement_timestamps directory in `fluxObject ` and place
+Create `manual_measurement_timestamps` directory in `fluxObject` and place
 the timestamp files there.
 
-Create manual_measurement directory in `fluxObject ` and place
+Create `manual_measurement` directory in `fluxObject` and place
 the gas measurement files there.
 
 Now you should be able to run `python main.py inis/` to run the script.
