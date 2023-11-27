@@ -1,7 +1,5 @@
 # Instructions on manual measurements
 
-These instructions will cover how to run the script via Docker, since
-that's the most foolproof solution for doing this.
 
 ## Collecting manual measurement timestamps
 The manual measurement files have a bit of an odd format since the file is
