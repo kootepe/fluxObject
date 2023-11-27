@@ -455,6 +455,15 @@ class filterer:
 
     """
 
+    # TODO: solution for what to do when there's a gas measurement and
+    # there's supposed to be temperature and pressure measurement but for
+    # whatever reason they are empty. Currently that data is just
+    # dropped.
+
+    # TODO:
+    #     there's lots of old deprecated stuff in this function, needs
+    #     cleaning up
+
     def __init__(self, filter_tuple, df):
         self.clean_filter_tuple = []
         self.filter_tuple = filter_tuple
@@ -464,9 +473,6 @@ class filterer:
         """
         Takes in the dataframe and two timestamps from each tuple, drops
         data that isn't between the timestamps.
-        TODO:
-            there's lots of old deprecated stuff in this function, needs
-            cleaning up
 
         args:
         ---
@@ -484,9 +490,9 @@ class filterer:
         # timestamps for the data with no errors
         clean_timestamps = []
         # datafrrames which have errors
-        dirty_data = []
+        error_data = []
         # timestamps for the data with errors
-        dirty_timestamps = []
+        error_timestamps = []
         # timestamps with no data
         empty_timestamps = []
         # the loop below raises a false positive warning, disable it
@@ -505,13 +511,14 @@ class filterer:
             # drop all measurements that have any error codes
             if "error_code" in df.columns:
                 if df["error_code"].sum() != 0:
-                    errors = ", ".join([str(x) for x in df["error_code"].unique()])
+                    errors = ", ".join([str(x)
+                                       for x in df["error_code"].unique()])
                     # errors = ', '.join(str(df["error_code"].unique())
                     logging.info(
                         f"Measuring errors {errors} between {date[0]} and {date[1]}, dropping measurement."
                     )
-                    dirty_data.append(df)
-                    dirty_timestamps.append(date)
+                    error_data.append(df)
+                    error_timestamps.append(date)
                     continue
             # chamber number is the third value in filter_tuple
             df["chamber"] = date[2]
@@ -527,10 +534,10 @@ class filterer:
         # save tuples that have data and no error codes
         self.clean_filter_tuple = clean_timestamps
         # dataframes with errors
-        if len(dirty_data) != 0:
-            self.dirty_df = pd.concat(dirty_data)
+        if len(error_data) != 0:
+            self.dirty_df = pd.concat(error_data)
         # the timestamps which cover data with errors
-        self.dirty_timestamps = dirty_timestamps
+        self.dirty_timestamps = error_timestamps
         self.empty_timestamps = empty_timestamps
         # loop raises false positive error which was turned off before,
         # turn it on
