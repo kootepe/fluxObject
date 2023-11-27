@@ -38,7 +38,9 @@ ac_ini_ap = "tests/test_inis/test_ini_ac_airpres.ini"
 
 
 ac_csv_ap = pd.read_csv("tests/test_data/test_results_ac_ap.csv")
-ac_csv_ap["datetime"] = pd.to_datetime(ac_csv_ap["datetime"], format="%Y-%m-%d %H:%M:%S")
+ac_csv_ap["datetime"] = pd.to_datetime(
+    ac_csv_ap["datetime"], format="%Y-%m-%d %H:%M:%S"
+)
 ac_csv_ap.set_index("datetime", inplace=True)
 
 ac_col_ap = ac_csv_ap.columns.to_list()
@@ -58,6 +60,7 @@ def test_main_ac_ap(test_input):
         correct[input] = pd.to_datetime(correct[input], format="%Y-%m-%d %H:%M:%S")
     # assert correct.snowdepth.tolist() == test.upload_ready_data.snowdepth.tolist()
     assert correct[input].tolist() == test.upload_ready_data[input].tolist()
+
 
 # initialize data for manual test
 man_ini = "tests/test_inis/test_ini_man.ini"
@@ -99,12 +102,14 @@ man_ap_ini = "tests/test_inis/test_ini_man_airpres.ini"
 man_ap_csv = pd.read_csv(
     "tests/test_data/test_results_man_ap.csv", dtype={"start": "str", "notes": "str"}
 )
-man_ap_csv["datetime"] = pd.to_datetime(man_ap_csv["datetime"], format="%Y-%m-%d %H:%M:%S")
+man_ap_csv["datetime"] = pd.to_datetime(
+    man_ap_csv["datetime"], format="%Y-%m-%d %H:%M:%S"
+)
 man_ap_csv.set_index("datetime", inplace=True)
-man_ap_csv["notes"] =man_ap_csv["notes"].fillna("")
-man_ap_csv["validity"] =man_ap_csv["validity"].fillna("")
+man_ap_csv["notes"] = man_ap_csv["notes"].fillna("")
+man_ap_csv["validity"] = man_ap_csv["validity"].fillna("")
 
-man_ap_cols =man_ap_csv.columns.to_list()
+man_ap_cols = man_ap_csv.columns.to_list()
 
 # run main py with test flag to return classes
 man_ap_data_to_test = main.man_push(man_ap_ini, 1)
@@ -127,6 +132,7 @@ def test_man_manual_airpres(test_input):
     ]:
         correct[input] = pd.to_datetime(correct[input], format="%Y-%m-%d %H:%M:%S")
     assert correct[input].tolist() == test.upload_ready_data[input].tolist()
+
 
 main_snow_test_df = pd.read_csv("tests/snow_test_function.csv")
 main_snow_test_df["datetime"] = pd.to_datetime(
