@@ -36,7 +36,8 @@ def timer(func):
         value = func(*args, **kwargs)
         stop = timeit.default_timer()
         execution_time = stop - start
-        logging.info(f"{func.__name__} executed in {str(round(execution_time,3))}s.")
+        logging.info(
+            f"{func.__name__} executed in {str(round(execution_time,3))}s.")
         return value
 
     return wrapper_timer
@@ -46,7 +47,7 @@ def timer(func):
 def eddypro_push(inifile):
     """
     Pipeline to handle reading eddypro .zip files, reading the flux
-    from inside them and pusing that to influxdb
+    from inside them and pushing that to influxdb
 
     args:
     ---
@@ -57,25 +58,35 @@ def eddypro_push(inifile):
     ---
 
     """
+    # initiate configparser
     config = configparser.ConfigParser(env_vars, allow_no_value=True)
     config.read(inifile)
 
+    # load parts of the .ini file as dictionaries
     defaults_dict = dict(config.items("defaults"))
     influxdb_dict = dict(config.items("influxDB"))
     measurement_dict = dict(config.items("measurement_data"))
 
+    # get start and end times for data that is going to be
+    # calculated
     timestamps_values = get_start_and_end_time(
         influxdb_dict, measurement_dict, defaults_dict
     )
 
+    # generate / search files that contain the data that is going to be
+    # calulated
     measurement_files = file_finder(
         measurement_dict,
         defaults_dict,
         timestamps_values.start_timestamp,
         timestamps_values.end_timestamp,
     )
-    data = handle_eddypro(measurement_files.measurement_files, measurement_dict)
-    pusher(data.data, influxdb_dict)
+
+    # read the data from eddypro zip files
+    data = handle_eddypro(
+        measurement_files.measurement_files, measurement_dict)
+
+    # if url is defined in the .ini, attempt to push to influxdb
     if influxdb_dict.get("url"):
         pusher(data.data, influxdb_dict)
 
@@ -94,24 +105,34 @@ def csv_push(inifile):
     ---
 
     """
+    # initiate configparser
     config = configparser.ConfigParser(env_vars, allow_no_value=True)
     config.read(inifile)
 
+    # load parts of the .ini file as dictionaries
     defaults_dict = dict(config.items("defaults"))
     influxdb_dict = dict(config.items("influxDB"))
     measurement_dict = dict(config.items("measurement_data"))
 
+    # get start and end times for data that is going to be
+    # calculated
     timestamps_values = get_start_and_end_time(
         influxdb_dict, measurement_dict, defaults_dict
     )
 
+    # generate / search files that contain the data that is going to be
+    # calulated
     measurement_files = file_finder(
         measurement_dict,
         defaults_dict,
         timestamps_values.start_timestamp,
         timestamps_values.end_timestamp,
     )
+
+    # read the data from .csv files
     data = csv_reader(measurement_files.measurement_files, measurement_dict)
+
+    # if url is defined in the .ini, attempt to push to influxdb
     if influxdb_dict.get("url"):
         pusher(data.data, influxdb_dict)
 
@@ -126,13 +147,20 @@ def man_push(inifile, test_mode=0):
     inifile -- str
         path to the .ini file
 
+    test_mode -- boolean
+        defaults to 0, if set to 1 will return the calculated data for
+        testing
+
     returns:
     ---
-
+    ready_data -- class
+        if test_mode is set 1, this will be returned
     """
+    # initiate configparser
     config = configparser.ConfigParser(env_vars, allow_no_value=True)
     config.read(inifile)
 
+    # load parts of the .ini file as dictionaries
     defaults_dict = dict(config.items("defaults"))
     influxdb_dict = dict(config.items("influxDB"))
     air_pressure_dict = dict(config.items("air_pressure_data"))
@@ -147,16 +175,21 @@ def man_push(inifile, test_mode=0):
         config.items("manual_measurement_time_data")
     )
 
+    # get start and end times for data that is going to be # calculated
     timestamps_values = get_start_and_end_time(
         influxdb_dict, measurement_dict, defaults_dict
     )
 
+    # generate / search files that contain the gas measurement that is going
+    # to be calulated
     measurement_files = file_finder(
         measurement_dict,
         defaults_dict,
         timestamps_values.start_timestamp,
         timestamps_values.end_timestamp,
     )
+    # generate / search files that contain the timestamps for the data
+    # that is going to be calulated
     measurement_times_files = file_finder(
         manual_measurement_time_data_dict,
         defaults_dict,
@@ -164,6 +197,8 @@ def man_push(inifile, test_mode=0):
         timestamps_values.end_timestamp,
     )
 
+    # if get_temp_and_pressure_from_file is defined, generate filenames
+    # for the air and pressure data
     if get_temp_and_pressure_from_file == "1":
         air_pressure_files = file_finder(
             air_pressure_dict,
@@ -181,17 +216,19 @@ def man_push(inifile, test_mode=0):
         air_pressure_files = None
         air_temperature_files = None
 
-    # should filter tuple just be generated here?
+    # read the gas measurement data
     measurement_df = measurement_reader(
         measurement_dict, measurement_files.measurement_files
     )
 
+    # read the manual measurement timestamps
     manual_measurement_time_df = read_manual_measurement_timestamps(
         manual_measurement_time_data_dict,
         measurement_times_files.measurement_files,
         chamber_start_stop_dict,
     )
 
+    # read air_temp and air_pressure if the filenames were generated
     if air_pressure_files is not None and air_temperature_files is not None:
         air_temperature_df = aux_data_reader(
             air_temperature_dict, air_temperature_files.measurement_files
@@ -203,16 +240,23 @@ def man_push(inifile, test_mode=0):
     else:
         air_temperature_df = None
         air_pressure_df = None
+
     # list with three values, start_time, end_time, chamber_num, flux is
     # calculated from the data between start and end times
     filter_tuple = manual_measurement_time_df.filter_tuple
 
-    filtered_measurement = filterer(filter_tuple, measurement_df.measurement_df)
+    # filter the measured gas flux
+    filtered_measurement = filterer(
+        filter_tuple, measurement_df.measurement_df)
 
     # same list as before but the timestamps with no data or invalid
     # data dropped
     filter_tuple = filtered_measurement.clean_filter_tuple
 
+    # BUG: air_pressure data is at 10min interval, and it's filtered
+    # with measurement_timestamps which are only have 3min length,
+    # meaning there's a high chance that these measurements will be
+    # dropped
     # if air_pressure_df is not None and air_temperature_df is not None:
     #     air_temperature_df = filterer(
     #         filter_tuple, air_temperature_df.aux_data_df)
@@ -221,38 +265,31 @@ def man_push(inifile, test_mode=0):
     #     air_temperature_df = None
     #     air_pressure_df = None
 
+    # merge manual_measurement_timestamps to the gas measurement_dict
+    # NOTE: is this needed?
     merged_data = merge_data(
         filtered_measurement.filtered_data,
         manual_measurement_time_df.manual_measurement_df,
     )
+    # merge air_pressure and air_temp data to measurement_data
     if air_pressure_df is not None and air_temperature_df is not None:
         merged_data = merge_data(
             merged_data.merged_data, air_temperature_df.aux_data_df
         )
         merged_data = merge_data(
             merged_data.merged_data, air_pressure_df.aux_data_df)
-    else:
-        merged_data = merge_data(
-            filtered_measurement.filtered_data,
-            manual_measurement_time_df.manual_measurement_df,
-            True,
-        )
 
-    if merged_data is None:
-        # filtered_measurement.filtered_data["snowdepth"] = 0
-        ready_data = calculated_data(
-            filtered_measurement.filtered_data,
-            measuring_chamber_dict,
-            filter_tuple,
-            defaults_dict,
-        )
+    ready_data = calculated_data(
+        merged_data.merged_data,
+        measuring_chamber_dict,
+        filter_tuple, defaults_dict
+    )
 
-    else:
-        ready_data = calculated_data(
-            merged_data.merged_data, measuring_chamber_dict, filter_tuple, defaults_dict
-        )
+    # if url is defined, try and push to db
     if influxdb_dict.get("url"):
         pusher(ready_data.upload_ready_data, influxdb_dict)
+
+    # if create_excel is 1, create excel summaries
     if defaults_dict.get("create_excel") == "1":
         logging.info("Excel creation enabled, keep and eye on your memory")
         excel_creator(
@@ -264,6 +301,7 @@ def man_push(inifile, test_mode=0):
     else:
         logging.info("Excel creation disabled in .ini, skipping")
 
+    # if test_mode is 1, return ready_data class for testing purposes
     if test_mode == 1:
         return ready_data
 
@@ -277,14 +315,21 @@ def ac_push(inifile, test_mode=None):
     ---
     inifile -- str
         path to the .ini file
+    test_mode -- boolean
+        defaults to 0, if set to 1 will return the calculated data for
+        testing
 
     returns:
     ---
+    ready_data -- class
+        if test_mode is set 1, this will be returned
 
     """
+    # initiate configparser
     config = configparser.ConfigParser(env_vars, allow_no_value=True)
     config.read(inifile)
 
+    # load parts of the .ini file as dictionaries
     defaults_dict = dict(config.items("defaults"))
     measurement_time_dict = dict(config.items("chamber_start_stop"))
     influxdb_dict = dict(config.items("influxDB"))
@@ -292,15 +337,18 @@ def ac_push(inifile, test_mode=None):
     air_temperature_dict = dict(config.items("air_temperature_data"))
     measuring_chamber_dict = dict(config.items("measuring_chamber"))
     measurement_dict = dict(config.items("measurement_data"))
-
     get_temp_and_pressure_from_file = defaults_dict.get(
         "get_temp_and_pressure_from_file"
     )
 
+    # get start and end times for data that is going to be
+    # calculated
     timestamps_values = get_start_and_end_time(
         influxdb_dict, measurement_dict, defaults_dict
     )
 
+    # generate / search files that contain the gas measurement that is going
+    # to be calulated
     measurement_files = file_finder(
         measurement_dict,
         defaults_dict,
@@ -308,6 +356,8 @@ def ac_push(inifile, test_mode=None):
         timestamps_values.end_timestamp,
     )
 
+    # if get_temp_and_pressure_from_file is defined, generate filenames
+    # for the air and pressure data
     if get_temp_and_pressure_from_file == "1":
         air_pressure_files = file_finder(
             air_pressure_dict,
@@ -325,6 +375,7 @@ def ac_push(inifile, test_mode=None):
         air_pressure_files = None
         air_temperature_files = None
 
+    # create chamber open and close timestamps from template
     chamber_cycle_df = chamber_cycle(
         measurement_dict,
         defaults_dict,
@@ -332,11 +383,12 @@ def ac_push(inifile, test_mode=None):
         measurement_files.measurement_files,
     )
 
-    # should filter tuple just be generated here?
+    # read the gas measurement data
     measurement_df = measurement_reader(
         measurement_dict, measurement_files.measurement_files
     )
 
+    # read air_temp and air_pressure if the filenames were generated
     if air_pressure_files is not None and air_temperature_files is not None:
         air_temperature_df = aux_data_reader(
             air_temperature_dict, air_temperature_files.measurement_files
@@ -353,26 +405,35 @@ def ac_push(inifile, test_mode=None):
     # calculated from the data between start and end times
     filter_tuple = chamber_cycle_df.filter_tuple
 
-    filtered_measurement = filterer(filter_tuple, measurement_df.measurement_df)
+    # filter the measured gas flux
+    filtered_measurement = filterer(
+        filter_tuple, measurement_df.measurement_df)
 
     # same list as before but the timestamps with no data or invalid
     # data dropped
     filter_tuple = filtered_measurement.clean_filter_tuple
 
-    if air_pressure_df is not None and air_temperature_df is not None:
-        air_temperature_df = filterer(filter_tuple, air_temperature_df.aux_data_df)
-        air_pressure_df = filterer(filter_tuple, air_pressure_df.aux_data_df)
+    # BUG: air_pressure data is at 10min interval, and it's filtered
+    # with measurement_timestamps which are only have 3min length,
+    # meaning there's a high chance that these measurements will be
+    # dropped
+    # if air_pressure_df is not None and air_temperature_df is not None:
+    #     air_temperature_df = filterer(
+    #         filter_tuple, air_temperature_df.aux_data_df)
+    #     air_pressure_df = filterer(filter_tuple, air_pressure_df.aux_data_df)
 
+    # read the snowdepth measurement into a dataframe
     snowdepth_df = snowdepth_parser(
         defaults_dict.get("snowdepth_measurement"),
     )
+
+    # if set_snow_to_zero is 1, there's no snowdepth measurement and
+    # snowdepth will be set 0
     set_snow_to_zero = snowdepth_df.set_to_zero
     if set_snow_to_zero is True:
         filtered_measurement.filtered_data["snowdepth"] = 0
 
-    data_with_temp = False
-    data_with_temp_pressure = False
-    data_with_temp_pressure_snow = False
+    # merge air_pressure and air_temp data to measurement_data
     if air_pressure_df is not None and air_temperature_df is not None:
         data_with_temp = merge_data(
             filtered_measurement.filtered_data,
@@ -398,15 +459,18 @@ def ac_push(inifile, test_mode=None):
         merged_data = data_with_snow
 
     ready_data = calculated_data(
-        merged_data.merged_data, measuring_chamber_dict, filter_tuple, defaults_dict
+        merged_data.merged_data,
+        measuring_chamber_dict,
+        filter_tuple,
+        defaults_dict
     )
 
-    # ready_data.upload_ready_data.to_csv('./AC_data_2023.csv')
-    # if there's no URL defined, skip pushing to influxdb
+    # if url is defined, try and push to db
     if influxdb_dict.get("url"):
         pusher(ready_data.upload_ready_data, influxdb_dict)
+
+    # if create_excel is 1, create excel summaries
     if defaults_dict.get("create_excel") == "1":
-        logging.info("Excel creation enabled, keep and eye on your memory")
         excel_creator(
             merged_data.merged_data,
             ready_data.upload_ready_data,
@@ -416,6 +480,7 @@ def ac_push(inifile, test_mode=None):
     else:
         logging.info("Excel creation disabled in .ini, skipping")
 
+    # if test_mode is 1, return ready_data class for testing purposes
     if test_mode:
         return ready_data
 
@@ -463,6 +528,7 @@ if __name__ == "__main__":
     # Update os.environ with the filtered dictionary
     env_vars.clear()
     env_vars.update(filtered_env)
+
     for inifile in ini_files:
         file_name = Path(inifile).name
 
@@ -495,7 +561,8 @@ if __name__ == "__main__":
                 # get environment variables from dotenv
                 env_vars = dotenv_values()
                 # pass env_vars to parser and reread .ini
-                config = configparser.ConfigParser(env_vars, allow_no_value=True)
+                config = configparser.ConfigParser(
+                    env_vars, allow_no_value=True)
                 config.read(inifile)
             mode = dict(config.items("defaults")).get("mode")
             logger.info(f"Running {inifile}.")
