@@ -104,8 +104,9 @@ class pusher:
             if check is True:
                 return tag_columns
             else:
-                logging.info("Columns labeled for tagging don't exist in dataframe")
-                logging.warning("EXITING")
+                logging.info(
+                    "Columns labeled for tagging don't exist in dataframe")
+                logging.info("EXITING")
                 sys.exit(0)
 
 
@@ -159,8 +160,6 @@ class calculated_data:
         Data with gas flux and pearsonsR calculated
     upload_ready_data -- df
         Data with unnecessary columns removed
-    TODO:
-        Clean this mess up
 
     Methods
     ---
@@ -182,11 +181,14 @@ class calculated_data:
         self.get_temp_and_pressure_from_file = defaults_dict.get(
             "get_temp_and_pressure_from_file"
         )
-        self.chamber_height = float(measuring_chamber_dict.get("chamber_height"))
+        self.chamber_height = float(
+            measuring_chamber_dict.get("chamber_height"))
         self.chamber_width = float(measuring_chamber_dict.get("chamber_width"))
-        self.chamber_length = float(measuring_chamber_dict.get("chamber_length"))
+        self.chamber_length = float(
+            measuring_chamber_dict.get("chamber_length"))
         self.default_pressure = float(defaults_dict.get("default_pressure"))
-        self.default_temperature = float(defaults_dict.get("default_temperature"))
+        self.default_temperature = float(
+            defaults_dict.get("default_temperature"))
         self.calculated_data = self.calculate_slope_pearsons_r(
             self.measured_data, "ch4"
         )
@@ -214,6 +216,7 @@ class calculated_data:
             same dataframe with additional slope, pearsons_r and
             flux columns
         """
+        # TODO: Clean this mess up
         mr = measurement_name
         measurement_list = []
         slope_times_list = []
@@ -233,7 +236,8 @@ class calculated_data:
                 continue
 
             slope_dates = add_time_to_filter_tuple(date, 25)
-            measurement_df[f"{mr}_slope"] = calculate_slope(df, slope_dates, mr)
+            measurement_df[f"{mr}_slope"] = calculate_slope(
+                df, slope_dates, mr)
 
             if measurement_df.ch4.isnull().values.any():
                 logging.warning(
@@ -348,7 +352,8 @@ class merge_data:
                 df["snowdepth"] = df["snowdepth"].fillna(0)
                 dflist.append(df)
             else:
-                logging.info("Dataframes are not properly sorted by datetimeindex")
+                logging.info(
+                    "Dataframes are not properly sorted by datetimeindex")
                 sys.exit(0)
         df = pd.concat(dflist)
         return df
@@ -487,7 +492,8 @@ class filterer:
         # the loop below raises a false positive warning, disable it
         pd.options.mode.chained_assignment = None
         empty_count = 0
-        logging.info(f"Filtering data with columns:\n{list(data_to_filter.columns)}")
+        logging.info(
+            f"Filtering data with columns:\n{list(data_to_filter.columns)}")
         for date in self.filter_tuple:
             df = date_filter(data_to_filter, date)
             # drop measurements with no data
@@ -514,7 +520,8 @@ class filterer:
             clean_data.append(df)
             clean_timestamps.append(date)
         if len(self.filter_tuple) == empty_count:
-            logging.info("No data found for any timestamp, is there data in the files?")
+            logging.info(
+                "No data found for any timestamp, is there data in the files?")
             sys.exit(0)
         clean_df = pd.concat(clean_data)
         # save tuples that have data and no error codes
@@ -600,7 +607,8 @@ class aux_data_reader:
             int(dict.get("timestamp_column")),
             int(dict.get("measurement_column")),
         ]
-        names = [dict.get("timestamp_column_name"), dict.get("measurement_column_name")]
+        names = [dict.get("timestamp_column_name"),
+                 dict.get("measurement_column_name")]
         # dtypes needs to passed to pandas as a dict
         dtypes = {
             dict.get("timestamp_column_name"): dict.get("timestamp_column_dtype"),
@@ -657,7 +665,8 @@ class aux_data_reader:
                     f"File not found at {Path(path) / f}, make sure the .ini is correct"
                 )
                 sys.exit()
-            df["datetime"] = pd.to_datetime(df["datetime"], format=timestamp_format)
+            df["datetime"] = pd.to_datetime(
+                df["datetime"], format=timestamp_format)
             df.set_index("datetime", inplace=True)
             tmp.append(df)
         try:
@@ -693,6 +702,7 @@ class measurement_reader:
     """
 
     def __init__(self, measurement_dict, measurement_files):
+        logging.info("Reading measurements.")
         self.measurement_dict = measurement_dict
         self.measurement_files = measurement_files
         self.measurement_df = self.read_measurement(self.measurement_dict)
@@ -712,12 +722,13 @@ class measurement_reader:
             All of the .csv in self.measurement_files read into one
             big dataframe
         """
-        path = dict.get("path")
         skiprows = int(dict.get("skiprows"))
         names = dict.get("names").split(",")
         columns = list(map(int, dict.get("columns").split(",")))
-        # oulanka has data from old licor software version which has no remark column
-        columns_alternative = list(map(int, dict.get("columns_alternative").split(",")))
+        # oulanka has data from old licor software version which has no
+        # remark column
+        columns_alternative = list(
+            map(int, dict.get("columns_alternative").split(",")))
         dtypes = dict.get("dtypes").split(",")
         dtypes = {names[i]: dtypes[i] for i in range(len(names))}
 
@@ -755,7 +766,8 @@ class measurement_reader:
         dfs["ordinal_date"] = pd.to_datetime(dfs["datetime"]).map(
             datetime.datetime.toordinal
         )
-        dfs["ordinal_time"] = dfs.apply(lambda row: ordinal_timer(row["time"]), axis=1)
+        dfs["ordinal_time"] = dfs.apply(
+            lambda row: ordinal_timer(row["time"]), axis=1)
         dfs["ordinal_datetime"] = dfs["ordinal_time"] + dfs["ordinal_date"]
         dfs.set_index("datetime", inplace=True)
         dfs.sort_index(inplace=True)
@@ -793,7 +805,8 @@ class chamber_cycle:
     def __init__(
         self, measurement_dict, defaults_dict, measurement_time_dict, measurement_files
     ):
-        self.file_timestamp_format = measurement_dict.get("file_timestamp_format")
+        self.file_timestamp_format = measurement_dict.get(
+            "file_timestamp_format")
         self.chamber_cycle_file = defaults_dict.get("chamber_cycle_file")
         self.chamber_measurement_start_sec = int(
             measurement_time_dict.get("start_of_measurement")
@@ -801,9 +814,7 @@ class chamber_cycle:
         self.chamber_measurement_end_sec = int(
             measurement_time_dict.get("end_of_measurement")
         )
-        self.end_of_cycle = int(
-            measurement_time_dict.get("end_of_cycle")
-        )
+        self.end_of_cycle = int(measurement_time_dict.get("end_of_cycle"))
         self.measurement_files = measurement_files
         self.chamber_cycle_df = self.create_chamber_cycle()
         self.filter_tuple = create_filter_tuple(self.chamber_cycle_df)
@@ -828,8 +839,10 @@ class chamber_cycle:
         # loop through files, read them into a pandas dataframe and
         # create timestamps
         for file in self.measurement_files:
-            df = pd.read_csv(self.chamber_cycle_file, names=["time", "chamber"])
-            date = extract_date(self.file_timestamp_format, os.path.splitext(file)[0])
+            df = pd.read_csv(self.chamber_cycle_file,
+                             names=["time", "chamber"])
+            date = extract_date(self.file_timestamp_format,
+                                os.path.splitext(file)[0])
             df["date"] = date
             df["datetime"] = pd.to_datetime(
                 df["date"].astype(str) + " " + df["time"].astype(str)
@@ -883,7 +896,8 @@ class file_finder:
 
     def __init__(self, measurement_dict, defaults_dict, start_timestamp, end_timestamp):
         self.path = measurement_dict.get("path")
-        self.file_timestamp_format = measurement_dict.get("file_timestamp_format")
+        self.file_timestamp_format = measurement_dict.get(
+            "file_timestamp_format")
         self.defaults_dict = defaults_dict
         self.file_timestep = int(self.defaults_dict.get("file_timestep"))
         self.start_timestamp = start_timestamp
@@ -895,9 +909,6 @@ class file_finder:
         """
         Generates filenames by adding file_timestep to the timestamp in
         the filename
-        TODO:
-            Should generate filenames at least one timestep past the
-            end_date to make sure the whole timeframe is covered.
 
         args:
         ---
@@ -915,6 +926,9 @@ class file_finder:
 
         # just initiate this variable for later use
         new_filename = "init"
+        # TODO:
+        #     Should generate filenames at least one timestep past the
+        #     end_date to make sure the whole timeframe is covered.
         while current_date <= end_date:
             filename = current_date.strftime(self.file_timestamp_format)
             # if the filename in current loop is the same as the one
@@ -957,7 +971,8 @@ class file_finder:
                 except IndexError:
                     continue
                 files.append(file)
-        # if scan or generate is 0, file_timestamp_format should generate complete filenames
+        # if scan or generate is 0, file_timestamp_format should generate
+        # complete filenames
         if self.scan_or_generate == 0:
             return patterns
         return files
@@ -1008,7 +1023,8 @@ class get_start_and_end_time:
         self.season_start = self.defaults_dict.get("season_start")
         self.path = measurement_dict.get("path")
         self.file_extension = measurement_dict.get("file_extension")
-        self.file_timestamp_format = measurement_dict.get("file_timestamp_format")
+        self.file_timestamp_format = measurement_dict.get(
+            "file_timestamp_format")
         self.start_timestamp = self.get_last_timestamp()
         self.used_ini_date = 0
         self.end_timestamp = self.extract_date(
@@ -1056,7 +1072,8 @@ class get_start_and_end_time:
         # logging.info('Files are found in folder but no matching file found, is the format of the timestamp correct?')
         #    return None
         if self.file_timestamp_format == strftime_to_regex(self.file_timestamp_format):
-            logging.info("No strftime formatting in filename, returning current date")
+            logging.info(
+                "No strftime formatting in filename, returning current date")
             return datetime.datetime.today()
         date = re.search(
             strftime_to_regex(self.file_timestamp_format), datestring
@@ -1082,7 +1099,8 @@ class get_start_and_end_time:
         if not self.influxdb_dict.get("url"):
             # if self.influxdb_dict.get("url") is "":
             last_ts = datetime.datetime.strptime(
-                self.season_start, self.influxdb_dict.get("influxdb_timestamp_format")
+                self.season_start, self.influxdb_dict.get(
+                    "influxdb_timestamp_format")
             )
             self.used_ini_date = 1
         else:
@@ -1092,7 +1110,8 @@ class get_start_and_end_time:
             #     "Couldn't get timestamp from influxdb," " using season_start from .ini"
             # )
             last_ts = datetime.datetime.strptime(
-                self.season_start, self.influxdb_dict.get("influxdb_timestamp_format")
+                self.season_start, self.influxdb_dict.get(
+                    "influxdb_timestamp_format")
             )
         return last_ts
 
@@ -1133,9 +1152,11 @@ class handle_eddypro:
         self.measurement_dict = measurement_dict
         self.path = self.measurement_dict.get("path")
         self.names = self.measurement_dict.get("names").split(",")
-        self.columns = list(map(int, self.measurement_dict.get("columns").split(",")))
+        self.columns = list(
+            map(int, self.measurement_dict.get("columns").split(",")))
         self.dtypes = self.measurement_dict.get("dtypes").split(",")
-        self.dtypes = {self.names[i]: self.dtypes[i] for i in range(len(self.names))}
+        self.dtypes = {self.names[i]: self.dtypes[i]
+                       for i in range(len(self.names))}
         # self.columns = self.measurement_dict.get('columns')
         # columns = list(map(int, dict.get('columns').split(',')))
         self.delimiter = self.measurement_dict.get("delimiter")
@@ -1331,7 +1352,8 @@ class csv_reader:
             )
         # if they are not separate, there should be a datetime column already
         else:
-            dfs["datetime"] = pd.to_datetime(dfs["datetime"], format=timestamp_format)
+            dfs["datetime"] = pd.to_datetime(
+                dfs["datetime"], format=timestamp_format)
         dfs.set_index("datetime", inplace=True)
         return dfs
 
@@ -1399,12 +1421,15 @@ class read_manual_measurement_timestamps:
         self.chamber_close_time = int(
             self.chamber_cycle_dict.get("start_of_measurement")
         )
-        self.chamber_open_time = int(self.chamber_cycle_dict.get("end_of_measurement"))
-        self.measurement_end_time = int(self.chamber_cycle_dict.get("end_of_cycle"))
+        self.chamber_open_time = int(
+            self.chamber_cycle_dict.get("end_of_measurement"))
+        self.measurement_end_time = int(
+            self.chamber_cycle_dict.get("end_of_cycle"))
         self.manual_measurement_df = self.read_manual_measurement_file()
         self.filter_tuple = create_filter_tuple(self.manual_measurement_df)
 
     def read_manual_measurement_file(self):
+        # NOTE: the format of the manual measurement is hardcoded
         tmp = []
         for f in self.measurement_files:
             # with open(f) as f:
@@ -1425,7 +1450,8 @@ class read_manual_measurement_timestamps:
             )
             df["date"] = date
             df["datetime"] = df["date"] + " " + df["start"]
-            df["datetime"] = pd.to_datetime(df["datetime"], format="%y%m%d %H%M")
+            df["datetime"] = pd.to_datetime(
+                df["datetime"], format="%y%m%d %H%M")
             # for the sake of consisteny, even though the manual
             # measurement doesn't really have a closing time, the
             # variable is named like this
@@ -1454,6 +1480,7 @@ class excel_creator:
         self.filter_tuple = filter_tuple
         self.excel_path = excel_path
         self.create_xlsx()
+
         # files = glob.glob("figs")
 
     def create_xlsx(self):
