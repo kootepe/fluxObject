@@ -10,6 +10,7 @@ from tools.snow_height import read_snow_measurement
 
 # initialize data for AC test
 ac_ini = "tests/test_inis/test_ini_ac.ini"
+env_vars = {}
 
 
 csv = pd.read_csv("tests/test_data/test_results_ac.csv")
