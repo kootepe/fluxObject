@@ -213,12 +213,13 @@ def man_push(inifile, test_mode=0):
     # data dropped
     filter_tuple = filtered_measurement.clean_filter_tuple
 
-    if air_pressure_df is not None and air_temperature_df is not None:
-        air_temperature_df = filterer(filter_tuple, air_temperature_df.aux_data_df)
-        air_pressure_df = filterer(filter_tuple, air_pressure_df.aux_data_df)
-    else:
-        air_temperature_df = None
-        air_pressure_df = None
+    # if air_pressure_df is not None and air_temperature_df is not None:
+    #     air_temperature_df = filterer(
+    #         filter_tuple, air_temperature_df.aux_data_df)
+    #     air_pressure_df = filterer(filter_tuple, air_pressure_df.aux_data_df)
+    # else:
+    #     air_temperature_df = None
+    #     air_pressure_df = None
 
     merged_data = merge_data(
         filtered_measurement.filtered_data,
@@ -226,9 +227,10 @@ def man_push(inifile, test_mode=0):
     )
     if air_pressure_df is not None and air_temperature_df is not None:
         merged_data = merge_data(
-            merged_data.merged_data, air_temperature_df.filtered_data
+            merged_data.merged_data, air_temperature_df.aux_data_df
         )
-        merged_data = merge_data(merged_data.merged_data, air_pressure_df.filtered_data)
+        merged_data = merge_data(
+            merged_data.merged_data, air_pressure_df.aux_data_df)
     else:
         merged_data = merge_data(
             filtered_measurement.filtered_data,
@@ -373,10 +375,11 @@ def ac_push(inifile, test_mode=None):
     data_with_temp_pressure_snow = False
     if air_pressure_df is not None and air_temperature_df is not None:
         data_with_temp = merge_data(
-            filtered_measurement.filtered_data, air_temperature_df.filtered_data
+            filtered_measurement.filtered_data,
+            air_temperature_df.aux_data_df
         )
         data_with_temp_pressure = merge_data(
-            data_with_temp.merged_data, air_pressure_df.filtered_data
+            data_with_temp.merged_data, air_pressure_df.aux_data_df
         )
         if set_snow_to_zero is False:
             data_with_temp_pressure = merge_data(
