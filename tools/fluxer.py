@@ -1040,7 +1040,8 @@ class get_start_and_end_time:
         if self.defaults_dict.get("limit_data"):
             if int(self.defaults_dict.get("limit_data")) > 0:
                 to_add = int(self.defaults_dict.get("limit_data"))
-            self.end_timestamp = self.start_timestamp + datetime.timedelta(days=to_add)
+                self.end_timestamp = self.start_timestamp + \
+                    datetime.timedelta(days=to_add)
 
         if check_timestamp(self.start_timestamp, self.end_timestamp):
             if self.used_ini_date == 1:
@@ -1480,6 +1481,8 @@ class read_manual_measurement_timestamps:
         dfs["validity"] = dfs["notes"].fillna("")
         dfs.sort_index(inplace=True)
         return dfs
+
+
 class excel_creator:
     def __init__(self, all_data, summarized_data, filter_tuple, excel_path):
         self.all_data = all_data
