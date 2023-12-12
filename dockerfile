@@ -12,7 +12,7 @@ COPY run.sh .
 
 COPY requirements.txt .
 
-RUN pip install -r ./requirements.txt
+RUN pip install -r /fluxObject/requirements.txt
 
 COPY crontab /etc/cron.d/crontab
 
