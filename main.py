@@ -176,12 +176,14 @@ def man_push(inifile, test_mode=0):
     )
 
     # get start and end times for data that is going to be # calculated
+    logging.debug("Running get_start_and_end_time")
     timestamps_values = get_start_and_end_time(
         influxdb_dict, measurement_dict, defaults_dict
     )
 
     # generate / search files that contain the gas measurement that is going
     # to be calulated
+    logging.debug("Running file_finder for gas measurements")
     measurement_files = file_finder(
         measurement_dict,
         defaults_dict,
@@ -190,6 +192,7 @@ def man_push(inifile, test_mode=0):
     )
     # generate / search files that contain the timestamps for the data
     # that is going to be calulated
+    logging.debug("Running file_finder for measurement timestamps")
     measurement_times_files = file_finder(
         manual_measurement_time_data_dict,
         defaults_dict,
@@ -200,6 +203,8 @@ def man_push(inifile, test_mode=0):
     # if get_temp_and_pressure_from_file is defined, generate filenames
     # for the air and pressure data
     if get_temp_and_pressure_from_file == "1":
+        logging.debug(
+            "Running file_finder for air_pressure and air_temperature")
         air_pressure_files = file_finder(
             air_pressure_dict,
             defaults_dict,
@@ -215,13 +220,16 @@ def man_push(inifile, test_mode=0):
     else:
         air_pressure_files = None
         air_temperature_files = None
+        logging.debug("Skipped finding air_temp and and air_pressure files")
 
     # read the gas measurement data
+    logging.debug("Running measurement_reader")
     measurement_df = measurement_reader(
         measurement_dict, measurement_files.measurement_files
     )
 
     # read the manual measurement timestamps
+    logging.debug("Running read_manual_measurement_timestamps")
     manual_measurement_time_df = read_manual_measurement_timestamps(
         manual_measurement_time_data_dict,
         measurement_times_files.measurement_files,
@@ -230,6 +238,7 @@ def man_push(inifile, test_mode=0):
 
     # read air_temp and air_pressure if the filenames were generated
     if air_pressure_files is not None and air_temperature_files is not None:
+        logging.debug("Reading air_temp and air_pressure files")
         air_temperature_df = aux_data_reader(
             air_temperature_dict, air_temperature_files.measurement_files
         )
@@ -238,19 +247,23 @@ def man_push(inifile, test_mode=0):
             air_pressure_dict, air_pressure_files.measurement_files
         )
     else:
+        logging.debug("Skipped reading air_temp and air_pressure files")
         air_temperature_df = None
         air_pressure_df = None
 
     # list with three values, start_time, end_time, chamber_num, flux is
     # calculated from the data between start and end times
+    logging.debug("Grabbed filter tuple")
     filter_tuple = manual_measurement_time_df.filter_tuple
 
     # filter the measured gas flux
+    logging.debug("Filtering gas measurements")
     filtered_measurement = filterer(
         filter_tuple, measurement_df.measurement_df)
 
     # same list as before but the timestamps with no data or invalid
     # data dropped
+    logging.debug("Grabbed filter_tuple cleaned up filter_tuple")
     filter_tuple = filtered_measurement.clean_filter_tuple
 
     # BUG: air_pressure data is at 10min interval, and it's filtered
@@ -267,18 +280,25 @@ def man_push(inifile, test_mode=0):
 
     # merge manual_measurement_timestamps to the gas measurement_dict
     # NOTE: is this needed?
+    logging.debug("Merging gas measurement to manual measurement timestamps")
     merged_data = merge_data(
         filtered_measurement.filtered_data,
         manual_measurement_time_df.manual_measurement_df,
     )
     # merge air_pressure and air_temp data to measurement_data
     if air_pressure_df is not None and air_temperature_df is not None:
+        logging.debug("Merging air_temp and air_pressure to gas measurement")
         merged_data = merge_data(
             merged_data.merged_data, air_temperature_df.aux_data_df
         )
         merged_data = merge_data(
             merged_data.merged_data, air_pressure_df.aux_data_df)
+    else:
+        logging.debug(
+            "No air_temp or air_pressure measurement, "
+            "skipped merging to gas measurement")
 
+    logging.debug("Running calculated_data to calculate gas fluxes")
     ready_data = calculated_data(
         merged_data.merged_data,
         measuring_chamber_dict,
@@ -287,6 +307,7 @@ def man_push(inifile, test_mode=0):
 
     # if url is defined, try and push to db
     if influxdb_dict.get("url"):
+        logging.debug("Attempting pushing to influx")
         pusher(ready_data.upload_ready_data, influxdb_dict)
 
     # if create_excel is 1, create excel summaries
