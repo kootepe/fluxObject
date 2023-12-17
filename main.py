@@ -354,6 +354,10 @@ def ac_push(inifile, env_vars, test_mode=None):
 
     logger = init_logger()
 
+    log_level = dict(config.items("defaults")).get("logging_level")
+    if log_level:
+        logger.setLevel(getattr(logging, log_level))
+
     # load parts of the .ini file as dictionaries
     defaults_dict = dict(config.items("defaults"))
     measurement_time_dict = dict(config.items("chamber_start_stop"))
