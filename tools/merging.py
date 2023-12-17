@@ -2,7 +2,7 @@ import logging
 import sys
 import pandas as pd
 
-logger = logging.getLogger("__main__")
+logger = logging.getLogger("defaultLogger")
 
 
 def merge_aux_by_column(measurement_df, aux_df):

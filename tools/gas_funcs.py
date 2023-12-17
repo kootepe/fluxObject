@@ -3,7 +3,7 @@ import pandas as pd
 from tools.filter import date_filter
 import logging
 
-logger = logging.getLogger("__main__")
+logger = logging.getLogger("defaultLogger")
 
 
 def calculate_gas_flux(data, measurement_name, chamber_height):

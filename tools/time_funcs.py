@@ -2,7 +2,7 @@ import datetime
 import re
 import logging
 
-logger = logging.getLogger("__main__")
+logger = logging.getLogger("defaultLogger")
 
 
 def ordinal_timer(time):

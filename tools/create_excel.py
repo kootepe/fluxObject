@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import os
 import logging
 
-logger = logging.getLogger("__main__")
+logger = logging.getLogger("defaultLogger")
 
 
 def create_excel(df, name, path):
