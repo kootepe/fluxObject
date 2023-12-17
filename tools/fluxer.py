@@ -737,6 +737,7 @@ class measurement_reader:
         columns_alternative = list(
             map(int, dict.get("columns_alternative").split(",")))
         dtypes = dict.get("dtypes").split(",")
+        # NOTE: ADD ERROR WHEN THERE'S NO FILES TO READ
         dtypes = {names[i]: dtypes[i] for i in range(len(names))}
 
         # initiate list where all read dataframes will be stored
