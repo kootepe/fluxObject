@@ -34,6 +34,7 @@ def create_excel(df, name, path):
     exists = os.path.exists(path)
     if not exists:
         os.makedirs(path)
+    # NOTE: CHECK IF FILE EXISTS AND USE ANOTHER NAME IF IT DOES
     xlsxName = f"{path}/{name}.xlsx"
     wb.save(xlsxName)
 
@@ -59,6 +60,7 @@ def create_sparkline(df, filename):
     )
     ax.set_xticks([], [])
     ax.set_yticks([], [])
-    fig.savefig(f"{path}{plotname}", dpi=150, bbox_inches="tight", pad_inches=0.005)
+    fig.savefig(f"{path}{plotname}", dpi=150,
+                bbox_inches="tight", pad_inches=0.005)
     ax.cla()
     plt.close(fig)

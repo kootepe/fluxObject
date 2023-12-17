@@ -318,6 +318,7 @@ class merge_data:
             else:
                 self.merged_data = self.merge_aux_data(measurement_df, aux_df)
         else:
+            self.merged_data = self.measurement_df
             pass
 
     def merge_aux_by_column2(self, measurement_df, aux_df):
@@ -737,6 +738,7 @@ class measurement_reader:
         columns_alternative = list(
             map(int, dict.get("columns_alternative").split(",")))
         dtypes = dict.get("dtypes").split(",")
+        # NOTE: ADD ERROR WHEN THERE'S NO FILES TO READ
         dtypes = {names[i]: dtypes[i] for i in range(len(names))}
 
         # initiate list where all read dataframes will be stored
@@ -1483,6 +1485,65 @@ class read_manual_measurement_timestamps:
         return dfs
 
 
+class grapher:
+    def __init__(
+        self, measurement_data, cycle_timestamps, slope_timestamps, flux_timestamps
+    ):
+        self.measurement_data = measurement_data
+        self.cycle_timestamps = cycle_timestamps
+        self.slope_timestamps = slope_timestamps
+        self.flux_timestamps = flux_timestamps
+        generate_graphs(measurement_data, slope_timestamps)
+
+
+class measurement_tagger:
+    def __init__(
+        self, measurement_data, cycle_timestamps, slope_timestamps, flux_timestamps
+    ):
+        self.measurement_data = measurement_data
+        self.cycle_timestamps = cycle_timestamps
+        self.slope_timestamps = slope_timestamps
+        self.flux_timestamps = flux_timestamps
+        self.measurement_data["type"] = "measurement"
+        self.tagged_data = self.tag_measurement(
+            self.measurement_data, self.flux_timestamps, "flux"
+        )
+        self.tagged_data = self.tag_measurement(
+            self.tagged_data, self.slope_timestamps, "slope"
+        )
+        self.tagged_data = self.tag_measurement(
+            self.tagged_data, self.slope_timestamps, "slope"
+        )
+        # self.graph_measurement()
+
+    def graph_measurement(self):
+        df = self.tagged_data
+        df = df[df.error_code == 0]
+        df = df[~df.index.duplicated()]
+        # fig = sns.relplot(data=df, x = df.index, y = 'ch4', hue = "type")
+        for date in self.cycle_timestamps:
+            name = str(date[0])
+            start = date[0]
+            end = date[1]
+            start_mask = df.index > start
+            end_mask = df.index < end
+            data = df[start_mask & end_mask]
+            fig = px.scatter(data, x=data.index, y="ch4", color="type")
+            fig.write_image(f"figs/{name}.png")
+
+    def tag_measurement(self, data_to_tag, timestamps, tag):
+        data = data_to_tag.copy()
+        base_tag = tag
+        for date in timestamps:
+            tag_str = f"{base_tag}_chamber_{date[2]}"
+            start = date[0]
+            end = date[1]
+            start_mask = data.index > start
+            end_mask = data.index < end
+            data.loc[start_mask & end_mask, "type"] = tag_str
+        return data
+
+
 class excel_creator:
     def __init__(self, all_data, summarized_data, filter_tuple, excel_path):
         self.all_data = all_data
@@ -1505,6 +1566,12 @@ class excel_creator:
             if day not in daylist:
                 daylist.append(day)
             create_sparkline(data[["ch4"]], date[0])
+            try:
+                create_sparkline(data[["ch4"]], date[0])
+            except Exception as e:
+                logging.error(
+                    f"Error when creating graph with matplotlib, "
+                    f"most likely not enough memory. Error: {e}")
         for day in daylist:
             data = self.summarized_data[self.summarized_data.index.date == day]
             create_excel(data, str(day), self.excel_path)
