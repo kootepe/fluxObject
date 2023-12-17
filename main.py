@@ -513,6 +513,9 @@ def custom_logger(logger_name, level=logging.INFO):
 
 
 if __name__ == "__main__":
+    # NOTE: Need to use try except blocks in functions to prevent
+    # crashes since we are now looping through files in a folder,
+    # if one .ini crashes, all the ones after
     ini_path = sys.argv[1]
     # mode = sys.argv[2]
     ini_files = list_inis(ini_path)
@@ -544,6 +547,7 @@ if __name__ == "__main__":
             if isinstance(hdlr, logging.FileHandler):
                 logger.removeHandler(hdlr)
         logger.addHandler(filehandler)
+        # TODO: IMPLEMENT GETTING LOGGING LEVEL FROM .INI
         logger.setLevel(logging.INFO)
         logger = logging.getLogger()
         logging.Formatter.default_msec_format = "%s.%03d"
