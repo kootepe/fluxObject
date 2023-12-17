@@ -328,7 +328,7 @@ def man_push(inifile, test_mode=0):
 
 
 @timer
-def ac_push(inifile, test_mode=None):
+def ac_push(inifile, env_vars, test_mode=None):
     """
     Function to handle flux calculation and influx pushing
 
@@ -537,29 +537,7 @@ def list_inis(ini_path):
     return filtered_files
 
 
-# def custom_logger(logger_name, level=logging.INFO):
-#     """Custom logger that has .ini name in the logging message"""
-#     logger = logging.getLogger(logger_name)
-#     logger.propagate = False
-#     logger.setLevel(level)
-#     format_string = (
-#         f"%(asctime)s.%(msecs)03d %(levelname)s {logger_name}:\t" "%(message)s"
-#     )
-#     date_format = "%Y-%m-%d %H:%M:%S"
-#     log_format = logging.Formatter(format_string, date_format)
-#     console_handler = logging.StreamHandler(sys.stdout)
-#     console_handler.setFormatter(log_format)
-#     logger.addHandler(console_handler)
-#
-#     return logger
-
-
-if __name__ == "__main__":
-    # NOTE: Need to use try except blocks in functions to prevent
-    # crashes since we are now looping through files in a folder,
-    # if one .ini crashes, all the ones after
-    ini_path = sys.argv[1]
-    # mode = sys.argv[2]
+def main(ini_path):
     ini_files = list_inis(ini_path)
     # get environment variables
     env_vars = os.environ
@@ -613,7 +591,7 @@ if __name__ == "__main__":
             mode = dict(config.items("defaults")).get("mode")
             logger.info(f"Running {inifile}.")
             if mode == "ac":
-                ac_push(inifile)
+                ac_push(inifile, env_vars)
             if mode == "man":
                 man_push(inifile)
             if mode == "csv":
@@ -624,3 +602,12 @@ if __name__ == "__main__":
         else:
             logging.info(f"Active set  0, skipped {inifile}")
             logger.removeHandler(file_name)
+
+
+if __name__ == "__main__":
+    # NOTE: Need to use try except blocks in functions to prevent
+    # crashes since we are now looping through files in a folder,
+    # if one .ini crashes, all the ones after
+    ini_path = sys.argv[1]
+    # mode = sys.argv[2]
+    main(ini_path)
