@@ -1507,6 +1507,12 @@ class excel_creator:
             if day not in daylist:
                 daylist.append(day)
             create_sparkline(data[["ch4"]], date[0])
+            try:
+                create_sparkline(data[["ch4"]], date[0])
+            except Exception as e:
+                logging.error(
+                    f"Error when creating graph with matplotlib, "
+                    f"most likely not enough memory. Error: {e}")
         for day in daylist:
             data = self.summarized_data[self.summarized_data.index.date == day]
             create_excel(data, str(day), self.excel_path)
