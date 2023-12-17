@@ -72,10 +72,13 @@ class pusher:
         self.tag_columns = self.read_tag_columns()
         # only push one day of data at once
         for date, group in self.data.groupby(pd.Grouper(freq="D")):
+            logger.debug(f"Running groupby on {date}")
             # if there was a day when all measurements had errors, the
             # dataframe can be empty
             if group.empty:
+                logger.debug(f"Dataframe on {date} is empty")
                 continue
+            logger.debug(f"Pushing data from {date} to db.")
             influx_push(group, self.influxdb_dict, self.tag_columns)
 
     def read_tag_columns(self):
