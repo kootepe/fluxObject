@@ -44,7 +44,7 @@ def merge_aux_by_column(measurement_df, aux_df):
             dflist.append(df)
         else:
             logger.info("Dataframes are not properly sorted by datetimeindex")
-            sys.exit(0)
+            return None
     df = pd.concat(dflist)
     df.sort_index(inplace=True)
     # df.to_csv("tests/test_data/snow_ready.csv")

@@ -293,6 +293,9 @@ def man_push(inifile, env_vars, test_mode=0):
         filtered_measurement.filtered_data,
         manual_measurement_time_df.manual_measurement_df,
     )
+    if merged_data.merged_data is None:
+        return None
+
     # merge air_pressure and air_temp data to measurement_data
     if air_pressure_df is not None and air_temperature_df is not None:
         logger.debug("Merging air_temp and air_pressure to gas measurement")

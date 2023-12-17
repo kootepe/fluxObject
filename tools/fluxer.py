@@ -108,10 +108,9 @@ class pusher:
             if check is True:
                 return tag_columns
             else:
-                logger.info(
+                logger.warning(
                     "Columns labeled for tagging don't exist in dataframe")
-                logger.info("EXITING")
-                sys.exit(0)
+                return None
 
 
 class snowdepth_parser:
@@ -319,8 +318,12 @@ class merge_data:
         if self.aux_df is not None:
             if self.snowdepth is not None:
                 self.merged_data = merge_aux_by_column(measurement_df, aux_df)
+                if self.merged_data is None:
+                    return None
             else:
                 self.merged_data = self.merge_aux_data(measurement_df, aux_df)
+            if self.merged_data is None:
+                return None
         else:
             self.merged_data = self.measurement_df
             pass
@@ -360,7 +363,7 @@ class merge_data:
             df.set_index("datetime", inplace=True)
         else:
             logger.info("Dataframes are not properly sorted by datetimeindex")
-            sys.exit(0)
+            return None
         return df
 
     def is_dataframe_sorted_by_datetime_index(self, df):

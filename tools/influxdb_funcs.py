@@ -36,10 +36,10 @@ def influx_push(df, influxdb_dict, tag_columns):
                 debug=True,
             )
         except NewConnectionError:
-            logger.info(
+            logger.warning(
                 f"Couldn't connect to database at " f"{influxdb_dict.get('url')}"
             )
-            pass
+            return None
 
         first = str(df.index[0])
         last = str(df.index[-1])
