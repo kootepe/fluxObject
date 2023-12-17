@@ -318,6 +318,7 @@ class merge_data:
             else:
                 self.merged_data = self.merge_aux_data(measurement_df, aux_df)
         else:
+            self.merged_data = self.measurement_df
             pass
 
     def merge_aux_by_column2(self, measurement_df, aux_df):
