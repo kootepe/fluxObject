@@ -444,16 +444,18 @@ def ac_push(inifile, test_mode=None):
         )
         if set_snow_to_zero is False:
             data_with_temp_pressure = merge_data(
-                data_with_temp_pressure.merged_data, snowdepth_df.snowdepth_df, True
+                data_with_temp_pressure.merged_data,
+                snowdepth_df.snowdepth_df,
+                True
             )
         data_with_snow = False
         merged_data = data_with_temp_pressure
-    else:
-        data_with_snow = merge_data(
-            filtered_measurement.filtered_data,
-            snowdepth_df.snowdepth_df,
-            True,
-        )
+    # else:
+    #     data_with_snow = merge_data(
+    #         filtered_measurement.filtered_data,
+    #         snowdepth_df.snowdepth_df,
+    #         True,
+        # )
 
     if data_with_snow:
         merged_data = data_with_snow
@@ -464,6 +466,24 @@ def ac_push(inifile, test_mode=None):
         filter_tuple,
         defaults_dict
     )
+
+    # grapher(
+    #     date_filter_list(
+    #         measurement_df.measurement_df, chamber_cycle_df.whole_cycle_tuple
+    #     ),
+    #     chamber_cycle_df.whole_cycle_tuple,
+    #     ready_data.slope_times_list,
+    #     filter_tuple,
+    # )
+
+    # tagged_measurement = measurement_tagger(
+    #     date_filter_list(
+    #         measurement_df.measurement_df, chamber_cycle_df.whole_cycle_tuple
+    #     ),
+    #     chamber_cycle_df.whole_cycle_tuple,
+    #     ready_data.slope_times_list,
+    #     filter_tuple,
+    # )
 
     # if url is defined, try and push to db
     if influxdb_dict.get("url"):
@@ -496,20 +516,21 @@ def list_inis(ini_path):
     return filtered_files
 
 
-def custom_logger(logger_name, level=logging.INFO):
-    """Custom logger that has .ini name in the logging message"""
-    logger = logging.getLogger(logger_name)
-    logger.setLevel(level)
-    format_string = (
-        f"%(asctime)s.%(msecs)03d %(levelname)s {logger_name}:\t" "%(message)s"
-    )
-    date_format = "%Y-%m-%d %H:%M:%S"
-    log_format = logging.Formatter(format_string, date_format)
-    console_handler = logging.StreamHandler(sys.stdout)
-    console_handler.setFormatter(log_format)
-    logger.addHandler(console_handler)
-
-    return logger
+# def custom_logger(logger_name, level=logging.INFO):
+#     """Custom logger that has .ini name in the logging message"""
+#     logger = logging.getLogger(logger_name)
+#     logger.propagate = False
+#     logger.setLevel(level)
+#     format_string = (
+#         f"%(asctime)s.%(msecs)03d %(levelname)s {logger_name}:\t" "%(message)s"
+#     )
+#     date_format = "%Y-%m-%d %H:%M:%S"
+#     log_format = logging.Formatter(format_string, date_format)
+#     console_handler = logging.StreamHandler(sys.stdout)
+#     console_handler.setFormatter(log_format)
+#     logger.addHandler(console_handler)
+#
+#     return logger
 
 
 if __name__ == "__main__":
