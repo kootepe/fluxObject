@@ -2,7 +2,6 @@ import os
 import sys
 from pathlib import Path
 import functools
-import logging
 import configparser
 import timeit
 from dotenv import dotenv_values
