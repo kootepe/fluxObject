@@ -469,24 +469,21 @@ def ac_push(inifile, env_vars, test_mode=None):
                 snowdepth_df.snowdepth_df,
                 True
             )
-        data_with_snow = False
         merged_data = data_with_temp_pressure
-    # else:
-    #     data_with_snow = merge_data(
-    #         filtered_measurement.filtered_data,
-    #         snowdepth_df.snowdepth_df,
-    #         True,
-        # )
 
-    if data_with_snow:
-        merged_data = data_with_snow
-
-    ready_data = calculated_data(
-        merged_data.merged_data,
-        measuring_chamber_dict,
-        filter_tuple,
-        defaults_dict
-    )
+    if air_pressure_df is not None and air_temperature_df is not None:
+        ready_data = calculated_data(
+            merged_data.merged_data,
+            measuring_chamber_dict,
+            filter_tuple,
+            defaults_dict
+        )
+    else:
+        ready_data = calculated_data(
+            filtered_measurement.filtered_data,
+            measuring_chamber_dict,
+            filter_tuple,
+            defaults_dict)
 
     # grapher(
     #     date_filter_list(
