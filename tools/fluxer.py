@@ -38,7 +38,8 @@ from tools.merging import merge_aux_by_column, is_dataframe_sorted_by_datetime_i
 
 from tools.create_excel import create_excel, create_sparkline
 
-logging = logging.getLogger("__main__")
+
+logger = logging.getLogger("defaultLogger")
 
 
 class pusher:
@@ -67,7 +68,7 @@ class pusher:
     def __init__(self, data, influxdb_dict):
         self.influxdb_dict = influxdb_dict
         self.data = data
-        logging.info("Pushing data to DB")
+        logger.info("Pushing data to DB")
         self.tag_columns = self.read_tag_columns()
         # only push one day of data at once
         for date, group in self.data.groupby(pd.Grouper(freq="D")):
@@ -98,15 +99,15 @@ class pusher:
         check = any(item in tag_columns for item in measurement_columns)
         has_items = tag_columns[0]
         if not has_items:
-            logging.warning("No tag columns defined")
+            logger.warning("No tag columns defined")
             return []
         else:
             if check is True:
                 return tag_columns
             else:
-                logging.info(
+                logger.info(
                     "Columns labeled for tagging don't exist in dataframe")
-                logging.info("EXITING")
+                logger.info("EXITING")
                 sys.exit(0)
 
 
@@ -240,7 +241,7 @@ class calculated_data:
                 df, slope_dates, mr)
 
             if measurement_df.ch4.isnull().values.any():
-                logging.warning(
+                logger.warning(
                     "Non-numeric values present from" f" {date[0]} to " f"{date[1]}"
                 )
 
@@ -353,7 +354,7 @@ class merge_data:
                 df["snowdepth"] = df["snowdepth"].fillna(0)
                 dflist.append(df)
             else:
-                logging.info(
+                logger.info(
                     "Dataframes are not properly sorted by datetimeindex")
                 sys.exit(0)
         df = pd.concat(dflist)
@@ -393,7 +394,7 @@ class merge_data:
             df.drop(df.filter(regex="_y$").columns, axis=1, inplace=True)
             df.set_index("datetime", inplace=True)
         else:
-            logging.info("Dataframes are not properly sorted by datetimeindex")
+            logger.info("Dataframes are not properly sorted by datetimeindex")
             sys.exit(0)
         return df
 
@@ -415,15 +416,15 @@ class merge_data:
             df.sort_index(inplace=True)
 
         if not isinstance(df, pd.DataFrame):
-            logging.info("Not a dataframe.")
+            logger.info("Not a dataframe.")
             return False
 
         if not isinstance(df.index, pd.DatetimeIndex):
-            logging.info("Index is not a datetimeindex.")
+            logger.info("Index is not a datetimeindex.")
             return False
 
         if df.index.is_monotonic_decreasing:
-            logging.info("Datetimeindex goes backwards.")
+            logger.info("Datetimeindex goes backwards.")
             return False
 
         return df.index.is_monotonic_increasing
@@ -499,13 +500,13 @@ class filterer:
         # the loop below raises a false positive warning, disable it
         pd.options.mode.chained_assignment = None
         empty_count = 0
-        logging.info(
+        logger.info(
             f"Filtering data with columns:\n{list(data_to_filter.columns)}")
         for date in self.filter_tuple:
             df = date_filter(data_to_filter, date)
             # drop measurements with no data
             if df.empty:
-                logging.info(f"No data between {date[0]} and {date[1]}")
+                logger.info(f"No data between {date[0]} and {date[1]}")
                 empty_timestamps.append(date)
                 empty_count += 1
                 continue
@@ -515,7 +516,7 @@ class filterer:
                     errors = ", ".join([str(x)
                                        for x in df["error_code"].unique()])
                     # errors = ', '.join(str(df["error_code"].unique())
-                    logging.info(
+                    logger.info(
                         f"Measuring errors {errors} between {date[0]} and {date[1]}, dropping measurement."
                     )
                     error_data.append(df)
@@ -528,7 +529,7 @@ class filterer:
             clean_data.append(df)
             clean_timestamps.append(date)
         if len(self.filter_tuple) == empty_count:
-            logging.info(
+            logger.info(
                 "No data found for any timestamp, is there data in the files?")
             sys.exit(0)
         clean_df = pd.concat(clean_data)
@@ -669,7 +670,7 @@ class aux_data_reader:
                     dtype=dtypes,
                 )
             except FileNotFoundError:
-                logging.info(
+                logger.info(
                     f"File not found at {Path(path) / f}, make sure the .ini is correct"
                 )
                 sys.exit()
@@ -680,7 +681,7 @@ class aux_data_reader:
         try:
             dfs = pd.concat(tmp)
         except ValueError:
-            logging.info(
+            logger.info(
                 "None of the auxiliary data is in the same time range as gas measurement data."
             )
             sys.exit(0)
@@ -710,7 +711,8 @@ class measurement_reader:
     """
 
     def __init__(self, measurement_dict, measurement_files):
-        logging.info("Reading measurements.")
+        logger.info("Reading measurements.")
+        logger.debug("Reading measurements.")
         self.measurement_dict = measurement_dict
         self.measurement_files = measurement_files
         self.measurement_df = self.read_measurement(self.measurement_dict)
@@ -1047,17 +1049,17 @@ class get_start_and_end_time:
 
         if check_timestamp(self.start_timestamp, self.end_timestamp):
             if self.used_ini_date == 1:
-                logging.info(
+                logger.info(
                     "Timestamp from .ini is older than the oldest file"
                     " timestamp, is the date you have in the .ini"
                     " correct?"
                 )
             else:
-                logging.info(
+                logger.info(
                     "Timestamp in db is older than the oldest file"
                     " timestamp, all data is already in db"
                 )
-                logging.info("Exiting.")
+                logger.info("Exiting.")
             sys.exit(0)
         else:
             pass
@@ -1079,10 +1081,10 @@ class get_start_and_end_time:
         # try:
         #    date = re.search(self.strftime_to_regex(), datestring).group(0)
         # except AttributeError:
-        # logging.info('Files are found in folder but no matching file found, is the format of the timestamp correct?')
+        # logger.info('Files are found in folder but no matching file found, is the format of the timestamp correct?')
         #    return None
         if self.file_timestamp_format == strftime_to_regex(self.file_timestamp_format):
-            logging.info(
+            logger.info(
                 "No strftime formatting in filename, returning current date")
             return datetime.datetime.today()
         date = re.search(
@@ -1116,7 +1118,7 @@ class get_start_and_end_time:
         else:
             last_ts = check_last_db_timestamp(self.influxdb_dict)
         if last_ts is None:
-            # logging.warning(
+            # logger.warning(
             #     "Couldn't get timestamp from influxdb," " using season_start from .ini"
             # )
             last_ts = datetime.datetime.strptime(
@@ -1347,7 +1349,7 @@ class csv_reader:
                     dtype=dtypes,
                 )
             except FileNotFoundError:
-                logging.info(
+                logger.info(
                     f"File not found at {Path(path) / f}, make sure the .ini is correct"
                 )
                 sys.exit()
@@ -1569,7 +1571,7 @@ class excel_creator:
             try:
                 create_sparkline(data[["ch4"]], date[0])
             except Exception as e:
-                logging.error(
+                logger.error(
                     f"Error when creating graph with matplotlib, "
                     f"most likely not enough memory. Error: {e}")
         for day in daylist:
