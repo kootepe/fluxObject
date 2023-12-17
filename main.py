@@ -26,6 +26,8 @@ from tools.fluxer import (
     excel_creator,
 )
 
+from tools.logger import init_logger
+
 
 def timer(func):
     """Decorator for printing execution time of function."""
@@ -36,7 +38,7 @@ def timer(func):
         value = func(*args, **kwargs)
         stop = timeit.default_timer()
         execution_time = stop - start
-        logging.info(
+        logger.info(
             f"{func.__name__} executed in {str(round(execution_time,3))}s.")
         return value
 
@@ -176,14 +178,14 @@ def man_push(inifile, test_mode=0):
     )
 
     # get start and end times for data that is going to be # calculated
-    logging.debug("Running get_start_and_end_time")
+    logger.debug("Running get_start_and_end_time")
     timestamps_values = get_start_and_end_time(
         influxdb_dict, measurement_dict, defaults_dict
     )
 
     # generate / search files that contain the gas measurement that is going
     # to be calulated
-    logging.debug("Running file_finder for gas measurements")
+    logger.debug("Running file_finder for gas measurements")
     measurement_files = file_finder(
         measurement_dict,
         defaults_dict,
@@ -192,7 +194,7 @@ def man_push(inifile, test_mode=0):
     )
     # generate / search files that contain the timestamps for the data
     # that is going to be calulated
-    logging.debug("Running file_finder for measurement timestamps")
+    logger.debug("Running file_finder for measurement timestamps")
     measurement_times_files = file_finder(
         manual_measurement_time_data_dict,
         defaults_dict,
@@ -203,7 +205,7 @@ def man_push(inifile, test_mode=0):
     # if get_temp_and_pressure_from_file is defined, generate filenames
     # for the air and pressure data
     if get_temp_and_pressure_from_file == "1":
-        logging.debug(
+        logger.debug(
             "Running file_finder for air_pressure and air_temperature")
         air_pressure_files = file_finder(
             air_pressure_dict,
@@ -220,16 +222,16 @@ def man_push(inifile, test_mode=0):
     else:
         air_pressure_files = None
         air_temperature_files = None
-        logging.debug("Skipped finding air_temp and and air_pressure files")
+        logger.debug("Skipped finding air_temp and and air_pressure files")
 
     # read the gas measurement data
-    logging.debug("Running measurement_reader")
+    logger.debug("Running measurement_reader")
     measurement_df = measurement_reader(
         measurement_dict, measurement_files.measurement_files
     )
 
     # read the manual measurement timestamps
-    logging.debug("Running read_manual_measurement_timestamps")
+    logger.debug("Running read_manual_measurement_timestamps")
     manual_measurement_time_df = read_manual_measurement_timestamps(
         manual_measurement_time_data_dict,
         measurement_times_files.measurement_files,
@@ -238,7 +240,7 @@ def man_push(inifile, test_mode=0):
 
     # read air_temp and air_pressure if the filenames were generated
     if air_pressure_files is not None and air_temperature_files is not None:
-        logging.debug("Reading air_temp and air_pressure files")
+        logger.debug("Reading air_temp and air_pressure files")
         air_temperature_df = aux_data_reader(
             air_temperature_dict, air_temperature_files.measurement_files
         )
@@ -247,23 +249,23 @@ def man_push(inifile, test_mode=0):
             air_pressure_dict, air_pressure_files.measurement_files
         )
     else:
-        logging.debug("Skipped reading air_temp and air_pressure files")
+        logger.debug("Skipped reading air_temp and air_pressure files")
         air_temperature_df = None
         air_pressure_df = None
 
     # list with three values, start_time, end_time, chamber_num, flux is
     # calculated from the data between start and end times
-    logging.debug("Grabbed filter tuple")
+    logger.debug("Grabbed filter tuple")
     filter_tuple = manual_measurement_time_df.filter_tuple
 
     # filter the measured gas flux
-    logging.debug("Filtering gas measurements")
+    logger.debug("Filtering gas measurements")
     filtered_measurement = filterer(
         filter_tuple, measurement_df.measurement_df)
 
     # same list as before but the timestamps with no data or invalid
     # data dropped
-    logging.debug("Grabbed filter_tuple cleaned up filter_tuple")
+    logger.debug("Grabbed filter_tuple cleaned up filter_tuple")
     filter_tuple = filtered_measurement.clean_filter_tuple
 
     # BUG: air_pressure data is at 10min interval, and it's filtered
@@ -280,25 +282,25 @@ def man_push(inifile, test_mode=0):
 
     # merge manual_measurement_timestamps to the gas measurement_dict
     # NOTE: is this needed?
-    logging.debug("Merging gas measurement to manual measurement timestamps")
+    logger.debug("Merging gas measurement to manual measurement timestamps")
     merged_data = merge_data(
         filtered_measurement.filtered_data,
         manual_measurement_time_df.manual_measurement_df,
     )
     # merge air_pressure and air_temp data to measurement_data
     if air_pressure_df is not None and air_temperature_df is not None:
-        logging.debug("Merging air_temp and air_pressure to gas measurement")
+        logger.debug("Merging air_temp and air_pressure to gas measurement")
         merged_data = merge_data(
             merged_data.merged_data, air_temperature_df.aux_data_df
         )
         merged_data = merge_data(
             merged_data.merged_data, air_pressure_df.aux_data_df)
     else:
-        logging.debug(
+        logger.debug(
             "No air_temp or air_pressure measurement, "
             "skipped merging to gas measurement")
 
-    logging.debug("Running calculated_data to calculate gas fluxes")
+    logger.debug("Running calculated_data to calculate gas fluxes")
     ready_data = calculated_data(
         merged_data.merged_data,
         measuring_chamber_dict,
@@ -307,12 +309,12 @@ def man_push(inifile, test_mode=0):
 
     # if url is defined, try and push to db
     if influxdb_dict.get("url"):
-        logging.debug("Attempting pushing to influx")
+        logger.debug("Attempting pushing to influx")
         pusher(ready_data.upload_ready_data, influxdb_dict)
 
     # if create_excel is 1, create excel summaries
     if defaults_dict.get("create_excel") == "1":
-        logging.info("Excel creation enabled, keep and eye on your memory")
+        logger.info("Excel creation enabled, keep and eye on your memory")
         excel_creator(
             merged_data.merged_data,
             ready_data.upload_ready_data,
@@ -320,7 +322,7 @@ def man_push(inifile, test_mode=0):
             defaults_dict.get("excel_directory"),
         )
     else:
-        logging.info("Excel creation disabled in .ini, skipping")
+        logger.info("Excel creation disabled in .ini, skipping")
 
     # if test_mode is 1, return ready_data class for testing purposes
     if test_mode == 1:
@@ -349,6 +351,8 @@ def ac_push(inifile, env_vars, test_mode=None):
     # initiate configparser
     config = configparser.ConfigParser(env_vars, allow_no_value=True)
     config.read(inifile)
+
+    logger = init_logger()
 
     # load parts of the .ini file as dictionaries
     defaults_dict = dict(config.items("defaults"))
@@ -516,7 +520,7 @@ def ac_push(inifile, env_vars, test_mode=None):
             defaults_dict.get("excel_directory"),
         )
     else:
-        logging.info("Excel creation disabled in .ini, skipping")
+        logger.info("Excel creation disabled in .ini, skipping")
 
     # if test_mode is 1, return ready_data class for testing purposes
     if test_mode:
@@ -548,31 +552,9 @@ def main(ini_path):
     # Update os.environ with the filtered dictionary
     env_vars.clear()
     env_vars.update(filtered_env)
+    logger = init_logger()
 
     for inifile in ini_files:
-        file_name = Path(inifile).name
-
-        # HACK: this logging is a hack
-        filehandler = logging.FileHandler(file_name, "a")
-        formatter = logging.Formatter(
-            f"%(asctime)s.%(msecs)03d %(levelname)s {file_name}:\t" "%(message)s"
-        )
-        date_format = "%Y-%m-%d %H:%M:%S"
-        filehandler.setFormatter(formatter)
-        logger = logging.getLogger()
-        for hdlr in logger.handlers[:]:
-            if isinstance(hdlr, logging.FileHandler):
-                logger.removeHandler(hdlr)
-        logger.addHandler(filehandler)
-        # TODO: IMPLEMENT GETTING LOGGING LEVEL FROM .INI
-        logger.setLevel(logging.INFO)
-        logger = logging.getLogger()
-        logging.Formatter.default_msec_format = "%s.%03d"
-        logging.basicConfig(
-            format=f"%(asctime)s %(levelname)s {file_name}:\t" "%(message)s",
-            force=True,
-        )
-
         config = configparser.ConfigParser(env_vars, allow_no_value=True)
         config.read(inifile)
         active = config.getboolean("defaults", "active")
@@ -595,10 +577,8 @@ def main(ini_path):
                 csv_push(inifile)
             if mode == "eddypro":
                 eddypro_push(inifile)
-            logger.removeHandler(file_name)
         else:
-            logging.info(f"Active set  0, skipped {inifile}")
-            logger.removeHandler(file_name)
+            logger.info(f"Active set 0, skipped {inifile}")
 
 
 if __name__ == "__main__":
