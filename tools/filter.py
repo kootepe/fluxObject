@@ -1,7 +1,7 @@
 import pandas as pd
 import logging
 
-logger = logging.getLogger("__main__")
+logger = logging.getLogger("defaultLogger")
 
 
 def date_filter_list(data_to_filter, filter_tuple_list):
