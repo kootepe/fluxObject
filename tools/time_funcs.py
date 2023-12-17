@@ -2,7 +2,7 @@ import datetime
 import re
 import logging
 
-logging = logging.getLogger("__main__")
+logger = logging.getLogger("__main__")
 
 
 def ordinal_timer(time):
@@ -102,9 +102,11 @@ def extract_date(file_timestamp_format, datestring):
     #    print('Files are found in folder but no matching file found, is the format of the timestamp correct?')
     #    return None
     if file_timestamp_format == strftime_to_regex(file_timestamp_format):
-        logging.info("No strftime formatting in filename, returning current date")
+        logger.info(
+            "No strftime formatting in filename, returning current date")
         return datetime.datetime.today()
-    date = re.search(strftime_to_regex(file_timestamp_format), datestring).group(0)
+    date = re.search(strftime_to_regex(
+        file_timestamp_format), datestring).group(0)
     # class chamber_cycle calls this method and using an instance
     # variable here might cause issues if the timestamp formats
     # should be different

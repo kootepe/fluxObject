@@ -3,7 +3,7 @@ import logging
 import pandas as pd
 from pathlib import Path
 
-logging = logging.getLogger("__main__")
+logger = logging.getLogger("__main__")
 
 
 def read_snow_measurement(snow_depth_file):
@@ -27,12 +27,12 @@ def read_snow_measurement(snow_depth_file):
     """
     set_to_zero = False
     if bool(snow_depth_file) is False:
-        logging.info("No snowdepth measurement, setting snowdepth to 0")
+        logger.info("No snowdepth measurement, setting snowdepth to 0")
         snowdepth = None
         set_to_zero = True
         return snowdepth, set_to_zero
     if not Path(snow_depth_file).is_file():
-        logging.info(
+        logger.info(
             f"Snowdepth measurement is defined as {snow_depth_file} but the file is not found, exiting."
         )
         sys.exit(0)

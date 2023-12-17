@@ -3,7 +3,7 @@ from influxdb_client.client.write_api import SYNCHRONOUS
 import logging
 from urllib3.exceptions import NewConnectionError
 
-logging = logging.getLogger("__main__")
+logger = logging.getLogger("defaultLogger")
 
 
 def influx_push(df, influxdb_dict, tag_columns):
@@ -29,13 +29,14 @@ def influx_push(df, influxdb_dict, tag_columns):
             write_api.write(
                 bucket=influxdb_dict.get("bucket"),
                 record=df,
-                data_frame_measurement_name=influxdb_dict.get("measurement_name"),
+                data_frame_measurement_name=influxdb_dict.get(
+                    "measurement_name"),
                 data_frame_timestamp_timezone=influxdb_dict.get("timezone"),
                 data_frame_tag_columns=tag_columns,
                 debug=True,
             )
         except NewConnectionError:
-            logging.info(
+            logger.info(
                 f"Couldn't connect to database at " f"{influxdb_dict.get('url')}"
             )
             pass
@@ -74,7 +75,8 @@ def check_last_db_timestamp(influxdb_dict):
     try:
         tables = client.query_api().query(query=query)
     except NewConnectionError:
-        logging.warning(f"Couldn't connect to database at {influxdb_dict.get('url')}")
+        logging.warning(
+            f"Couldn't connect to database at {influxdb_dict.get('url')}")
         last_ts = None
         return last_ts
     try:

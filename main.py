@@ -31,6 +31,7 @@ from tools.logger import init_logger
 
 def timer(func):
     """Decorator for printing execution time of function."""
+    logger = init_logger()
 
     @functools.wraps(func)
     def wrapper_timer(*args, **kwargs):
@@ -46,7 +47,7 @@ def timer(func):
 
 
 @timer
-def eddypro_push(inifile):
+def eddypro_push(inifile, env_vars):
     """
     Pipeline to handle reading eddypro .zip files, reading the flux
     from inside them and pushing that to influxdb
@@ -63,6 +64,8 @@ def eddypro_push(inifile):
     # initiate configparser
     config = configparser.ConfigParser(env_vars, allow_no_value=True)
     config.read(inifile)
+    log_level = dict(config.items("defaults")).get("logging_level")
+    logger = init_logger(log_level)
 
     # load parts of the .ini file as dictionaries
     defaults_dict = dict(config.items("defaults"))
@@ -94,7 +97,7 @@ def eddypro_push(inifile):
 
 
 @timer
-def csv_push(inifile):
+def csv_push(inifile, env_vars):
     """
     Reads .csv files and pushes them to influxdb
 
@@ -110,6 +113,8 @@ def csv_push(inifile):
     # initiate configparser
     config = configparser.ConfigParser(env_vars, allow_no_value=True)
     config.read(inifile)
+    log_level = dict(config.items("defaults")).get("logging_level")
+    logger = init_logger(log_level)
 
     # load parts of the .ini file as dictionaries
     defaults_dict = dict(config.items("defaults"))
@@ -140,7 +145,7 @@ def csv_push(inifile):
 
 
 @timer
-def man_push(inifile, test_mode=0):
+def man_push(inifile, env_vars, test_mode=0):
     """
     Function to handle flux calculation and influx pushing
 
@@ -161,6 +166,8 @@ def man_push(inifile, test_mode=0):
     # initiate configparser
     config = configparser.ConfigParser(env_vars, allow_no_value=True)
     config.read(inifile)
+    log_level = dict(config.items("defaults")).get("logging_level")
+    logger = init_logger(log_level)
 
     # load parts of the .ini file as dictionaries
     defaults_dict = dict(config.items("defaults"))
@@ -352,11 +359,8 @@ def ac_push(inifile, env_vars, test_mode=None):
     config = configparser.ConfigParser(env_vars, allow_no_value=True)
     config.read(inifile)
 
-    logger = init_logger()
-
     log_level = dict(config.items("defaults")).get("logging_level")
-    if log_level:
-        logger.setLevel(getattr(logging, log_level))
+    logger = init_logger(log_level)
 
     # load parts of the .ini file as dictionaries
     defaults_dict = dict(config.items("defaults"))
@@ -576,11 +580,11 @@ def main(ini_path):
             if mode == "ac":
                 ac_push(inifile, env_vars)
             if mode == "man":
-                man_push(inifile)
+                man_push(inifile, env_vars)
             if mode == "csv":
-                csv_push(inifile)
+                csv_push(inifile, env_vars)
             if mode == "eddypro":
-                eddypro_push(inifile)
+                eddypro_push(inifile, env_vars)
         else:
             logger.info(f"Active set 0, skipped {inifile}")
 

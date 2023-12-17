@@ -3,7 +3,7 @@ import logging
 import os
 import sys
 
-logging = logging.getLogger("__main__")
+logger = logging.getLogger("defaultLogger")
 
 
 def get_newest(path: str, file_extension: str):
@@ -19,11 +19,13 @@ def get_newest(path: str, file_extension: str):
         Name of the newest file in a folder
 
     """
-    logging.info(f"Getting first timestamp from {path}")
+    logger.info(f"Getting first timestamp from {path}")
     files = list(Path(path).rglob(f"*{file_extension}*"))
     if not files:
-        logging.info(f"No files found in {path}")
-        logging.warning("EXITING")
+        logger.info(f"No files found in {path}")
+        logger.warning("EXITING")
+        # BUG: NEED A BETTER WAY OF EXITING THE FUNCTION BECAUSE THIS
+        # STOPS THE LOOPING THROUGH FILES
         sys.exit(0)
 
     # linux only

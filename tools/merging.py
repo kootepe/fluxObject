@@ -2,7 +2,7 @@ import logging
 import sys
 import pandas as pd
 
-logging = logging.getLogger("__main__")
+logger = logging.getLogger("__main__")
 
 
 def merge_aux_by_column(measurement_df, aux_df):
@@ -43,7 +43,7 @@ def merge_aux_by_column(measurement_df, aux_df):
             df["snowdepth"].astype("float")
             dflist.append(df)
         else:
-            logging.info("Dataframes are not properly sorted by datetimeindex")
+            logger.info("Dataframes are not properly sorted by datetimeindex")
             sys.exit(0)
     df = pd.concat(dflist)
     df.sort_index(inplace=True)
@@ -69,15 +69,15 @@ def is_dataframe_sorted_by_datetime_index(df):
         df.sort_index(inplace=True)
 
     if not isinstance(df, pd.DataFrame):
-        logging.info("Not a dataframe.")
+        logger.info("Not a dataframe.")
         return False
 
     if not isinstance(df.index, pd.DatetimeIndex):
-        logging.info("Index is not a datetimeindex.")
+        logger.info("Index is not a datetimeindex.")
         return False
 
     if df.index.is_monotonic_decreasing:
-        logging.info("Datetimeindex goes backwards.")
+        logger.info("Datetimeindex goes backwards.")
         return False
 
     return df.index.is_monotonic_increasing
