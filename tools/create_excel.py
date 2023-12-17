@@ -60,6 +60,7 @@ def create_sparkline(df, filename):
     )
     ax.set_xticks([], [])
     ax.set_yticks([], [])
-    fig.savefig(f"{path}{plotname}", dpi=150, bbox_inches="tight", pad_inches=0.005)
+    fig.savefig(f"{path}{plotname}", dpi=150,
+                bbox_inches="tight", pad_inches=0.005)
     ax.cla()
     plt.close(fig)
