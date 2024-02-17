@@ -862,14 +862,14 @@ class chamber_cycle:
                 df["date"].astype(str) + " " + df["time"].astype(str)
             )
             df["close_time"] = df["datetime"] + pd.to_timedelta(
-                self.chamber_measurement_start_sec, unit="S"
+                self.chamber_measurement_start_sec, unit="s"
             )
             df["open_time"] = df["datetime"] + pd.to_timedelta(
-                self.chamber_measurement_end_sec, unit="S"
+                self.chamber_measurement_end_sec, unit="s"
             )
             df["cycle_start"] = df["datetime"]
             df["cycle_end"] = df["datetime"] + pd.to_timedelta(
-                self.end_of_cycle, unit="S"
+                self.end_of_cycle, unit="s"
             )
             tmp.append(df)
         dfs = pd.concat(tmp)
@@ -1472,13 +1472,13 @@ class read_manual_measurement_timestamps:
             # variable is named like this
             df["start_time"] = df["datetime"]
             df["close_time"] = df["datetime"] + pd.to_timedelta(
-                self.chamber_close_time, unit="S"
+                self.chamber_close_time, unit="s"
             )
             df["open_time"] = df["datetime"] + pd.to_timedelta(
-                self.chamber_open_time, unit="S"
+                self.chamber_open_time, unit="s"
             )
             df["end_time"] = df["datetime"] + pd.to_timedelta(
-                self.measurement_end_time, unit="S"
+                self.measurement_end_time, unit="s"
             )
             df["snowdepth"] = df["snowdepth"].fillna(0)
             tmp.append(df)

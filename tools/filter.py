@@ -53,7 +53,7 @@ def create_filter_tuple_extra(df, start_col, end_col):
 def add_time_to_filter_tuple(filter_tuple, percentage):
     """Remove percentage from both ends of the filter tuple"""
     time_difference = (filter_tuple[1] - filter_tuple[0]).seconds
-    time_to_remove = pd.to_timedelta(time_difference * (percentage / 100), "S")
+    time_to_remove = pd.to_timedelta(time_difference * (percentage / 100), "s")
     start = filter_tuple[0] + time_to_remove
     end = filter_tuple[1] - time_to_remove
     tuple = (start, end, filter_tuple[2])
