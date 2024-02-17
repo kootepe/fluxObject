@@ -36,7 +36,7 @@ from tools.gas_funcs import calculate_gas_flux, calculate_pearsons_r, calculate_
 import tools.snow_height
 from tools.merging import merge_aux_by_column, is_dataframe_sorted_by_datetime_index
 
-from tools.create_excel import create_excel, create_sparkline
+from tools.create_excel import create_excel, create_sparkline, create_fig
 
 
 logger = logging.getLogger("defaultLogger")
@@ -1565,14 +1565,17 @@ class excel_creator:
         if not exists:
             os.mkdir(fig_dir)
         daylist = []
+        fig, ax = create_fig()
         for date in self.filter_tuple:
             data = date_filter(self.all_data, date).copy()
             day = date[0].date()
             if day not in daylist:
                 daylist.append(day)
-            create_sparkline(data[["ch4"]], date[0])
             try:
-                create_sparkline(data[["ch4"]], date[0])
+                gas = "ch4"
+                create_sparkline(data[[gas]], date[0], gas, fig, ax)
+                gas = "co2"
+                create_sparkline(data[[gas]], date[0], gas, fig, ax)
             except Exception as e:
                 logger.error(
                     f"Error when creating graph with matplotlib, "
