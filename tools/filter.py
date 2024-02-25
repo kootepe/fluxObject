@@ -39,8 +39,8 @@ def date_filter(data_to_filter, filter_tuple):
     return df
 
 
-def create_filter_tuple(df):
-    filter_tuple = list(zip(df["close_time"], df["open_time"], df["chamber"]))
+def create_filter_tuple(df, close="close_time", open="open_time"):
+    filter_tuple = list(zip(df[close], df[open], df["chamber"]))
     return filter_tuple
 
 
