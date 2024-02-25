@@ -56,5 +56,5 @@ def add_time_to_filter_tuple(filter_tuple, percentage):
     time_to_remove = pd.to_timedelta(time_difference * (percentage / 100), "s")
     start = filter_tuple[0] + time_to_remove
     end = filter_tuple[1] - time_to_remove
-    tuple = (start, end, filter_tuple[2])
-    return tuple
+    time_tuple = (start, end, filter_tuple[2])
+    return time_tuple
