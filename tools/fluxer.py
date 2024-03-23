@@ -34,7 +34,12 @@ from tools.influxdb_funcs import influx_push, check_last_db_timestamp
 from tools.file_tools import get_newest
 from tools.gas_funcs import calculate_gas_flux, calculate_pearsons_r, calculate_slope
 import tools.snow_height
-from tools.merging import merge_aux_by_column, is_dataframe_sorted_by_datetime_index
+from tools.merging import (
+    merge_by_dtx,
+    merge_by_id,
+    merge_by_dtx_and_id,
+    is_df_valid,
+)
 
 from tools.create_excel import create_excel, create_sparkline, create_fig
 
@@ -1584,3 +1589,158 @@ class excel_creator:
             data = self.summarized_data[self.summarized_data.index.date == day]
             create_excel(data, str(day), self.excel_path)
         shutil.rmtree(fig_dir)
+
+
+class parse_aux_data:
+    def __init__(self, config):
+        self.cfg = config
+        self.parse_aux_cfg()
+        self.read_aux_data()
+
+    def parse_skiprows(self, skiprows):
+        def parser(x):
+            return [
+                int(item) if item.isdigit() else item for item in x.split(",")
+            ]
+
+        value = parser(skiprows)
+        if len(value) == 1:
+            value = value.pop()
+        return value
+
+    def parse_read_csv_args(self, args_dict):
+        # Define converters for specific arguments known to require non-string types
+        converters = {
+            "header": lambda x: int(x)
+            if x.isdigit()
+            else None
+            if x.lower() == "none"
+            else x,
+            "index_col": lambda x: int(x)
+            if x.isdigit()
+            else None
+            if x.lower() == "none"
+            else x,
+            "usecols": lambda x: [
+                int(item) if item.isdigit() else item for item in x.split(",")
+            ],
+            "skiprows": self.parse_skiprows,
+            "parse_dates": lambda x: [item for item in x.split(",")],
+            "names": lambda x: [
+                int(item) if item.isdigit() else item for item in x.split(",")
+            ],
+            "na_values": lambda x: x.split(",") if "," in x else x,
+        }
+
+        parsed_args = {}
+        for key, value in args_dict.items():
+            if key in converters:
+                try:
+                    # Apply the converter if one is defined for this key
+                    parsed_args[key] = converters[key](value)
+                except ValueError:
+                    print(
+                        f"Warning: Could not convert argument { key} with value {value}"
+                    )
+            else:
+                # Copy over any arguments without a specific converter
+                parsed_args[key] = value
+
+        return parsed_args
+
+    def parse_aux_cfg(self):
+        """
+        Creates a list of dictionaries out of .ini sections with have
+        "aux_data_" in them.
+        """
+        # list all config sections with aux_data_ in them
+        cfg_names = [s for s in self.cfg.sections() if "aux_data_" in s]
+        # config sections to dictionaries
+        aux_cfgs = [dict(self.cfg.items(c)) for c in cfg_names]
+        # initiate list for the parsed configs
+        self.aux_cfgs = []
+        for cfg in aux_cfgs:
+            name_key = cfg["name"]
+            path = Path(cfg.get("path"))
+            files = list(path.rglob(cfg.get("file_name")))
+            merge_method = cfg.get("merge_method")
+            direction = cfg.get("direction")
+            tolerance = cfg.get("tolerance")
+            # possible values in the .ini that we don't want passed to pandas
+            # read_csv
+            excluded = [
+                "name",
+                "path",
+                "file_name",
+                "merge_method",
+                "direction",
+                "tolerance",
+            ]
+
+            # create dict with pandas read_csv compatible args
+            pd_args = {k: v for k, v in cfg.items() if k not in excluded}
+            pd_args = self.parse_read_csv_args(pd_args)
+
+            new_dict = {
+                "name": name_key,
+                "merge_method": merge_method,
+                "files": files,
+                "args": pd_args,
+                "direction": direction,
+                "tolerance": tolerance,
+            }
+            self.aux_cfgs.append(new_dict)
+
+    def read_aux_data(self):
+        self.aux_dfs = []
+        for f in self.aux_cfgs:
+            dfs = pd.DataFrame()
+            for file in f.get("files"):
+                args = f.get("args")
+                df = pd.read_csv(file, **args)
+                dfs = pd.concat([dfs, df])
+            # NOTE: add sort
+            dfs.sort_index(inplace=True)
+            f["df"] = dfs
+
+
+class merge_data2:
+    """
+    Merges auxiliary data to the main gas measurement.
+
+    Attributes
+    ----------
+    measurement_df : pandas.DataFrame
+        main gas measurement
+    aux_cfg : dictionary
+        parsed with `parse_aux_cfg`
+    merged_data : pandas.DataFrame
+        `measurement_df` with auxiliary data merged into it
+    """
+
+    def __init__(self, measurement_df, aux_cfg):
+        self.measurement_df = measurement_df
+        self.aux_cfg = aux_cfg
+        self.merged_data = measurement_df
+        for cfg in self.aux_cfg:
+            merge_method = cfg.get("merge_method")
+            logger.debug(f"Merge method for {cfg.get('name')}: {merge_method}")
+            if merge_method == "timeid":
+                logger.debug(f"merging {cfg.get('name')} with {merge_method}")
+                merged = merge_by_dtx_and_id(self.merged_data, cfg)
+                if merged is not None:
+                    self.merged_data = merged
+            if merge_method == "id":
+                logger.debug(f"merging {cfg.get('name')} with {merge_method}")
+                merged = merge_by_id(self.merged_data, cfg)
+                if merged is not None:
+                    self.merged_data = merged
+            if merge_method == "time":
+                logger.debug(f"merging {cfg.get('name')} with {merge_method}")
+                merged = merge_by_dtx(self.merged_data, cfg)
+                if merged is not None:
+                    self.merged_data = merged
+
+        if len(aux_cfg) == 0:
+            self.merged_data = self.measurement_df
+            pass
