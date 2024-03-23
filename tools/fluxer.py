@@ -2,9 +2,9 @@ import os
 import re
 import functools
 import glob
-import shutil
 
 import sys
+import shutil
 import logging
 import datetime
 import configparser
@@ -14,15 +14,16 @@ import pandas as pd
 import zipfile as zf
 from zipfile import BadZipFile
 from pathlib import Path
-
+from traceback import format_exc
 
 # modules from this repo
 from tools.filter import (
     date_filter,
     date_filter_list,
-    create_filter_tuple,
+    mk_fltr_tuple,
     create_filter_tuple_extra,
-    add_time_to_filter_tuple,
+    subs_from_filter_tuple,
+    add_to_filter_tuple,
 )
 from tools.time_funcs import (
     ordinal_timer,
@@ -41,7 +42,14 @@ from tools.merging import (
     is_df_valid,
 )
 
-from tools.create_excel import create_excel, create_sparkline, create_fig
+from tools.create_excel import (
+    create_excel,
+    create_excel2,
+    create_sparkline,
+    create_sparkline2,
+    create_fig,
+    create_rects,
+)
 
 
 logger = logging.getLogger("defaultLogger")
@@ -1507,88 +1515,64 @@ class read_manual_measurement_timestamps:
 
 
 class measurement_tagger:
-    def __init__(
-        self, measurement_data, cycle_timestamps, slope_timestamps, flux_timestamps
-    ):
-        self.measurement_data = measurement_data
-        self.cycle_timestamps = cycle_timestamps
-        self.slope_timestamps = slope_timestamps
-        self.flux_timestamps = flux_timestamps
-        self.measurement_data["type"] = "measurement"
-        self.tagged_data = self.tag_measurement(
-            self.measurement_data, self.flux_timestamps, "flux"
-        )
-        self.tagged_data = self.tag_measurement(
-            self.tagged_data, self.slope_timestamps, "slope"
-        )
-        self.tagged_data = self.tag_measurement(
-            self.tagged_data, self.slope_timestamps, "slope"
-        )
-        # self.graph_measurement()
-
-    def graph_measurement(self):
-        df = self.tagged_data
-        df = df[df.error_code == 0]
-        df = df[~df.index.duplicated()]
-        # fig = sns.relplot(data=df, x = df.index, y = 'ch4', hue = "type")
-        for date in self.cycle_timestamps:
-            name = str(date[0])
-            start = date[0]
-            end = date[1]
-            start_mask = df.index > start
-            end_mask = df.index < end
-            data = df[start_mask & end_mask]
-            fig = px.scatter(data, x=data.index, y="ch4", color="type")
-            fig.write_image(f"figs/{name}.png")
-
-    def tag_measurement(self, data_to_tag, timestamps, tag):
-        data = data_to_tag.copy()
-        base_tag = tag
-        for date in timestamps:
-            tag_str = f"{base_tag}_chamber_{date[2]}"
-            start = date[0]
-            end = date[1]
-            start_mask = data.index > start
-            end_mask = data.index < end
-            data.loc[start_mask & end_mask, "type"] = tag_str
-        return data
-
-
 class excel_creator:
-    def __init__(self, all_data, summarized_data, filter_tuple, excel_path):
+    def __init__(
+        self, all_data, summarized_data, filter_tuple, excel_path, sort
+    ):
         self.all_data = all_data
-        self.summarized_data = summarized_data
-        self.filter_tuple = filter_tuple
+        self.sum_data = summarized_data
+        self.fil_tup = filter_tuple
         self.excel_path = excel_path
         self.create_xlsx()
 
         # files = glob.glob("figs")
 
     def create_xlsx(self):
-        fig_dir = "figs/"
-        exists = os.path.exists(fig_dir)
-        if not exists:
-            os.mkdir(fig_dir)
+        # create a list of days for creating outputs
         daylist = []
+        # initiate sparkline
         fig, ax = create_fig()
-        for date in self.filter_tuple:
+        times = self.fil_tup
+
+        m_times = [subs_from_filter_tuple(time, 20) for time in times]
+        w_times = [add_to_filter_tuple(time, 20) for time in times]
+
+        for i, date in enumerate(w_times):
             data = date_filter(self.all_data, date).copy()
+            if data.empty:
+                continue
             day = date[0].date()
+            smask = self.sum_data.index == times[i][0]
             if day not in daylist:
                 daylist.append(day)
             try:
-                gas = "ch4"
-                create_sparkline(data[[gas]], date[0], gas, fig, ax)
-                gas = "co2"
-                create_sparkline(data[[gas]], date[0], gas, fig, ax)
+                gases = ["ch4", "co2"]
+                day = str(date[0].date())
+                name = date[0].strftime("%Y%m%d%H%M%S")
+                for gas in gases:
+                    fig_root = "figs"
+                    path = Path(f"{fig_root}/{gas}/{day}/")
+                    plotname = f"{name}.png"
+                    fig_path = str(path / plotname)
+                    if not path.exists():
+                        path.mkdir(parents=True)
+                    self.sum_data.loc[smask, f"fig_dir_{gas}"] = fig_path
+                    y = data[gas]
+                    rects = create_rects(y, times[i], m_times[i])
+                    create_sparkline2(
+                        data[[gas]], fig_path, gas, fig, ax, rects
+                    )
             except Exception as e:
                 logger.error(
                     f"Error when creating graph with matplotlib, "
-                    f"most likely not enough memory. Error: {e}")
+                    f"most likely not enough memory. Error: {e}"
+                )
         for day in daylist:
-            data = self.summarized_data[self.summarized_data.index.date == day]
-            create_excel(data, str(day), self.excel_path)
-        shutil.rmtree(fig_dir)
+            data = self.sum_data[self.sum_data.index.date == day]
+            sort = None
+            create_excel2(data, self.excel_path, sort)
+        create_excel2(self.sum_data, self.excel_path, sort, "all_data")
+        shutil.rmtree(fig_root)
 
 
 class parse_aux_data:
