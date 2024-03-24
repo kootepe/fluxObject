@@ -198,23 +198,44 @@ class calculated_data:
         self.get_temp_and_pressure_from_file = defaults_dict.get(
             "get_temp_and_pressure_from_file"
         )
-        self.chamber_height = float(
-            measuring_chamber_dict.get("chamber_height"))
-        self.chamber_width = float(measuring_chamber_dict.get("chamber_width"))
-        self.chamber_length = float(
-            measuring_chamber_dict.get("chamber_length"))
-        self.default_pressure = float(defaults_dict.get("default_pressure"))
-        self.default_temperature = float(
-            defaults_dict.get("default_temperature"))
-        self.calculated_data = self.calculate_slope_pearsons_r(
-            self.measured_data, "ch4"
-        )
-        self.calculated_data = self.calculate_slope_pearsons_r(
-            self.calculated_data, "co2"
-        )
-        self.upload_ready_data = self.summarize(self.calculated_data)
 
-    def calculate_slope_pearsons_r(self, data, measurement_name):
+        self.measurement_perc = defaults_dict.get("measurement_perc")
+        if self.measurement_perc is None:
+            self.measurement_perc = 20
+        else:
+            self.measurement_perc = int(self.measurement_perc)
+
+        self.chamber_height = float(
+            measuring_chamber_dict.get("chamber_height")
+        )
+        self.def_press = float(defaults_dict.get("default_pressure"))
+        self.def_temp = float(defaults_dict.get("default_temperature"))
+        self.check_valid()
+
+        gases = ["ch4", "co2"]
+        for gas in gases:
+            self.measured_data = self.calc_slope_pearsR(self.measured_data, gas)
+        self.upload_ready_data = self.summarize(self.measured_data)
+
+    def check_valid(self):
+        dfa = pd.DataFrame()
+        for date in self.filter_tuple:
+            measurement_df = date_filter(self.measured_data, date)
+            if measurement_df["error_code"].sum() != 0:
+                measurement_df["checks"] += "has errors,"
+                measurement_df["is_valid"] = False
+
+            if measurement_df["air_temperature"].isna().all():
+                measurement_df["checks"] += "no air temp,"
+                measurement_df["is_valid"] = False
+
+            if measurement_df["air_pressure"].isna().all():
+                measurement_df["checks"] += "no air press,"
+                measurement_df["is_valid"] = False
+            dfa = pd.concat([dfa, measurement_df])
+        self.measured_data = dfa
+
+    def calc_slope_pearsR(self, data, measurement_name):
         """
         Calculates Pearsons R (correlation) and the slope of
         the CH4 flux.
@@ -234,42 +255,50 @@ class calculated_data:
             flux columns
         """
         # TODO: Clean this mess up
-        mr = measurement_name
+        meas_name = measurement_name
         measurement_list = []
         slope_times_list = []
         pearsons_r_times_list = []
         df = data.copy()
 
-        if self.get_temp_and_pressure_from_file == "1":
-            pressure = df["air_pressure"].mean()
-            temperature = df["air_temperature"].mean()
-        else:
-            pressure = df["air_pressure"] = self.default_pressure
-            temperature = df["air_temperature"] = self.default_temperature
-
         for date in self.filter_tuple:
+            is_valid = None
             measurement_df = date_filter(df, date).copy()
             if measurement_df.empty:
                 continue
 
-            slope_dates = add_time_to_filter_tuple(date, 25)
-            measurement_df[f"{mr}_slope"] = calculate_slope(
-                df, slope_dates, mr)
+            slope_dates = subs_from_filter_tuple(date, self.measurement_perc)
+            slope = calculate_slope(df, slope_dates, meas_name)
+            if slope is None:
+                continue
+            measurement_df[f"{meas_name}_slope"] = slope
+            pearsons_dates = subs_from_filter_tuple(date, self.measurement_perc)
+            pearsons = calculate_pearsons_r(df, pearsons_dates, meas_name)
+            if pearsons is None:
+                continue
+            measurement_df[f"{meas_name}_pearsons_r"] = pearsons
 
-            if measurement_df.ch4.isnull().values.any():
-                logger.warning(
-                    "Non-numeric values present from" f" {date[0]} to " f"{date[1]}"
-                )
-
-            pearsons_dates = add_time_to_filter_tuple(date, 25)
-            measurement_df[f"{mr}_pearsons_r"] = calculate_pearsons_r(
-                df, pearsons_dates, mr
-            )
-            measurement_df[f"{mr}_flux"] = calculate_gas_flux(
+            flux, is_valid = calculate_gas_flux(
                 measurement_df,
-                mr,
+                meas_name,
                 self.chamber_height,
+                self.def_temp,
+                self.def_press,
             )
+            measurement_df[f"{meas_name}_flux"] = flux
+
+            # MOVE THIS TO A DIFFERENT FUNCTION, THIS FUNCTION RUNS
+            # MULTIPLE TIMES TO THE VALUES ARE DUPLICATED
+            # if measurement_df["error_code"].sum() != 0:
+            #     measurement_df["checks"] += "has errors,"
+            # if is_valid is False:
+            #     measurement_df["checks"] += "no temp or pressure,"
+            # if measurement_df["error_code"].sum() != 0  or is_valid is False:
+            #     measurement_df["is_valid"] = False
+            # else:
+            #     measurement_df["is_valid"] = True
+            # if is_valid is False:
+            # print(measurement_df["checks"])
             measurement_list.append(measurement_df)
             slope_times_list.append(slope_dates)
             pearsons_r_times_list.append(pearsons_dates)
@@ -293,13 +322,19 @@ class calculated_data:
 
         """
         dfList = []
-        data = data[
-            ["ch4_flux", "co2_flux", "ch4_pearsons_r", "co2_pearsons_r", "chamber"]
-        ]
+        # data = data[
+        #     ["ch4_flux", "co2_flux", "ch4_pearsons_r", "co2_pearsons_r", "chamber"]
+        # ]
         for date in self.filter_tuple:
             dfa = date_filter(data, date)
             dfList.append(dfa.iloc[:1])
         summary = pd.concat(dfList)
+        summary["is_valid"] = summary["is_valid"] * 1
+        # try:
+        #     summary.loc[summary['has_errors'] == 1, 'is_valid'] = 0
+        # except Exception:
+        #     pass
+
         return summary
 
 
