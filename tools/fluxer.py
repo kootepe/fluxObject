@@ -755,6 +755,12 @@ class measurement_reader:
         self.measurement_dict = measurement_dict
         self.measurement_files = measurement_files
         self.measurement_df = self.read_measurement(self.measurement_dict)
+        self.measurement_df["year"] = self.measurement_df.index.year
+        self.measurement_df["month"] = self.measurement_df.index.month
+        self.measurement_df["day"] = self.measurement_df.index.day
+        self.measurement_df["doy"] = self.measurement_df.index.dayofyear
+        self.measurement_df["checks"] = ""
+        self.measurement_df["is_valid"] = True
 
     def read_measurement(self, dict):
         """
@@ -777,7 +783,8 @@ class measurement_reader:
         # oulanka has data from old licor software version which has no
         # remark column
         columns_alternative = list(
-            map(int, dict.get("columns_alternative").split(",")))
+            map(int, dict.get("columns_alternative").split(","))
+        )
         dtypes = dict.get("dtypes").split(",")
         # NOTE: ADD ERROR WHEN THERE'S NO FILES TO READ
         dtypes = {names[i]: dtypes[i] for i in range(len(names))}
