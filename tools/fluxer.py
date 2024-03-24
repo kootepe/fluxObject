@@ -1,7 +1,5 @@
 import os
 import re
-import functools
-import glob
 
 import sys
 import shutil
@@ -30,10 +28,15 @@ from tools.time_funcs import (
     strftime_to_regex,
     check_timestamp,
     extract_date,
+    get_time_diff,
 )
 from tools.influxdb_funcs import influx_push, check_last_db_timestamp
 from tools.file_tools import get_newest
-from tools.gas_funcs import calculate_gas_flux, calculate_pearsons_r, calculate_slope
+from tools.gas_funcs import (
+    calculate_gas_flux,
+    calculate_pearsons_r,
+    calculate_slope,
+)
 import tools.snow_height
 from tools.merging import (
     merge_by_dtx,
