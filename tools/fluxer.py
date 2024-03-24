@@ -1438,8 +1438,8 @@ class csv_reader:
             path,
             delimiter,
             skiprows,
-            timestamp_format,
-            file_extension,
+            ts_fmt,
+            f_ext,
             columns,
             names,
             dtypes,
@@ -1448,7 +1448,7 @@ class csv_reader:
         date_and_time = ["date", "time"]
         for f in self.files:
             try:
-                f = f + file_extension
+                f = f + f_ext
                 df = pd.read_csv(
                     Path(path) / f,
                     skiprows=skiprows,
@@ -1469,12 +1469,11 @@ class csv_reader:
         # if date and time are separate, combine them to datetime
         if check is True:
             dfs["datetime"] = pd.to_datetime(
-                dfs["date"].apply(str) + " " + dfs["time"], format=timestamp_format
+                dfs["date"].apply(str) + " " + dfs["time"], format=ts_fmt
             )
         # if they are not separate, there should be a datetime column already
         else:
-            dfs["datetime"] = pd.to_datetime(
-                dfs["datetime"], format=timestamp_format)
+            dfs["datetime"] = pd.to_datetime(dfs["datetime"], format=ts_fmt)
         dfs.set_index("datetime", inplace=True)
         return dfs
 
