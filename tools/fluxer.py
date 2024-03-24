@@ -711,8 +711,10 @@ class aux_data_reader:
                     f"File not found at {Path(path) / f}, make sure the .ini is correct"
                 )
                 sys.exit()
+            df["aux_file"] = str(f.name)
             df["datetime"] = pd.to_datetime(
-                df["datetime"], format=timestamp_format)
+                df["datetime"], format=timestamp_format
+            )
             df.set_index("datetime", inplace=True)
             tmp.append(df)
         try:
