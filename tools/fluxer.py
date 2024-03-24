@@ -793,38 +793,77 @@ class measurement_reader:
         tmp = []
         for f in self.measurement_files:
             try:
+                columns = ["DIAG", "DATE", "TIME", "H2O", "CO2", "CH4"]
+                columns_d = {
+                    "DIAG": "error_code",
+                    "DATE": "date",
+                    "TIME": "time",
+                    "H2O": "h2o",
+                    "CO2": "co2",
+                    "CH4": "ch4",
+                }
+                dtypes = {
+                    "error_code": "int",
+                    "date": "str",
+                    "time": "str",
+                    "h2o": "float",
+                    "co2": "float",
+                    "ch4": "float",
+                }
+                skiprows = [0, 1, 2, 3, 4, 6]
                 df = pd.read_csv(
                     f,
                     skiprows=skiprows,
                     delimiter="\t",
                     usecols=columns,
-                    names=names,
+                    # names=names,
                     dtype=dtypes,
+                )
+                df.rename(columns=columns_d, inplace=True)
+                df.astype(dtypes)
+                df["datetime"] = pd.to_datetime(
+                    df["date"].apply(str) + " " + df["time"],
+                    format="%Y-%m-%d %H:%M:%S",
                 )
             # there's old LICOR files which have an extra column,
             # this handles those
             except ValueError:
-                df = pd.read_csv(
-                    f,
-                    skiprows=skiprows,
-                    delimiter="\t",
-                    usecols=columns_alternative,
-                    names=names,
-                    dtype=dtypes,
-                )
+                print(format_exc())
+                logger.debug(f"Read fail: {f.name}")
+                try:
+                    df = pd.read_csv(
+                        f,
+                        skiprows=skiprows,
+                        delimiter="\t",
+                        usecols=columns_alternative,
+                        names=names,
+                        dtype=dtypes,
+                    )
+                    df["datetime"] = pd.to_datetime(
+                        df["date"].apply(str) + " " + df["time"],
+                        format="%Y-%m-%d %H:%M:%S",
+                    )
+                except Exception as e:
+                    print(f"Error: {e}")
+                    print(format_exc())
+                    continue
+            except Exception as e:
+                print(f"Error: {e}")
+                print(format_exc())
+            logger.debug(f"read success: {f.name}")
             tmp.append(df)
+            # df["gas_file"] = f
+            df["gas_file"] = str(f.name)
         # concatenate all stored dataframes into one big one
         dfs = pd.concat(tmp)
         # combine individual date and time columns into datetime
         # column
-        dfs["datetime"] = pd.to_datetime(
-            dfs["date"].apply(str) + " " + dfs["time"], format="%Y-%m-%d %H:%M:%S"
-        )
         dfs["ordinal_date"] = pd.to_datetime(dfs["datetime"]).map(
             datetime.datetime.toordinal
         )
         dfs["ordinal_time"] = dfs.apply(
-            lambda row: ordinal_timer(row["time"]), axis=1)
+            lambda row: ordinal_timer(row["time"]), axis=1
+        )
         dfs["ordinal_datetime"] = dfs["ordinal_time"] + dfs["ordinal_date"]
         dfs.set_index("datetime", inplace=True)
         dfs.sort_index(inplace=True)
