@@ -639,14 +639,28 @@ class aux_data_reader:
             int(dict.get("timestamp_column")),
             int(dict.get("measurement_column")),
         ]
-        names = [dict.get("timestamp_column_name"),
-                 dict.get("measurement_column_name")]
+        names = [
+            dict.get("timestamp_column_name"),
+            dict.get("measurement_column_name"),
+        ]
         # dtypes needs to passed to pandas as a dict
         dtypes = {
-            dict.get("timestamp_column_name"): dict.get("timestamp_column_dtype"),
-            dict.get("measurement_column_name"): dict.get("measurement_column_dtype"),
+            dict.get("timestamp_column_name"): dict.get(
+                "timestamp_column_dtype"
+            ),
+            dict.get("measurement_column_name"): dict.get(
+                "measurement_column_dtype"
+            ),
         }
-        return path, delimiter, skiprows, timestamp_format, columns, names, dtypes
+        return (
+            path,
+            delimiter,
+            skiprows,
+            timestamp_format,
+            columns,
+            names,
+            dtypes,
+        )
 
     def add_aux_data(self, ini_dict):
         """
