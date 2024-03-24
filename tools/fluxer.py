@@ -1599,18 +1599,6 @@ class read_manual_measurement_timestamps:
         return dfs
 
 
-# class grapher:
-#     def __init__(
-#         self, measurement_data, cycle_timestamps, slope_timestamps, flux_timestamps
-#     ):
-#         self.measurement_data = measurement_data
-#         self.cycle_timestamps = cycle_timestamps
-#         self.slope_timestamps = slope_timestamps
-#         self.flux_timestamps = flux_timestamps
-#         generate_graphs(measurement_data, slope_timestamps)
-
-
-class measurement_tagger:
 class excel_creator:
     def __init__(
         self, all_data, summarized_data, filter_tuple, excel_path, sort
