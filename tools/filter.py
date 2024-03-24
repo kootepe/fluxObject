@@ -39,7 +39,7 @@ def date_filter(data_to_filter, filter_tuple):
     return df
 
 
-def create_filter_tuple(df, close="close_time", open="open_time"):
+def mk_fltr_tuple(df, close="close_time", open="open_time"):
     filter_tuple = list(zip(df[close], df[open], df["chamber"]))
     return filter_tuple
 
@@ -50,11 +50,23 @@ def create_filter_tuple_extra(df, start_col, end_col):
     return filter_tuple
 
 
-def add_time_to_filter_tuple(filter_tuple, percentage):
-    """Remove percentage from both ends of the filter tuple"""
+def subs_from_filter_tuple(filter_tuple, percentage):
+    """Remove percentage from both ends of the filter tuple, eg. shorten the
+    time between the timestamps"""
     time_difference = (filter_tuple[1] - filter_tuple[0]).seconds
     time_to_remove = pd.to_timedelta(time_difference * (percentage / 100), "s")
     start = filter_tuple[0] + time_to_remove
     end = filter_tuple[1] - time_to_remove
+    time_tuple = (start, end, filter_tuple[2])
+    return time_tuple
+
+
+def add_to_filter_tuple(filter_tuple, percentage):
+    """Add percentage to both ends of the filter tuple, eg. lengthen the time
+    between the timestamps"""
+    time_difference = (filter_tuple[1] - filter_tuple[0]).seconds
+    time_to_remove = pd.to_timedelta(time_difference * (percentage / 100), "s")
+    start = filter_tuple[0] - time_to_remove
+    end = filter_tuple[1] + time_to_remove
     time_tuple = (start, end, filter_tuple[2])
     return time_tuple
