@@ -6,8 +6,9 @@ import logging
 logger = logging.getLogger("defaultLogger")
 
 
-def calculate_gas_flux(data, measurement_name, chamber_height, def_temp,
-                       def_press):
+def calculate_gas_flux(
+    data, measurement_name, chamber_height, def_temp, def_press
+):
     """
     Calculates gas flux
 
@@ -95,8 +96,8 @@ def calculate_pearsons_r(df, date, measurement_name):
         Dataframe with ordinal time column and gas measurement column
     date : tuple
         Tuple with start time and end time that will be used to select rows to
-        calculate pearsons R from. 
-    measurement_name : string 
+        calculate pearsons R from.
+    measurement_name : string
         name of the column slope is going to be calculated for.
 
     Returns
@@ -129,7 +130,9 @@ def calculate_slope(df, date, measurement_name):
         slope = None
         return slope
 
-    slope = round(np.polyfit(time_array.astype(float), gas_array.astype(float), 1).item(0) / 86400, 8)
+    slope = round(
+        np.polyfit(time_array.astype(float), gas_array.astype(float), 1).item(0)
+        / 86400,
+        8,
+    )
     return slope
-
-
