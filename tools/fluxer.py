@@ -899,10 +899,15 @@ class chamber_cycle:
     """
 
     def __init__(
-        self, measurement_dict, defaults_dict, measurement_time_dict, measurement_files
+        self,
+        measurement_dict,
+        defaults_dict,
+        measurement_time_dict,
+        measurement_files,
     ):
         self.file_timestamp_format = measurement_dict.get(
-            "file_timestamp_format")
+            "file_timestamp_format"
+        )
         self.chamber_cycle_file = defaults_dict.get("chamber_cycle_file")
         self.chamber_measurement_start_sec = int(
             measurement_time_dict.get("start_of_measurement")
@@ -913,7 +918,7 @@ class chamber_cycle:
         self.end_of_cycle = int(measurement_time_dict.get("end_of_cycle"))
         self.measurement_files = measurement_files
         self.chamber_cycle_df = self.create_chamber_cycle()
-        self.filter_tuple = create_filter_tuple(self.chamber_cycle_df)
+        self.filter_tuple = mk_fltr_tuple(self.chamber_cycle_df)
         self.whole_cycle_tuple = create_filter_tuple_extra(
             self.chamber_cycle_df, "cycle_start", "cycle_end"
         )
@@ -935,10 +940,10 @@ class chamber_cycle:
         # loop through files, read them into a pandas dataframe and
         # create timestamps
         for file in self.measurement_files:
-            df = pd.read_csv(self.chamber_cycle_file,
-                             names=["time", "chamber"])
-            date = extract_date(self.file_timestamp_format,
-                                os.path.splitext(file)[0])
+            df = pd.read_csv(self.chamber_cycle_file, names=["time", "chamber"])
+            date = extract_date(
+                self.file_timestamp_format, os.path.splitext(file)[0]
+            )
             df["date"] = date
             df["datetime"] = pd.to_datetime(
                 df["date"].astype(str) + " " + df["time"].astype(str)
