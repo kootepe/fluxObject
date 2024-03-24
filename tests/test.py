@@ -20,7 +20,7 @@ csv.set_index("datetime", inplace=True)
 ac_cols = csv.columns.to_list()
 
 # run main py with test flag to return classes
-ac_data_to_test = main.ac_push(ac_ini, 1)
+ac_data_to_test = main.ac_push(ac_ini, env_vars, 1)
 
 
 @pytest.mark.parametrize("test_input", ac_cols)
@@ -47,7 +47,7 @@ ac_csv_ap.set_index("datetime", inplace=True)
 ac_col_ap = ac_csv_ap.columns.to_list()
 
 # run main py with test flag to return classes
-ac_data_to_test_ap = main.ac_push(ac_ini_ap, 1)
+ac_data_to_test_ap = main.ac_push(ac_ini_ap, env_vars, 1)
 # ac_data_to_test_ap.upload_ready_data.to_csv("tests/test_data/test_results_ac_ap.csv")
 # sys.exit()
 
@@ -77,7 +77,7 @@ man_csv["validity"] = man_csv["validity"].fillna("")
 man_cols = man_csv.columns.to_list()
 
 # run main py with test flag to return classes
-man_data_to_test = main.man_push(man_ini, 1)
+man_data_to_test = main.man_push(man_ini, env_vars, 1)
 
 
 @pytest.mark.parametrize("test_input", man_cols)
@@ -113,7 +113,7 @@ man_ap_csv["validity"] = man_ap_csv["validity"].fillna("")
 man_ap_cols = man_ap_csv.columns.to_list()
 
 # run main py with test flag to return classes
-man_ap_data_to_test = main.man_push(man_ap_ini, 1)
+man_ap_data_to_test = main.man_push(man_ap_ini, env_vars, 1)
 # man_ap_data_to_test.upload_ready_data.to_csv("tests/test_data/test_results_man_ap.csv")
 # sys.exit()
 
