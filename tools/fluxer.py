@@ -1538,15 +1538,17 @@ class read_manual_measurement_timestamps:
         self.measurement_path = self.measurement_time_data_dict.get("path")
         self.measurement_files = measurement_files
 
-        self.chamber_close_time = int(
-            self.chamber_cycle_dict.get("start_of_measurement")
-        )
-        self.chamber_open_time = int(
-            self.chamber_cycle_dict.get("end_of_measurement"))
-        self.measurement_end_time = int(
-            self.chamber_cycle_dict.get("end_of_cycle"))
+        # chamaber close time
+        self.ch_ct = int(self.chamber_cycle_dict.get("start_of_measurement"))
+        # chamber open time
+        self.ch_ot = int(self.chamber_cycle_dict.get("end_of_measurement"))
+        # measurement end time
+        self.meas_et = int(self.chamber_cycle_dict.get("end_of_cycle"))
         self.manual_measurement_df = self.read_manual_measurement_file()
-        self.filter_tuple = create_filter_tuple(self.manual_measurement_df)
+        self.whole_measurement_tuple = mk_fltr_tuple(
+            self.manual_measurement_df, close="start_time", open="end_time"
+        )
+        self.filter_tuple = mk_fltr_tuple(self.manual_measurement_df)
 
     def read_manual_measurement_file(self):
         # NOTE: the format of the manual measurement is hardcoded
@@ -1571,26 +1573,28 @@ class read_manual_measurement_timestamps:
             df["date"] = date
             df["datetime"] = df["date"] + " " + df["start"]
             df["datetime"] = pd.to_datetime(
-                df["datetime"], format="%y%m%d %H%M")
-            # for the sake of consisteny, even though the manual
+                df["datetime"], format="%y%m%d %H%M"
+            )
+            # NOTE: for the sake of consisteny, even though the manual
             # measurement doesn't really have a closing time, the
             # variable is named like this
             df["start_time"] = df["datetime"]
             df["close_time"] = df["datetime"] + pd.to_timedelta(
-                self.chamber_close_time, unit="s"
+                self.ch_ct, unit="s"
             )
             df["open_time"] = df["datetime"] + pd.to_timedelta(
-                self.chamber_open_time, unit="s"
+                self.ch_ot, unit="s"
             )
             df["end_time"] = df["datetime"] + pd.to_timedelta(
-                self.measurement_end_time, unit="s"
+                self.meas_et, unit="s"
             )
             df["snowdepth"] = df["snowdepth"].fillna(0)
+            df["ts_file"] = str(f.name)
             tmp.append(df)
         dfs = pd.concat(tmp)
         dfs.set_index("datetime", inplace=True)
         dfs["notes"] = dfs["notes"].fillna("")
-        dfs["validity"] = dfs["notes"].fillna("")
+        # dfs["validity"] = dfs["notes"].fillna(1)
         dfs.sort_index(inplace=True)
         return dfs
 
