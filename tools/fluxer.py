@@ -355,7 +355,7 @@ class merge_data:
     ---
     merge_aux_data
         Merges the two dataframes if they are sorted by datetimeindex
-    is_dataframe_sorted_by_datetime_index
+    is_df_sorted_by_dt_idx
         Checks if input is a dataframe, if it has a datetimeindex and
         that the index is ascending.
     """
@@ -366,7 +366,8 @@ class merge_data:
         self.snowdepth = snowdepth
         if self.aux_df is not None:
             if self.snowdepth is not None:
-                self.merged_data = merge_aux_by_column(measurement_df, aux_df)
+                self.merged_data = merge_by_dtx_and_id(measurement_df, aux_df)
+                # self.merged_data = merge_aux_by_column(measurement_df, aux_df)
             else:
                 self.merged_data = self.merge_aux_data(measurement_df, aux_df)
         else:
@@ -383,9 +384,9 @@ class merge_data:
         other_df = aux_df
         dflist = []
         for _, group in other_df.groupby("chamber"):
-            if self.is_dataframe_sorted_by_datetime_index(
+            if self.is_df_sorted_by_dt_idx(
                 measurement_df
-            ) and self.is_dataframe_sorted_by_datetime_index(aux_df):
+            ) and self.is_df_sorted_by_dt_idx(aux_df):
                 main_df = main_df.copy()
                 other_df = group.copy()
                 chamberNum = other_df.chamber.mean()
@@ -406,7 +407,8 @@ class merge_data:
                 dflist.append(df)
             else:
                 logger.info(
-                    "Dataframes are not properly sorted by datetimeindex")
+                    "Dataframes are not properly sorted by datetimeindex"
+                )
                 sys.exit(0)
         df = pd.concat(dflist)
         return df
@@ -428,9 +430,10 @@ class merge_data:
         df -- pandas.dataframe
             dataframe with aux_data merged into the main gas measurement dataframe
         """
-        if is_dataframe_sorted_by_datetime_index(
-            measurement_df
-        ) and is_dataframe_sorted_by_datetime_index(aux_df):
+        # BUG: IF THERE'S A NA VALUES THE SCRIPT WILL CRASH
+        aux_df.dropna(inplace=True, axis=1)
+        if is_df_valid(measurement_df) and is_df_valid(aux_df):
+            measurement_df["temp_index"] = measurement_df.index
             df = pd.merge_asof(
                 measurement_df,
                 aux_df,
@@ -440,45 +443,13 @@ class merge_data:
                 direction="nearest",
                 suffixes=("", "_y"),
             )
-            # merge_asof creates some unnecessary columns that are named
-            # {colname}_y, drop them
+            df.drop("temp_index", axis=1, inplace=True)
             df.drop(df.filter(regex="_y$").columns, axis=1, inplace=True)
             df.set_index("datetime", inplace=True)
         else:
             logger.info("Dataframes are not properly sorted by datetimeindex")
             sys.exit(0)
         return df
-
-    def is_dataframe_sorted_by_datetime_index(self, df):
-        """
-        Checks that the dataframe is a dataframe, is sorted by a
-        datetimeindex and that the index is ascending
-
-        args:
-        ---
-        df -- pandas.dataframe
-
-        returns:
-        ---
-        bool
-
-        """
-        if not df.index.is_monotonic_increasing:
-            df.sort_index(inplace=True)
-
-        if not isinstance(df, pd.DataFrame):
-            logger.info("Not a dataframe.")
-            return False
-
-        if not isinstance(df.index, pd.DatetimeIndex):
-            logger.info("Index is not a datetimeindex.")
-            return False
-
-        if df.index.is_monotonic_decreasing:
-            logger.info("Datetimeindex goes backwards.")
-            return False
-
-        return df.index.is_monotonic_increasing
 
 
 class filterer:
