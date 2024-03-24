@@ -522,8 +522,7 @@ class filterer:
         # the loop below raises a false positive warning, disable it
         pd.options.mode.chained_assignment = None
         empty_count = 0
-        logger.info(
-            f"Filtering data with columns:\n{list(data_to_filter.columns)}")
+        # logger.info( f"Filtering data with columns:\n{list(data_to_filter.columns)}")
         for date in self.filter_tuple:
             df = date_filter(data_to_filter, date)
             # drop measurements with no data
@@ -535,15 +534,15 @@ class filterer:
             # drop all measurements that have any error codes
             if "error_code" in df.columns:
                 if df["error_code"].sum() != 0:
-                    errors = ", ".join([str(x)
-                                       for x in df["error_code"].unique()])
-                    # errors = ', '.join(str(df["error_code"].unique())
-                    logger.info(
-                        f"Measuring errors {errors} between {date[0]} and {date[1]}, dropping measurement."
-                    )
+                    # errors = ", ".join(
+                    #     [str(x) for x in df["error_code"].unique()]
+                    # )
+                    diff = get_time_diff(date[0], date[1])
+                    logger.info(f"Measuring errors at {date[0]} +{diff}sec.")
+                    # df["has_errors"] = 1
                     error_data.append(df)
                     error_timestamps.append(date)
-                    continue
+                    # continue
             # chamber number is the third value in filter_tuple
             df["chamber"] = date[2]
             df["chamber_close"] = date[0]
@@ -552,7 +551,8 @@ class filterer:
             clean_timestamps.append(date)
         if len(self.filter_tuple) == empty_count:
             logger.info(
-                "No data found for any timestamp, is there data in the files?")
+                "No data found for any timestamp, is there data in the files?"
+            )
             sys.exit(0)
         clean_df = pd.concat(clean_data)
         # save tuples that have data and no error codes
