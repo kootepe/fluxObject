@@ -148,8 +148,8 @@ class snowdepth_parser:
     def __init__(self, snowdepth_measurement):
         self.snowdepth_measurement = snowdepth_measurement
         # NOTE: does doing this little require it's own class?
-        self.snowdepth_df, self.set_to_zero = tools.snow_height.read_snow_measurement(
-            self.snowdepth_measurement
+        self.snowdepth_df, self.set_to_zero = (
+            tools.snow_height.read_snow_measurement(self.snowdepth_measurement)
         )
 
 
