@@ -301,8 +301,8 @@ def ac_push(inifile, env_vars, test_mode=None):
     defaults_dict = dict(config.items("defaults"))
     measurement_time_dict = dict(config.items("chamber_start_stop"))
     influxdb_dict = dict(config.items("influxDB"))
-    air_pressure_dict = dict(config.items("air_pressure_data"))
-    air_temperature_dict = dict(config.items("air_temperature_data"))
+    # air_pressure_dict = dict(config.items("air_pressure_data"))
+    # air_temperature_dict = dict(config.items("air_temperature_data"))
     measuring_chamber_dict = dict(config.items("measuring_chamber"))
     measurement_dict = dict(config.items("measurement_data"))
     get_temp_and_pressure_from_file = defaults_dict.get(
@@ -374,8 +374,7 @@ def ac_push(inifile, env_vars, test_mode=None):
     filter_tuple = chamber_cycle_df.filter_tuple
 
     # filter the measured gas flux
-    filtered_measurement = filterer(
-        filter_tuple, measurement_df.measurement_df)
+    filtered_measurement = filterer(filter_tuple, measurement_df.measurement_df)
 
     # same list as before but the timestamps with no data or invalid
     # data dropped
@@ -391,47 +390,67 @@ def ac_push(inifile, env_vars, test_mode=None):
     #     air_pressure_df = filterer(filter_tuple, air_pressure_df.aux_data_df)
 
     # read the snowdepth measurement into a dataframe
-    snowdepth_df = snowdepth_parser(
-        defaults_dict.get("snowdepth_measurement"),
-    )
+    # snowdepth_df = snowdepth_parser(
+    #     defaults_dict.get("snowdepth_measurement"),
+    # )
 
     # if set_snow_to_zero is 1, there's no snowdepth measurement and
     # snowdepth will be set 0
-    set_snow_to_zero = snowdepth_df.set_to_zero
-    if set_snow_to_zero is True:
-        filtered_measurement.filtered_data["snowdepth"] = 0
+    # set_snow_to_zero = snowdepth_df.set_to_zero
+    # if set_snow_to_zero is True:
+    #     filtered_measurement.filtered_data["snowdepth"] = 0
 
     # merge air_pressure and air_temp data to measurement_data
-    if air_pressure_df is not None and air_temperature_df is not None:
-        data_with_temp = merge_data(
-            filtered_measurement.filtered_data,
-            air_temperature_df.aux_data_df
-        )
-        data_with_temp_pressure = merge_data(
-            data_with_temp.merged_data, air_pressure_df.aux_data_df
-        )
-        if set_snow_to_zero is False:
-            data_with_temp_pressure = merge_data(
-                data_with_temp_pressure.merged_data,
-                snowdepth_df.snowdepth_df,
-                True
-            )
-        merged_data = data_with_temp_pressure
+    # if air_pressure_df is not None and air_temperature_df is not None:
+    #     data_with_temp = merge_data(
+    #         filtered_measurement.filtered_data,
+    #         air_temperature_df.aux_data_df
+    #     )
+    #     data_with_temp_pressure = merge_data(
+    #         data_with_temp.merged_data, air_pressure_df.aux_data_df
+    #     )
+    #     if set_snow_to_zero is False:
+    #         data_with_temp_pressure = merge_data(
+    #             data_with_temp_pressure.merged_data,
+    #             snowdepth_df.snowdepth_df,
+    #             True
+    #         )
+    #     merged_data = data_with_temp_pressure
 
     if air_pressure_df is not None and air_temperature_df is not None:
         ready_data = calculated_data(
             merged_data.merged_data,
             measuring_chamber_dict,
             filter_tuple,
-            defaults_dict
+            defaults_dict,
         )
     else:
-        ready_data = calculated_data(
-            filtered_measurement.filtered_data,
-            measuring_chamber_dict,
-            filter_tuple,
-            defaults_dict)
+        if snowdepth_df is None:
+            ready_data = calculated_data(
+                filtered_measurement.filtered_data,
+                measuring_chamber_dict,
+                filter_tuple,
+                defaults_dict,
+            )
+        else:
+            merged_data = merge_data(
+                filtered_measurement.filtered_data,
+                snowdepth_df.snowdepth_df,
+                True,
+            )
+            ready_data = calculated_data(
+                merged_data.merged_data,
+                measuring_chamber_dict,
+                filter_tuple,
+                defaults_dict,
+            )
 
+    ready_data = calculated_data(
+        merged_data.merged_data,
+        measuring_chamber_dict,
+        filter_tuple,
+        defaults_dict,
+    )
     # grapher(
     #     date_filter_list(
     #         measurement_df.measurement_df, chamber_cycle_df.whole_cycle_tuple
@@ -508,7 +527,8 @@ def main(ini_path):
                 env_vars = dotenv_values()
                 # pass env_vars to parser and reread .ini
                 config = configparser.ConfigParser(
-                    env_vars, allow_no_value=True)
+                    env_vars, allow_no_value=True
+                )
                 config.read(inifile)
             mode = dict(config.items("defaults")).get("mode")
             logger.info(f"Running {inifile}.")
