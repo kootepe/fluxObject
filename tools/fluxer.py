@@ -995,16 +995,22 @@ class file_finder:
         Checks that all of the generated filenames can be found
     """
 
-    def __init__(self, measurement_dict, defaults_dict, start_timestamp, end_timestamp):
+    def __init__(
+        self, measurement_dict, defaults_dict, start_timestamp, end_timestamp
+    ):
         self.path = measurement_dict.get("path")
         self.file_timestamp_format = measurement_dict.get(
-            "file_timestamp_format")
+            "file_timestamp_format"
+        )
         self.defaults_dict = defaults_dict
         self.file_timestep = int(self.defaults_dict.get("file_timestep"))
         self.start_timestamp = start_timestamp
         self.end_timestamp = end_timestamp
         self.scan_or_generate = int(measurement_dict.get("scan_or_generate"))
         self.measurement_files = self.match_files(self.generate_filenames())
+        logger.debug(
+            f"Found {len(self.measurement_files) } in folder {self.path}."
+        )
 
     def generate_filenames(self):
         """
@@ -1021,6 +1027,9 @@ class file_finder:
         """
         start_date = self.start_timestamp
         end_date = self.end_timestamp
+        logger.debug(
+            f"Creating file between {self.start_timestamp} and {self.end_timestamp}"
+        )
 
         filenames = []
         current_date = start_date
@@ -1034,12 +1043,12 @@ class file_finder:
             filename = current_date.strftime(self.file_timestamp_format)
             # if the filename in current loop is the same as the one
             # generated in previous loop, it means there's no timestamp
-            # in the filename, assumdely there's only one file that
+            # in the filename, assumsely there's only one file that
             # needs to be read.
             if filename == new_filename:
                 return [filename]
             filenames.append(filename)
-            current_date += datetime.timedelta(seconds=self.file_timestep)
+            current_date += datetime.timedelta(days=1)
             new_filename = filename
 
         filenames = sorted(filenames)
