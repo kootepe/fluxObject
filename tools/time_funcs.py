@@ -111,3 +111,9 @@ def extract_date(file_timestamp_format, datestring):
     # variable here might cause issues if the timestamp formats
     # should be different
     return datetime.datetime.strptime(date, file_timestamp_format)
+
+
+def get_time_diff(start, stop):
+    return (stop - start).total_seconds()
+
+
