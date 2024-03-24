@@ -122,7 +122,8 @@ class pusher:
                 return tag_columns
             else:
                 logger.info(
-                    "Columns labeled for tagging don't exist in dataframe")
+                    "Columns labeled for tagging don't exist in dataframe"
+                )
                 logger.info("EXITING")
                 sys.exit(0)
 
