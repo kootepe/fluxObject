@@ -1273,10 +1273,12 @@ class handle_eddypro:
         self.path = self.measurement_dict.get("path")
         self.names = self.measurement_dict.get("names").split(",")
         self.columns = list(
-            map(int, self.measurement_dict.get("columns").split(",")))
+            map(int, self.measurement_dict.get("columns").split(","))
+        )
         self.dtypes = self.measurement_dict.get("dtypes").split(",")
-        self.dtypes = {self.names[i]: self.dtypes[i]
-                       for i in range(len(self.names))}
+        self.dtypes = {
+            self.names[i]: self.dtypes[i] for i in range(len(self.names))
+        }
         # self.columns = self.measurement_dict.get('columns')
         # columns = list(map(int, dict.get('columns').split(',')))
         self.delimiter = self.measurement_dict.get("delimiter")
@@ -1323,7 +1325,6 @@ class handle_eddypro:
                 skiprows=self.skiprows,
                 names=self.names,
                 dtype=self.dtypes,
-                na_values="NaN",
             )
             # this file should only have one row, skip if there's more
             if len(ec) != 1:
