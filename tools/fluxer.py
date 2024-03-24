@@ -1134,17 +1134,23 @@ class get_start_and_end_time:
         self.path = measurement_dict.get("path")
         self.file_extension = measurement_dict.get("file_extension")
         self.file_timestamp_format = measurement_dict.get(
-            "file_timestamp_format")
+            "file_timestamp_format"
+        )
         self.start_timestamp = self.get_last_timestamp()
         self.used_ini_date = 0
         self.end_timestamp = self.extract_date(
             get_newest(self.path, self.file_extension)
         )
+        self.end_timestamp = extract_date(
+            self.file_timestamp_format,
+            get_newest(self.path, self.file_extension),
+        )
         if self.defaults_dict.get("limit_data"):
             if int(self.defaults_dict.get("limit_data")) > 0:
                 to_add = int(self.defaults_dict.get("limit_data"))
-                self.end_timestamp = self.start_timestamp + \
-                    datetime.timedelta(days=to_add)
+                self.end_timestamp = self.start_timestamp + datetime.timedelta(
+                    days=to_add
+                )
 
         if check_timestamp(self.start_timestamp, self.end_timestamp):
             if self.used_ini_date == 1:
@@ -1182,9 +1188,12 @@ class get_start_and_end_time:
         # except AttributeError:
         # logger.info('Files are found in folder but no matching file found, is the format of the timestamp correct?')
         #    return None
-        if self.file_timestamp_format == strftime_to_regex(self.file_timestamp_format):
+        if self.file_timestamp_format == strftime_to_regex(
+            self.file_timestamp_format
+        ):
             logger.info(
-                "No strftime formatting in filename, returning current date")
+                "No strftime formatting in filename, returning current date"
+            )
             return datetime.datetime.today()
         date = re.search(
             strftime_to_regex(self.file_timestamp_format), datestring
@@ -1210,8 +1219,8 @@ class get_start_and_end_time:
         if not self.influxdb_dict.get("url"):
             # if self.influxdb_dict.get("url") is "":
             last_ts = datetime.datetime.strptime(
-                self.season_start, self.influxdb_dict.get(
-                    "influxdb_timestamp_format")
+                self.season_start,
+                self.influxdb_dict.get("influxdb_timestamp_format"),
             )
             self.used_ini_date = 1
         else:
@@ -1221,8 +1230,8 @@ class get_start_and_end_time:
             #     "Couldn't get timestamp from influxdb," " using season_start from .ini"
             # )
             last_ts = datetime.datetime.strptime(
-                self.season_start, self.influxdb_dict.get(
-                    "influxdb_timestamp_format")
+                self.season_start,
+                self.influxdb_dict.get("influxdb_timestamp_format"),
             )
         return last_ts
 
