@@ -100,12 +100,6 @@ def merge_by_dtx_and_id(main_df, cfg):
             ).dt.total_seconds()
             df.drop(df.filter(regex="_y$").columns, axis=1, inplace=True)
             df.set_index("datetime", inplace=True)
-            try:
-                df["snowdepth"] = df["snowdepth"].fillna(0)
-                df["snowdepth"].astype("float")
-            except KeyError:
-                df["snowdepth"] = 0.0
-                logger.debug("No snowdepth measurement, setting to 0")
             dflist.append(df)
         else:
             logger.info("Dataframes are not properly sorted by datetimeindex.")

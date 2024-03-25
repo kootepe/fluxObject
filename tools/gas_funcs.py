@@ -29,6 +29,9 @@ def calculate_gas_flux(
     is_valid = True
     df = data.copy()
     # from mm to m
+    if "snowdepth" not in df.columns:
+        df["snowdepth"] = 0
+
     height = (chamber_height * 0.001) - (df["snowdepth"].mean() / 100)
 
     # slope of the linear fit of the measurement
