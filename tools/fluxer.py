@@ -28,6 +28,7 @@ from tools.time_funcs import (
     check_timestamp,
     extract_date,
     get_time_diff,
+    convert_seconds,
 )
 from tools.influxdb_funcs import influx_push, check_last_db_timestamp
 from tools.file_tools import get_newest
