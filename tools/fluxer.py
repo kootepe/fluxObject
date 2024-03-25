@@ -273,7 +273,6 @@ class calculated_data:
         df = data.copy()
 
         for date in self.filter_tuple:
-            is_valid = None
             measurement_df = date_filter(df, date).copy()
             if measurement_df.empty:
                 measurement_list.append(measurement_df)
@@ -291,6 +290,7 @@ class calculated_data:
                 logger.debug(f"slope returned as NaN at {date[0]}")
                 continue
             measurement_df[f"{meas_name}_slope"] = slope
+
             pearsons_dates = subs_from_filter_tuple(date, self.measurement_perc)
             pearsons = calculate_pearsons_r(df, pearsons_dates, meas_name)
             if np.isnan(pearsons):
@@ -298,7 +298,7 @@ class calculated_data:
                 continue
             measurement_df[f"{meas_name}_pearsons_r"] = pearsons
 
-            flux, is_valid = calculate_gas_flux(
+            flux = calculate_gas_flux(
                 measurement_df,
                 meas_name,
                 self.chamber_height,

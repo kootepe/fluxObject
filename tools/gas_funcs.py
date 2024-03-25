@@ -51,7 +51,6 @@ def calculate_gas_flux(
             t = def_temp
             is_valid = False
     if df["air_pressure"].isnull().values.sum() > 0:
-        is_valid = False
         p = def_press
     else:
         try:
@@ -60,7 +59,6 @@ def calculate_gas_flux(
         except Exception:
             logger.debug("NO AIR PRESSURE IN FILE, USING DEFAULT")
             p = def_press
-            is_valid = False
 
     # universal gas constant
     r = 8.314
@@ -83,7 +81,7 @@ def calculate_gas_flux(
         6,
     )
 
-    return flux, is_valid
+    return flux
 
 
 def calculate_pearsons_r(df, date, measurement_name):
