@@ -1645,6 +1645,7 @@ class excel_creator:
         self.sum_data = summarized_data
         self.fil_tup = filter_tuple
         self.excel_path = excel_path
+        self.defaults = defaults_dict
         self.create_xlsx()
 
         # files = glob.glob("figs")
@@ -1656,10 +1657,11 @@ class excel_creator:
         fig, ax = create_fig()
         times = self.fil_tup
 
-        m_times = [subs_from_filter_tuple(time, 20) for time in times]
-        w_times = [add_to_filter_tuple(time, 20) for time in times]
+        perc = int(self.defaults.get("measurement_perc"))
         # tuples with that cover the whole measurement / cycle
+        w_times = [add_to_filter_tuple(time, perc) for time in times]
         # tuples that cover the time where the calculations are from
+        m_times = [subs_from_filter_tuple(time, perc) for time in times]
 
         gases = ["ch4", "co2"]
         logger.debug(f"Creating {len(times) * len(gases)} sparklines.")
