@@ -1658,7 +1658,14 @@ class excel_creator:
 
         m_times = [subs_from_filter_tuple(time, 20) for time in times]
         w_times = [add_to_filter_tuple(time, 20) for time in times]
+        # tuples with that cover the whole measurement / cycle
+        # tuples that cover the time where the calculations are from
 
+        gases = ["ch4", "co2"]
+        logger.debug(f"Creating {len(times) * len(gases)} sparklines.")
+        logger.debug(
+            f"Time estimate: {convert_seconds(len(times) * (0.05 * len(gases)))}."
+        )
         for i, date in enumerate(w_times):
             data = date_filter(self.all_data, date).copy()
             if data.empty:
@@ -1668,9 +1675,10 @@ class excel_creator:
             if day not in daylist:
                 daylist.append(day)
             try:
-                gases = ["ch4", "co2"]
                 day = str(date[0].date())
+                day = pd.to_datetime(data.index.view("int").mean()).date()
                 name = date[0].strftime("%Y%m%d%H%M%S")
+                # logger.debug(f"Creating sparkline {i+1}/{w_len}")
                 for gas in gases:
                     fig_root = "figs"
                     path = Path(f"{fig_root}/{gas}/{day}/")
@@ -1691,6 +1699,8 @@ class excel_creator:
                 )
         for day in daylist:
             data = self.sum_data[self.sum_data.index.date == day]
+            if data.empty:
+                continue
             sort = None
             create_excel2(data, self.excel_path, sort)
         create_excel2(self.sum_data, self.excel_path, sort, "all_data")
@@ -1831,22 +1841,29 @@ class merge_data2:
         for cfg in self.aux_cfg:
             merge_method = cfg.get("merge_method")
             logger.debug(f"Merge method for {cfg.get('name')}: {merge_method}")
+            logger.debug(f"merging {cfg.get('name')} with {merge_method}")
             if merge_method == "timeid":
-                logger.debug(f"merging {cfg.get('name')} with {merge_method}")
                 merged = merge_by_dtx_and_id(self.merged_data, cfg)
                 if merged is not None:
                     self.merged_data = merged
+                    logger.debug(
+                        f"Merged {cfg.get('name')} with {merge_method}"
+                    )
             if merge_method == "id":
-                logger.debug(f"merging {cfg.get('name')} with {merge_method}")
                 merged = merge_by_id(self.merged_data, cfg)
                 if merged is not None:
                     self.merged_data = merged
+                    logger.debug(
+                        f"Merged {cfg.get('name')} with {merge_method}"
+                    )
             if merge_method == "time":
-                logger.debug(f"merging {cfg.get('name')} with {merge_method}")
                 merged = merge_by_dtx(self.merged_data, cfg)
                 if merged is not None:
                     self.merged_data = merged
+                    logger.debug(
+                        f"Merged {cfg.get('name')} with {merge_method}"
+                    )
 
         if len(aux_cfg) == 0:
             self.merged_data = self.measurement_df
-            pass
+        logger.debug(f"Completed merging {len(aux_cfg)} auxiliary datasets.")
