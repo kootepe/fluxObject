@@ -53,7 +53,10 @@ def create_excel2(df, path, sort=None, name=None):
         ws1.cell(row=1, column=idxx + 1).value = f"{cols[idxx][-3:]}_graph"
         for row, fig in enumerate(fig_ls):
             anc_str = get_column_letter(idxx + 1) + str(row + 2)
-            img = opxl.drawing.image.Image(fig)
+            try:
+                img = opxl.drawing.image.Image(fig)
+            except Exception:
+                continue
             ws1.add_image(img, anc_str)
 
     path = Path(path)
