@@ -19,7 +19,6 @@ from tools.filter import (
     date_filter,
     date_filter_list,
     mk_fltr_tuple,
-    create_filter_tuple_extra,
     subs_from_filter_tuple,
     add_to_filter_tuple,
 )

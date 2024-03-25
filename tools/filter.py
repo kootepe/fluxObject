@@ -40,13 +40,8 @@ def date_filter(data_to_filter, filter_tuple):
 
 
 def mk_fltr_tuple(df, close="close_time", open="open_time"):
-    filter_tuple = list(zip(df[close], df[open], df["chamber"]))
-    return filter_tuple
-
-
-def create_filter_tuple_extra(df, start_col, end_col):
     """create filter tuple from given column names"""
-    filter_tuple = list(zip(df[start_col], df[end_col]))
+    filter_tuple = list(zip(df[close], df[open], df["chamber"]))
     return filter_tuple
 
 
