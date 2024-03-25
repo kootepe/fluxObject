@@ -817,13 +817,15 @@ class measurement_reader:
             # there's old LICOR files which have an extra column,
             # this handles those
             except ValueError:
-                    continue
-            except Exception as e:
-                print(f"Error: {e}")
-                print(format_exc())
-                logger.debug(f"Read fail: {f.name}")
+                logger.info(f"Read fail: {f.name}")
+                logger.debug(format_exc())
                 continue
-            logger.debug(f"read success: {f.name}")
+            except Exception as e:
+                logger.info(f"Read fail: {f.name}")
+                logger.debug(f"Error: {e}")
+                logger.debug(format_exc())
+                continue
+            logger.info(f"read success: {f.name}")
             tmp.append(df)
             # df["gas_file"] = f
             df["gas_file"] = str(f.name)
