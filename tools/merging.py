@@ -83,9 +83,9 @@ def merge_by_dtx_and_id(main_df, cfg):
             masked_main, masked_aux = filter_with_mask(
                 main_df, aux_df, num, id_col
             )
-            logger.debug(
-                f"Merging {name}, direction: { direction}, tolerance: {tolerance}"
-            )
+            # logger.debug(
+            #     f"Merging {name}, direction: { direction}, tolerance: {tolerance}"
+            # )
             df = pd.merge_asof(
                 masked_main,
                 masked_aux,
@@ -100,8 +100,12 @@ def merge_by_dtx_and_id(main_df, cfg):
             ).dt.total_seconds()
             df.drop(df.filter(regex="_y$").columns, axis=1, inplace=True)
             df.set_index("datetime", inplace=True)
-            df["snowdepth"] = df["snowdepth"].fillna(0)
-            df["snowdepth"].astype("float")
+            try:
+                df["snowdepth"] = df["snowdepth"].fillna(0)
+                df["snowdepth"].astype("float")
+            except KeyError:
+                df["snowdepth"] = 0.0
+                logger.debug("No snowdepth measurement, setting to 0")
             dflist.append(df)
         else:
             logger.info("Dataframes are not properly sorted by datetimeindex.")
