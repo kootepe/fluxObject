@@ -950,9 +950,9 @@ class chamber_cycle:
         self.measurement_files = measurement_files
         logger.debug("Creating autochamber cycle.")
         self.chamber_cycle_df = self.create_chamber_cycle()
-        self.filter_tuple = mk_fltr_tuple(self.chamber_cycle_df)
-        self.whole_cycle_tuple = create_filter_tuple_extra(
-            self.chamber_cycle_df, "cycle_start", "cycle_end"
+        logger.debug("Creating filter tuples from autochamber cycle.")
+        self.filter_tuple = mk_fltr_tuple(
+            self.chamber_cycle_df, "close_time", "open_time"
         )
 
     def create_chamber_cycle(self):
