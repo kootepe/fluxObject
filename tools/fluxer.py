@@ -222,21 +222,27 @@ class calculated_data:
         self.upload_ready_data = self.summarize(self.measured_data)
 
     def check_valid(self):
-        dfa = pd.DataFrame()
+        logger.debug("Checking validity")
+        dfa = []
         for date in self.filter_tuple:
             measurement_df = date_filter(self.measured_data, date)
-            if measurement_df["error_code"].sum() != 0:
-                measurement_df["checks"] += "has errors,"
-                measurement_df["is_valid"] = False
+            has_errors = measurement_df["error_code"].sum() != 0
+            no_air_temp = measurement_df["air_temperature"].isna().all()
+            no_air_pressure = measurement_df["air_pressure"].isna().all()
+            if has_errors or no_air_temp or no_air_pressure:
+                checks = []
+                if has_errors:
+                    checks.append("has errors,")
+                if no_air_temp:
+                    checks.append("no air temp,")
+                if no_air_pressure:
+                    checks.append("no air pressure,")
+                checks_str = "".join(checks)
+                measurement_df.loc[:, "checks"] += checks_str
+                measurement_df.loc[:, "is_valid"] = False
 
-            if measurement_df["air_temperature"].isna().all():
-                measurement_df["checks"] += "no air temp,"
-                measurement_df["is_valid"] = False
-
-            if measurement_df["air_pressure"].isna().all():
-                measurement_df["checks"] += "no air press,"
-                measurement_df["is_valid"] = False
-            dfa = pd.concat([dfa, measurement_df])
+            dfa.append(measurement_df)
+        dfa = pd.concat(dfa)
         self.measured_data = dfa
 
     def calc_slope_pearsR(self, data, measurement_name):
