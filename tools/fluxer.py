@@ -218,6 +218,7 @@ class calculated_data:
 
         gases = ["ch4", "co2"]
         for gas in gases:
+            logger.debug(f"Calculating gas flux for {gas}.")
             self.measured_data = self.calc_slope_pearsR(self.measured_data, gas)
         self.upload_ready_data = self.summarize(self.measured_data)
 
@@ -286,12 +287,14 @@ class calculated_data:
 
             slope_dates = subs_from_filter_tuple(date, self.measurement_perc)
             slope = calculate_slope(df, slope_dates, meas_name)
-            if slope is None:
+            if np.isnan(slope):
+                logger.debug(f"slope returned as NaN at {date[0]}")
                 continue
             measurement_df[f"{meas_name}_slope"] = slope
             pearsons_dates = subs_from_filter_tuple(date, self.measurement_perc)
             pearsons = calculate_pearsons_r(df, pearsons_dates, meas_name)
-            if pearsons is None:
+            if np.isnan(pearsons):
+                logger.debug(f"pearsonsR returned as NaN at {date[0]}")
                 continue
             measurement_df[f"{meas_name}_pearsons_r"] = pearsons
 
@@ -778,7 +781,6 @@ class measurement_reader:
 
     def __init__(self, measurement_dict, measurement_files):
         logger.info("Reading measurements.")
-        logger.debug("Reading measurements.")
         self.measurement_dict = measurement_dict
         self.measurement_files = measurement_files
         self.measurement_df = self.read_measurement(self.measurement_dict)
@@ -873,10 +875,13 @@ class measurement_reader:
                 except Exception as e:
                     print(f"Error: {e}")
                     print(format_exc())
+                    logger.debug(f"Read fail: {f.name}")
                     continue
             except Exception as e:
                 print(f"Error: {e}")
                 print(format_exc())
+                logger.debug(f"Read fail: {f.name}")
+                continue
             logger.debug(f"read success: {f.name}")
             tmp.append(df)
             # df["gas_file"] = f
@@ -943,6 +948,7 @@ class chamber_cycle:
         )
         self.end_of_cycle = int(measurement_time_dict.get("end_of_cycle"))
         self.measurement_files = measurement_files
+        logger.debug("Creating autochamber cycle.")
         self.chamber_cycle_df = self.create_chamber_cycle()
         self.filter_tuple = mk_fltr_tuple(self.chamber_cycle_df)
         self.whole_cycle_tuple = create_filter_tuple_extra(
