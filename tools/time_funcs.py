@@ -1,6 +1,7 @@
 import datetime
 import re
 import logging
+from numpy import array
 
 logger = logging.getLogger("defaultLogger")
 
@@ -19,11 +20,17 @@ def ordinal_timer(time):
     time -- numpy.array
         Array of float timestamps
     """
-    h, m, s = map(int, time.split(":"))
-    sec = 60
-    secondsInDay = 86400
-    ordinal_time = round((sec * (sec * h) + sec * m + s) / secondsInDay, 10)
-    return ordinal_time
+    # Split the HH:MM:SS strings; this creates a list of lists
+    split_times = [time.split(":") for time in time]
+    # Convert split times to hours, minutes, and seconds, and calculate the fractional day
+    ordinal_times = array(
+        [
+            (int(h) * 3600 + int(m) * 60 + int(s)) / 86400
+            for h, m, s in split_times
+        ]
+    ).round(10)
+
+    return ordinal_times
 
 
 def strftime_to_regex(file_timestamp_format):

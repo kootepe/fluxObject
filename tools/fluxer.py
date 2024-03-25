@@ -867,12 +867,11 @@ class measurement_reader:
         dfs = pd.concat(tmp)
         # combine individual date and time columns into datetime
         # column
+        logger.debug("Calculating ordinal times.")
         dfs["ordinal_date"] = pd.to_datetime(dfs["datetime"]).map(
             datetime.datetime.toordinal
         )
-        dfs["ordinal_time"] = dfs.apply(
-            lambda row: ordinal_timer(row["time"]), axis=1
-        )
+        dfs["ordinal_time"] = ordinal_timer(dfs["time"].values)
         dfs["ordinal_datetime"] = dfs["ordinal_time"] + dfs["ordinal_date"]
         dfs.set_index("datetime", inplace=True)
         dfs.sort_index(inplace=True)
