@@ -1621,7 +1621,6 @@ class excel_creator:
                 daylist.append(day)
             try:
                 day = str(date[0].date())
-                day = pd.to_datetime(data.index.view("int").mean()).date()
                 name = date[0].strftime("%Y%m%d%H%M%S")
                 # logger.debug(f"Creating sparkline {i+1}/{w_len}")
                 for gas in gases:
