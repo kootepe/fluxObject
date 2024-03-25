@@ -331,9 +331,20 @@ class calculated_data:
 
         """
         dfList = []
-        # data = data[
-        #     ["ch4_flux", "co2_flux", "ch4_pearsons_r", "co2_pearsons_r", "chamber"]
-        # ]
+        drop_cols = [
+            "error_code",
+            "date",
+            "time",
+            "h2o",
+            "co2",
+            "ch4",
+            "gas_file",
+            "ordinal_date",
+            "ordinal_time",
+            "ordinal_datetime",
+        ]
+        drop_cols = drop_cols + [col for col in data.columns if "idx_cp" in col]
+        data.drop(labels=drop_cols, axis=1, inplace=True)
         for date in self.filter_tuple:
             dfa = date_filter(data, date)
             dfList.append(dfa.iloc[:1])
