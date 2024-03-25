@@ -1619,7 +1619,13 @@ class read_manual_measurement_timestamps:
 
 class excel_creator:
     def __init__(
-        self, all_data, summarized_data, filter_tuple, excel_path, sort
+        self,
+        all_data,
+        summarized_data,
+        filter_tuple,
+        excel_path,
+        sort,
+        defaults_dict,
     ):
         self.all_data = all_data
         self.sum_data = summarized_data
