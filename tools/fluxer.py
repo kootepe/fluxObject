@@ -405,45 +405,6 @@ class merge_data:
             self.merged_data = self.measurement_df
             pass
 
-    def merge_aux_by_column2(self, measurement_df, aux_df):
-        """
-        This sole use of this function is to merge AC chamber snowdepth
-        measurement into the main dataframe.
-        Its a bit of a mess.
-        """
-        main_df = measurement_df
-        other_df = aux_df
-        dflist = []
-        for _, group in other_df.groupby("chamber"):
-            if self.is_df_sorted_by_dt_idx(
-                measurement_df
-            ) and self.is_df_sorted_by_dt_idx(aux_df):
-                main_df = main_df.copy()
-                other_df = group.copy()
-                chamberNum = other_df.chamber.mean()
-                mask = main_df["chamber"] == chamberNum
-                other_df = other_df.drop(columns=["chamber"])
-                df = pd.merge_asof(
-                    main_df[mask],
-                    other_df,
-                    left_on="datetime",
-                    right_on="datetime",
-                    tolerance=pd.Timedelta("1000d"),
-                    direction="nearest",
-                    suffixes=("", "_y"),
-                )
-                df.drop(df.filter(regex="_y$").columns, axis=1, inplace=True)
-                df.set_index("datetime", inplace=True)
-                df["snowdepth"] = df["snowdepth"].fillna(0)
-                dflist.append(df)
-            else:
-                logger.info(
-                    "Dataframes are not properly sorted by datetimeindex"
-                )
-                sys.exit(0)
-        df = pd.concat(dflist)
-        return df
-
     def merge_aux_data(self, measurement_df, aux_df):
         """
         Merges 'auxiliary' data to the dataframe, mainly air temperature,
@@ -849,7 +810,6 @@ class measurement_reader:
                     dtype=dtypes,
                 )
                 df.rename(columns=columns_d, inplace=True)
-                df.astype(dtypes)
                 df["datetime"] = pd.to_datetime(
                     df["date"].apply(str) + " " + df["time"],
                     format="%Y-%m-%d %H:%M:%S",
@@ -857,25 +817,6 @@ class measurement_reader:
             # there's old LICOR files which have an extra column,
             # this handles those
             except ValueError:
-                print(format_exc())
-                logger.debug(f"Read fail: {f.name}")
-                try:
-                    df = pd.read_csv(
-                        f,
-                        skiprows=skiprows,
-                        delimiter="\t",
-                        usecols=columns_alternative,
-                        names=names,
-                        dtype=dtypes,
-                    )
-                    df["datetime"] = pd.to_datetime(
-                        df["date"].apply(str) + " " + df["time"],
-                        format="%Y-%m-%d %H:%M:%S",
-                    )
-                except Exception as e:
-                    print(f"Error: {e}")
-                    print(format_exc())
-                    logger.debug(f"Read fail: {f.name}")
                     continue
             except Exception as e:
                 print(f"Error: {e}")
