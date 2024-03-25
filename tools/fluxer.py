@@ -966,15 +966,15 @@ class chamber_cycle:
             df["datetime"] = pd.to_datetime(
                 df["date"].astype(str) + " " + df["time"].astype(str)
             )
+            df["cycle_start"] = df["datetime"]
+            df["cycle_end"] = df["datetime"] + pd.to_timedelta(
+                self.end_of_cycle, unit="s"
+            )
             df["close_time"] = df["datetime"] + pd.to_timedelta(
                 self.chamber_measurement_start_sec, unit="s"
             )
             df["open_time"] = df["datetime"] + pd.to_timedelta(
                 self.chamber_measurement_end_sec, unit="s"
-            )
-            df["cycle_start"] = df["datetime"]
-            df["cycle_end"] = df["datetime"] + pd.to_timedelta(
-                self.end_of_cycle, unit="s"
             )
             tmp.append(df)
         dfs = pd.concat(tmp)
