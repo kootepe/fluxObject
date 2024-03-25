@@ -110,10 +110,12 @@ def extract_date(file_timestamp_format, datestring):
     #    return None
     if file_timestamp_format == strftime_to_regex(file_timestamp_format):
         logger.info(
-            "No strftime formatting in filename, returning current date")
+            "No strftime formatting in filename, returning current date"
+        )
         return datetime.datetime.today()
-    date = re.search(strftime_to_regex(
-        file_timestamp_format), datestring).group(0)
+    date = re.search(
+        strftime_to_regex(file_timestamp_format), datestring
+    ).group(0)
     # class chamber_cycle calls this method and using an instance
     # variable here might cause issues if the timestamp formats
     # should be different
