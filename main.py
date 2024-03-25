@@ -301,13 +301,8 @@ def ac_push(inifile, env_vars, test_mode=None):
     defaults_dict = dict(config.items("defaults"))
     measurement_time_dict = dict(config.items("chamber_start_stop"))
     influxdb_dict = dict(config.items("influxDB"))
-    # air_pressure_dict = dict(config.items("air_pressure_data"))
-    # air_temperature_dict = dict(config.items("air_temperature_data"))
     measuring_chamber_dict = dict(config.items("measuring_chamber"))
     measurement_dict = dict(config.items("measurement_data"))
-    get_temp_and_pressure_from_file = defaults_dict.get(
-        "get_temp_and_pressure_from_file"
-    )
 
     # get start and end times for data that is going to be
     # calculated
@@ -324,25 +319,6 @@ def ac_push(inifile, env_vars, test_mode=None):
         timestamps_values.end_timestamp,
     )
 
-    # if get_temp_and_pressure_from_file is defined, generate filenames
-    # for the air and pressure data
-    if get_temp_and_pressure_from_file == "1":
-        air_pressure_files = file_finder(
-            air_pressure_dict,
-            defaults_dict,
-            timestamps_values.start_timestamp,
-            timestamps_values.end_timestamp,
-        )
-        air_temperature_files = file_finder(
-            air_temperature_dict,
-            defaults_dict,
-            timestamps_values.start_timestamp,
-            timestamps_values.end_timestamp,
-        )
-    else:
-        air_pressure_files = None
-        air_temperature_files = None
-
     # create chamber open and close timestamps from template
     chamber_cycle_df = chamber_cycle(
         measurement_dict,
@@ -356,94 +332,17 @@ def ac_push(inifile, env_vars, test_mode=None):
         measurement_dict, measurement_files.measurement_files
     )
 
-    # read air_temp and air_pressure if the filenames were generated
-    if air_pressure_files is not None and air_temperature_files is not None:
-        air_temperature_df = aux_data_reader(
-            air_temperature_dict, air_temperature_files.measurement_files
-        )
-
-        air_pressure_df = aux_data_reader(
-            air_pressure_dict, air_pressure_files.measurement_files
-        )
-    else:
-        air_temperature_df = None
-        air_pressure_df = None
-
     # list with three values, start_time, end_time, chamber_num, flux is
     # calculated from the data between start and end times
     filter_tuple = chamber_cycle_df.filter_tuple
 
-    # filter the measured gas flux
-    filtered_measurement = filterer(filter_tuple, measurement_df.measurement_df)
+    merged_data = merge_data(
+        measurement_df.measurement_df,
+        chamber_cycle_df.chamber_cycle_df,
+    )
 
-    # same list as before but the timestamps with no data or invalid
-    # data dropped
-    filter_tuple = filtered_measurement.clean_filter_tuple
-
-    # BUG: air_pressure data is at 10min interval, and it's filtered
-    # with measurement_timestamps which are only have 3min length,
-    # meaning there's a high chance that these measurements will be
-    # dropped
-    # if air_pressure_df is not None and air_temperature_df is not None:
-    #     air_temperature_df = filterer(
-    #         filter_tuple, air_temperature_df.aux_data_df)
-    #     air_pressure_df = filterer(filter_tuple, air_pressure_df.aux_data_df)
-
-    # read the snowdepth measurement into a dataframe
-    # snowdepth_df = snowdepth_parser(
-    #     defaults_dict.get("snowdepth_measurement"),
-    # )
-
-    # if set_snow_to_zero is 1, there's no snowdepth measurement and
-    # snowdepth will be set 0
-    # set_snow_to_zero = snowdepth_df.set_to_zero
-    # if set_snow_to_zero is True:
-    #     filtered_measurement.filtered_data["snowdepth"] = 0
-
-    # merge air_pressure and air_temp data to measurement_data
-    # if air_pressure_df is not None and air_temperature_df is not None:
-    #     data_with_temp = merge_data(
-    #         filtered_measurement.filtered_data,
-    #         air_temperature_df.aux_data_df
-    #     )
-    #     data_with_temp_pressure = merge_data(
-    #         data_with_temp.merged_data, air_pressure_df.aux_data_df
-    #     )
-    #     if set_snow_to_zero is False:
-    #         data_with_temp_pressure = merge_data(
-    #             data_with_temp_pressure.merged_data,
-    #             snowdepth_df.snowdepth_df,
-    #             True
-    #         )
-    #     merged_data = data_with_temp_pressure
-
-    if air_pressure_df is not None and air_temperature_df is not None:
-        ready_data = calculated_data(
-            merged_data.merged_data,
-            measuring_chamber_dict,
-            filter_tuple,
-            defaults_dict,
-        )
-    else:
-        if snowdepth_df is None:
-            ready_data = calculated_data(
-                filtered_measurement.filtered_data,
-                measuring_chamber_dict,
-                filter_tuple,
-                defaults_dict,
-            )
-        else:
-            merged_data = merge_data(
-                filtered_measurement.filtered_data,
-                snowdepth_df.snowdepth_df,
-                True,
-            )
-            ready_data = calculated_data(
-                merged_data.merged_data,
-                measuring_chamber_dict,
-                filter_tuple,
-                defaults_dict,
-            )
+    aux_cfgs = parse_aux_data(config)
+    merged_data = merge_data2(merged_data.merged_data, aux_cfgs.aux_cfgs)
 
     ready_data = calculated_data(
         merged_data.merged_data,
@@ -451,23 +350,6 @@ def ac_push(inifile, env_vars, test_mode=None):
         filter_tuple,
         defaults_dict,
     )
-    # grapher(
-    #     date_filter_list(
-    #         measurement_df.measurement_df, chamber_cycle_df.whole_cycle_tuple
-    #     ),
-    #     chamber_cycle_df.whole_cycle_tuple,
-    #     ready_data.slope_times_list,
-    #     filter_tuple,
-    # )
-
-    # tagged_measurement = measurement_tagger(
-    #     date_filter_list(
-    #         measurement_df.measurement_df, chamber_cycle_df.whole_cycle_tuple
-    #     ),
-    #     chamber_cycle_df.whole_cycle_tuple,
-    #     ready_data.slope_times_list,
-    #     filter_tuple,
-    # )
 
     # if url is defined, try and push to db
     if influxdb_dict.get("url"):
@@ -475,18 +357,23 @@ def ac_push(inifile, env_vars, test_mode=None):
 
     # if create_excel is 1, create excel summaries
     if defaults_dict.get("create_excel") == "1":
-        excel_creator(
+        excel = excel_creator(
             merged_data.merged_data,
             ready_data.upload_ready_data,
             filter_tuple,
             defaults_dict.get("excel_directory"),
+            defaults_dict.get("excel_sort"),
+            defaults_dict,
         )
     else:
+        excel = None
         logger.info("Excel creation disabled in .ini, skipping")
 
     # if test_mode is 1, return ready_data class for testing purposes
-    if test_mode:
+    if test_mode == 1:
         return ready_data
+    else:
+        return measurement_df, ready_data, excel
 
 
 def list_inis(ini_path):
