@@ -274,6 +274,13 @@ class calculated_data:
             is_valid = None
             measurement_df = date_filter(df, date).copy()
             if measurement_df.empty:
+                measurement_list.append(measurement_df)
+                continue
+            if "has errors" in measurement_df.iloc[0]["checks"]:
+                logger.debug(
+                    f"Skipping flux calculation at {date[0]} because of LICOR error flags"
+                )
+                measurement_list.append(measurement_df)
                 continue
 
             slope_dates = subs_from_filter_tuple(date, self.measurement_perc)
