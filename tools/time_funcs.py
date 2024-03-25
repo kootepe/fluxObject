@@ -124,3 +124,16 @@ def get_time_diff(start, stop):
     return (stop - start).total_seconds()
 
 
+def convert_seconds(time_in_sec):
+    if time_in_sec < 60:
+        return f"{time_in_sec} seconds"
+    elif time_in_sec < 3600:
+        minutes = time_in_sec // 60
+        seconds = time_in_sec % 60
+        return f"{minutes} minutes, {seconds} seconds"
+    else:
+        hours = time_in_sec // 3600
+        remainder = time_in_sec % 3600
+        minutes = remainder // 60
+        seconds = remainder % 60
+        return f"{hours} hours, {minutes} minutes, {seconds} seconds"
