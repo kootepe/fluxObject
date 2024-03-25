@@ -141,7 +141,7 @@ def create_sparkline(df, filename, gas, fig, ax, rects):
 
 
 def create_fig():
-    fig = Figure(figsize=(0.8, 0.18))
+    fig = Figure(figsize=(0.8, 0.175))
     ax = fig.add_subplot()
     ax.set_frame_on(False)
 
