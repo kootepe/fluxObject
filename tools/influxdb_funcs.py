@@ -7,6 +7,19 @@ logger = logging.getLogger("defaultLogger")
 
 
 def influx_push(df, influxdb_dict, tag_columns):
+def init_client(ifdb_dict):
+    url = ifdb_dict.get("url")
+    token = ifdb_dict.get("token")
+    org = ifdb_dict.get("organization")
+
+    client = ifdb.InfluxDBClient(
+        url=url,
+        token=token,
+        org=org,
+    )
+    return client
+
+
     """
     Push data to InfluxDB
 
