@@ -387,6 +387,30 @@ def list_inis(ini_path):
     return filtered_files
 
 
+@timer
+def class_calc(inifile, env_vars):
+    config = configparser.ConfigParser(env_vars, allow_no_value=True)
+    config.read(inifile)
+
+    defs = dict(config.items("defaults"))
+    module = defs.get("module")
+    class_name = defs.get("class_name")
+    measurement_name = defs.get("measurement_name")
+
+    if module:
+        module = importlib.import_module(module)
+    if class_name:
+        instrument_class = getattr(module, class_name)
+    if measurement_name:
+        measurement_class = getattr(module, measurement_name)
+
+    log_level = dict(config.items("defaults")).get("logging_level")
+    logger = init_logger(log_level)
+    # gas_flux_calculator(inifile, env_vars, instrument_class, measurement_class)
+    # gas_flux_calculator(inifile, env_vars, instrument_class)
+    gas_flux_calculator(inifile, env_vars)
+
+
 def main(ini_path):
     ini_files = list_inis(ini_path)
     # get environment variables
