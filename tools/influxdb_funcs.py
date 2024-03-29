@@ -66,6 +66,7 @@ def mk_ifdb_ts(ts):
     return ts.strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
+def ifdb_push(df, ifdb_dict, tag_columns):
     """
     Push data to InfluxDB
 
@@ -78,26 +79,25 @@ def mk_ifdb_ts(ts):
     ---
 
     """
-    with ifdb.InfluxDBClient(
-        url=influxdb_dict.get("url"),
-        token=influxdb_dict.get("token"),
-        org=influxdb_dict.get("organization"),
-    ) as client:
+    logger.debug("Attempting push.")
+    url = ifdb_dict.get("url")
+    bucket = ifdb_dict.get("bucket")
+    measurement_name = ifdb_dict.get("measurement_name")
+    timezone = ifdb_dict.get("timezone")
+
+    with init_client(ifdb_dict) as client:
         write_api = client.write_api(write_options=SYNCHRONOUS)
         try:
             write_api.write(
-                bucket=influxdb_dict.get("bucket"),
+                bucket=bucket,
                 record=df,
-                data_frame_measurement_name=influxdb_dict.get(
-                    "measurement_name"),
-                data_frame_timestamp_timezone=influxdb_dict.get("timezone"),
+                data_frame_measurement_name=measurement_name,
+                data_frame_timestamp_timezone=timezone,
                 data_frame_tag_columns=tag_columns,
                 debug=True,
             )
         except NewConnectionError:
-            logger.info(
-                f"Couldn't connect to database at " f"{influxdb_dict.get('url')}"
-            )
+            logger.info(f"Couldn't connect to database at {url}")
             pass
 
         first = str(df.index[0])
