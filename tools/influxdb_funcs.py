@@ -20,6 +20,52 @@ def init_client(ifdb_dict):
     return client
 
 
+def mk_field_q(field_list):
+    q = f'\t|> filter(fn: (r) => r["_field"] == "{field_list[0]}"'
+    for f in field_list[1:]:
+        q += f' or r["_field"] == "{f}"'
+    q += ")\n"
+    return q
+
+
+def mk_bucket_q(bucket):
+    return f'from(bucket: "{bucket}")\n'
+
+
+def mk_range_q(start, stop):
+    return f"\t|> range(start: {start}, stop: {stop})\n"
+
+
+def mk_meas_q(measurement):
+    return f'\t|> filter(fn: (r) => r["_measurement"] == "{measurement}")\n'
+
+
+def mk_query(bucket, start, stop, measurement, fields):
+    query = (
+        f"{mk_bucket_q(bucket)}"
+        f"{mk_range_q(start, stop)}"
+        f"{mk_meas_q(measurement)}"
+        f"{mk_field_q(fields)}"
+        '\t|> pivot(rowKey:["_time"], columnKey: ["_field"], valueColumn: "_value")'
+    )
+    return query
+
+
+def mk_ts_query(bucket, start, measurement, fields):
+    query = (
+        f"{mk_bucket_q(bucket)}"
+        f"{mk_range_q(start, 'now()')}"
+        f"{mk_meas_q(measurement)}"
+        f"{mk_field_q(fields)}"
+        '\t|> pivot(rowKey:["_time"], columnKey: ["_field"], valueColumn: "_value")'
+    )
+    return query
+
+
+def mk_ifdb_ts(ts):
+    return ts.strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
     """
     Push data to InfluxDB
 
