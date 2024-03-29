@@ -1345,20 +1345,20 @@ class csv_reader:
         dtypes -- dict
             columns and names paired into a dict
         """
-        dict = ini_dict
-        path = dict.get("path")
+        ini = ini_dict
+        path = ini.get("path")
         # unnecessary?
         # file_timestamp_format = dict.get('file_timestamp_format')
         # if file_timestamp_format == '':
         #    files = [p for p in Path(path).glob(f'*{file}*') if '~' not in str(p)]
 
-        delimiter = dict.get("delimiter")
-        file_extension = dict.get("file_extension")
-        skiprows = int(dict.get("skiprows"))
-        timestamp_format = dict.get("timestamp_format")
-        columns = list(map(int, dict.get("columns").split(",")))
-        names = dict.get("names").split(",")
-        dtypes = dict.get("dtypes").split(",")
+        delimiter = ini.get("delimiter")
+        file_extension = ini.get("file_extension")
+        skiprows = int(ini.get("skiprows"))
+        timestamp_format = ini.get("timestamp_format")
+        columns = list(map(int, ini.get("columns").split(",")))
+        names = ini.get("names").split(",")
+        dtypes = ini.get("dtypes").split(",")
         dtypes = {names[i]: dtypes[i] for i in range(len(names))}
         return (
             path,
@@ -1398,16 +1398,18 @@ class csv_reader:
         tmp = []
         date_and_time = ["date", "time"]
         for f in self.files:
+            logger.debug(f"Reading {f.name}")
             try:
-                f = f + f_ext
-                df = pd.read_csv(
-                    Path(path) / f,
-                    skiprows=skiprows,
-                    delimiter=delimiter,
-                    usecols=columns,
-                    names=names,
-                    dtype=dtypes,
-                )
+                # df = pd.read_csv(
+                #     f,
+                #     skiprows=skiprows,
+                #     delimiter=delimiter,
+                #     usecols=columns,
+                #     names=names,
+                #     dtype=dtypes,
+                # )
+                device = li7200()
+                df = device.read_file(f)
             except FileNotFoundError:
                 logger.info(
                     f"File not found at {Path(path) / f}, make sure the .ini is correct"
@@ -1418,13 +1420,13 @@ class csv_reader:
         # check if date and time are separate columns
         check = any(item in date_and_time for item in names)
         # if date and time are separate, combine them to datetime
-        if check is True:
-            dfs["datetime"] = pd.to_datetime(
-                dfs["date"].apply(str) + " " + dfs["time"], format=ts_fmt
-            )
-        # if they are not separate, there should be a datetime column already
-        else:
-            dfs["datetime"] = pd.to_datetime(dfs["datetime"], format=ts_fmt)
+        # if check is True:
+        #     dfs["datetime"] = pd.to_datetime(
+        #         dfs["date"].apply(str) + " " + dfs["time"], format=ts_fmt
+        #     )
+        # # if they are not separate, there should be a datetime column already
+        # else:
+        #     dfs["datetime"] = pd.to_datetime(dfs["datetime"], format=ts_fmt)
         dfs.set_index("datetime", inplace=True)
         return dfs
 
