@@ -14,7 +14,6 @@ from traceback import format_exc
 # modules from this repo
 from tools.filter import (
     date_filter,
-    date_filter_list,
     mk_fltr_tuple,
     subs_from_fltr_tuple,
     add_to_fltr_tuple,
@@ -22,19 +21,15 @@ from tools.filter import (
 from tools.time_funcs import (
     ordinal_timer,
     strftime_to_regex,
-    check_timestamp,
     extract_date,
-    get_time_diff,
     convert_seconds,
 )
 from tools.influxdb_funcs import ifdb_push, check_last_db_ts, read_ifdb
-from tools.file_tools import get_newest
 from tools.gas_funcs import (
     calculate_gas_flux,
     calculate_pearsons_r,
     calculate_slope,
 )
-import tools.snow_height
 from tools.merging import (
     merge_by_dtx,
     merge_by_id,
@@ -44,9 +39,7 @@ from tools.merging import (
 
 from tools.create_excel import (
     create_excel,
-    create_excel2,
     create_sparkline,
-    create_sparkline2,
     create_fig,
     create_rects,
 )
@@ -809,9 +802,7 @@ class gas_flux_calculator:
                     self.ready_data.loc[smask, f"fig_dir_{gas}"] = fig_path
                     y = data[gas]
                     rects = create_rects(y, times[i], m_times[i])
-                    create_sparkline2(
-                        data[[gas]], fig_path, gas, fig, ax, rects
-                    )
+                    create_sparkline(data[[gas]], fig_path, gas, fig, ax, rects)
             except Exception as e:
                 logger.error(
                     f"Error when creating graph with matplotlib, "
@@ -822,11 +813,11 @@ class gas_flux_calculator:
             if data.empty:
                 continue
             sort = None
-            create_excel2(data, self.excel_path, sort)
-        create_excel2(self.ready_data, self.excel_path, sort, "all_data")
+            create_excel(data, self.excel_path, sort)
+        create_excel(self.ready_data, self.excel_path, sort, "all_data")
 
-    def ifdb_push():
-        pass
+    # def ifdb_push():
+    #     pass
 
 
 class li7200:
