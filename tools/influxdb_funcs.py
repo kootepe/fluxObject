@@ -79,7 +79,7 @@ def read_ifdb(ifdb_dict, meas_dict, start_ts=None, stop_ts=None):
     with init_client(ifdb_dict) as client:
         q_api = client.query_api()
         query = mk_query(bucket, start, stop, measurement, fields)
-        print(query)
+        logger.debug("Query:\n" + query)
         df = q_api.query_data_frame(query)[["_time"] + fields]
         df = df.rename(columns={"_time": "datetime"})
         df["datetime"] = df.datetime.dt.tz_convert(None)
