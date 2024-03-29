@@ -56,6 +56,7 @@ def create_excel2(df, path, sort=None, name=None):
             try:
                 img = opxl.drawing.image.Image(fig)
             except Exception:
+                logger.debug("No fig")
                 continue
             ws1.add_image(img, anc_str)
 
