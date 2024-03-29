@@ -2,11 +2,13 @@ import influxdb_client as ifdb
 from influxdb_client.client.write_api import SYNCHRONOUS
 import logging
 from urllib3.exceptions import NewConnectionError
+import datetime
+from tools.time_funcs import ordinal_timer
+import pandas as pd
 
 logger = logging.getLogger("defaultLogger")
 
 
-def influx_push(df, influxdb_dict, tag_columns):
 def init_client(ifdb_dict):
     url = ifdb_dict.get("url")
     token = ifdb_dict.get("token")
@@ -66,6 +68,37 @@ def mk_ifdb_ts(ts):
     return ts.strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
+def read_ifdb(ifdb_dict, meas_dict, start_ts=None, stop_ts=None):
+    logger.debug(f"Running query from {start_ts} to {stop_ts}")
+    bucket = ifdb_dict.get("bucket")
+    measurement = meas_dict.get("measurement")
+    fields = list(meas_dict.get("fields").split(","))
+    start = mk_ifdb_ts(start_ts)
+    stop = mk_ifdb_ts(stop_ts)
+    fields = fields
+    with init_client(ifdb_dict) as client:
+        q_api = client.query_api()
+        query = mk_query(bucket, start, stop, measurement, fields)
+        print(query)
+        df = q_api.query_data_frame(query)[["_time"] + fields]
+        df = df.rename(columns={"_time": "datetime"})
+        df["datetime"] = df.datetime.dt.tz_convert(None)
+        df["DATE"] = df["datetime"].dt.strftime("%Y-%m-%d")
+        df["TIME"] = df["datetime"].dt.strftime("%H:%M:%S")
+        df["checks"] = ""
+        df["is_valid"] = ""
+
+        df["ordinal_date"] = pd.to_datetime(df["DATE"]).map(
+            datetime.datetime.toordinal
+        )
+        df["ordinal_time"] = ordinal_timer(df["TIME"].values)
+        df["ordinal_datetime"] = df["ordinal_time"] + df["ordinal_date"]
+
+        df.set_index("datetime", inplace=True)
+        logger.debug(f"\n{df}")
+        return df
+
+
 def ifdb_push(df, ifdb_dict, tag_columns):
     """
     Push data to InfluxDB
@@ -105,7 +138,7 @@ def ifdb_push(df, ifdb_dict, tag_columns):
         logging.info(f"Pushed data between {first}-{last} to DB")
 
 
-def check_last_db_timestamp(influxdb_dict):
+def check_last_db_ts(influxdb_dict, start="2022-10-01T00:00:00Z"):
     """
     Extract latest date from influxDB
 
@@ -116,35 +149,40 @@ def check_last_db_timestamp(influxdb_dict):
     ---
     Tables -- object with infludbtimestamps
     """
+    url = influxdb_dict.get("url")
+    token = influxdb_dict.get("token")
+    org = influxdb_dict.get("organization")
+    bucket = influxdb_dict.get("bucket")
+    measurement_name = influxdb_dict.get("measurement_name")
     # inflxudb query to get the timestamp of the last input
+    # NOTE: this query needs to be optimized, it currently fetches all data to
+    # check for a single timestamp
     query = (
-        f'from(bucket: "{influxdb_dict.get("bucket")}")'
-        '|> range(start: 0, stop: now())'
-        f'|> filter(fn: (r) => r["_measurement"] == "{influxdb_dict.get("measurement_name")}")'
+        f'from(bucket: "{bucket}")'
+        "|> range(start: 0, stop: now())"
+        f'|> filter(fn: (r) => r["_measurement"] == "{measurement_name}")'
         '|> keep(columns: ["_time"])'
         '|> sort(columns: ["_time"], desc: false)'
         '|> last(column: "_time")'
     )
+    query = mk_ts_query(bucket, start, "ac_csv", ["CH4"])
 
     client = ifdb.InfluxDBClient(
-        url=influxdb_dict.get("url"),
-        token=influxdb_dict.get("token"),
-        org=influxdb_dict.get("organization"),
+        url=url,
+        token=token,
+        org=org,
     )
     try:
         tables = client.query_api().query(query=query)
     except NewConnectionError:
-        logging.warning(
-            f"Couldn't connect to database at {influxdb_dict.get('url')}")
-        last_ts = None
-        return last_ts
+        logging.warning(f"Couldn't connect to database at {url}")
+        return None
     try:
         last_ts = tables[0].records[0]["_time"].replace(tzinfo=None)
     except IndexError:
         logging.warning(
             "Couldn't get timestamp from influxdb, using season_start from .ini"
         )
-        # if there's no timestamp, return None
-        last_ts = None
+        return None
 
     return last_ts
