@@ -43,7 +43,7 @@ def timer(func):
         stop = timeit.default_timer()
         execution_time = stop - start
         logger.info(
-            f"{func.__name__} executed in {str(round(execution_time,3))}s."
+            f"{func.__name__} executed in {convert_seconds(execution_time)}."
         )
         return value
 
