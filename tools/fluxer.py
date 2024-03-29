@@ -1677,7 +1677,7 @@ class parse_aux_data:
                     # Apply the converter if one is defined for this key
                     parsed_args[key] = converters[key](value)
                 except ValueError:
-                    print(
+                    logger.debug(
                         f"Warning: Could not convert argument { key} with value {value}"
                     )
             else:
