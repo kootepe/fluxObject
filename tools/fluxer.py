@@ -1146,11 +1146,6 @@ class get_start_and_end_time:
         datetime.datetime
             timestamp in datetime.datetime format
         """
-        # try:
-        #    date = re.search(self.strftime_to_regex(), datestring).group(0)
-        # except AttributeError:
-        # logger.info('Files are found in folder but no matching file found, is the format of the timestamp correct?')
-        #    return None
         if self.file_timestamp_format == strftime_to_regex(
             self.file_timestamp_format
         ):
@@ -1161,9 +1156,6 @@ class get_start_and_end_time:
         date = re.search(
             strftime_to_regex(self.file_timestamp_format), datestring
         ).group(0)
-        # class chamber_cycle calls this method and using an instance
-        # variable here might cause issues if the timestamp formats
-        # should be different
         return datetime.datetime.strptime(date, self.file_timestamp_format)
 
     def get_last_timestamp(self):
@@ -1180,18 +1172,14 @@ class get_start_and_end_time:
         """
 
         if not self.influxdb_dict.get("url"):
-            # if self.influxdb_dict.get("url") is "":
             last_ts = datetime.datetime.strptime(
                 self.season_start,
                 self.influxdb_dict.get("influxdb_timestamp_format"),
             )
             self.used_ini_date = 1
         else:
-            last_ts = check_last_db_timestamp(self.influxdb_dict)
+            last_ts = check_last_db_ts(self.influxdb_dict)
         if last_ts is None:
-            # logger.warning(
-            #     "Couldn't get timestamp from influxdb," " using season_start from .ini"
-            # )
             last_ts = datetime.datetime.strptime(
                 self.season_start,
                 self.influxdb_dict.get("influxdb_timestamp_format"),
