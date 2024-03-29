@@ -455,14 +455,16 @@ def main(ini_path):
                 config.read(inifile)
             mode = dict(config.items("defaults")).get("mode")
             logger.info(f"Running {inifile}.")
-            if mode == "ac":
-                ac_push(inifile, env_vars)
-            if mode == "man":
-                man_push(inifile, env_vars)
-            if mode == "csv":
-                csv_push(inifile, env_vars)
-            if mode == "eddypro":
-                eddypro_push(inifile, env_vars)
+            # if mode == "ac":
+            #     ac_push(inifile, env_vars)
+            # if mode == "man":
+            #     man_push(inifile, env_vars)
+            # if mode == "csv":
+            #     csv_push(inifile, env_vars)
+            # if mode == "eddypro":
+            #     eddypro_push(inifile, env_vars)
+            # if mode == "class":
+            class_calc(inifile, env_vars)
         else:
             logger.info(f"Active set 0, skipped {inifile}")
 
