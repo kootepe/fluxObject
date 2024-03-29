@@ -1580,9 +1580,9 @@ class excel_creator:
 
         perc = int(self.defaults.get("measurement_perc"))
         # tuples with that cover the whole measurement / cycle
-        w_times = [add_to_filter_tuple(time, perc) for time in times]
+        w_times = [add_to_fltr_tuple(time, perc) for time in times]
         # tuples that cover the time where the calculations are from
-        m_times = [subs_from_filter_tuple(time, perc) for time in times]
+        m_times = [subs_from_fltr_tuple(time, perc) for time in times]
 
         gases = ["ch4", "co2"]
         logger.debug(f"Creating {len(times) * len(gases)} sparklines.")
