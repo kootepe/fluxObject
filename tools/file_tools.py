@@ -19,7 +19,7 @@ def get_newest(path: str, file_extension: str):
         Name of the newest file in a folder
 
     """
-    logger.info(f"Getting first timestamp from {path}")
+    logger.info(f"Getting ts of last modified file from {path}")
     files = list(Path(path).rglob(f"*{file_extension}*"))
     if not files:
         logger.info(f"No files found in {path}")
