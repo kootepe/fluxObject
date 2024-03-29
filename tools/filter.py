@@ -45,7 +45,7 @@ def mk_fltr_tuple(df, close="close_time", open="open_time"):
     return filter_tuple
 
 
-def subs_from_filter_tuple(filter_tuple, percentage):
+def subs_from_fltr_tuple(filter_tuple, percentage):
     """Remove percentage from both ends of the filter tuple, eg. shorten the
     time between the timestamps"""
     time_difference = (filter_tuple[1] - filter_tuple[0]).seconds
@@ -56,7 +56,7 @@ def subs_from_filter_tuple(filter_tuple, percentage):
     return time_tuple
 
 
-def add_to_filter_tuple(filter_tuple, percentage):
+def add_to_fltr_tuple(filter_tuple, percentage):
     """Add percentage to both ends of the filter tuple, eg. lengthen the time
     between the timestamps"""
     time_difference = (filter_tuple[1] - filter_tuple[0]).seconds

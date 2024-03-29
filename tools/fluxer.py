@@ -19,8 +19,8 @@ from tools.filter import (
     date_filter,
     date_filter_list,
     mk_fltr_tuple,
-    subs_from_filter_tuple,
-    add_to_filter_tuple,
+    subs_from_fltr_tuple,
+    add_to_fltr_tuple,
 )
 from tools.time_funcs import (
     ordinal_timer,
@@ -30,7 +30,7 @@ from tools.time_funcs import (
     get_time_diff,
     convert_seconds,
 )
-from tools.influxdb_funcs import influx_push, check_last_db_timestamp
+from tools.influxdb_funcs import ifdb_push, check_last_db_ts, read_ifdb
 from tools.file_tools import get_newest
 from tools.gas_funcs import (
     calculate_gas_flux,
@@ -95,7 +95,8 @@ class pusher:
                 logger.debug(f"Dataframe on {date} is empty")
                 continue
             logger.debug(f"Pushing data from {date} to db.")
-            influx_push(group, self.influxdb_dict, self.tag_columns)
+            logger.debug(group)
+            ifdb_push(group, self.influxdb_dict, self.tag_columns)
 
     def read_tag_columns(self):
         """
@@ -283,16 +284,15 @@ class calculated_data:
                 )
                 measurement_list.append(measurement_df)
                 continue
+            time_tuple = subs_from_fltr_tuple(date, self.measurement_perc)
 
-            slope_dates = subs_from_filter_tuple(date, self.measurement_perc)
-            slope = calculate_slope(df, slope_dates, meas_name)
+            slope = calculate_slope(df, time_tuple, meas_name)
             if np.isnan(slope):
                 logger.debug(f"slope returned as NaN at {date[0]}")
                 continue
             measurement_df[f"{meas_name}_slope"] = slope
 
-            pearsons_dates = subs_from_filter_tuple(date, self.measurement_perc)
-            pearsons = calculate_pearsons_r(df, pearsons_dates, meas_name)
+            pearsons = calculate_pearsons_r(df, time_tuple, meas_name)
             if np.isnan(pearsons):
                 logger.debug(f"pearsonsR returned as NaN at {date[0]}")
                 continue
@@ -307,21 +307,9 @@ class calculated_data:
             )
             measurement_df[f"{meas_name}_flux"] = flux
 
-            # MOVE THIS TO A DIFFERENT FUNCTION, THIS FUNCTION RUNS
-            # MULTIPLE TIMES TO THE VALUES ARE DUPLICATED
-            # if measurement_df["error_code"].sum() != 0:
-            #     measurement_df["checks"] += "has errors,"
-            # if is_valid is False:
-            #     measurement_df["checks"] += "no temp or pressure,"
-            # if measurement_df["error_code"].sum() != 0  or is_valid is False:
-            #     measurement_df["is_valid"] = False
-            # else:
-            #     measurement_df["is_valid"] = True
-            # if is_valid is False:
-            # print(measurement_df["checks"])
             measurement_list.append(measurement_df)
-            slope_times_list.append(slope_dates)
-            pearsons_r_times_list.append(pearsons_dates)
+            slope_times_list.append(time_tuple)
+            pearsons_r_times_list.append(time_tuple)
         all_measurements_df = pd.concat(measurement_list)
         self.pearsons_r_times_list = pearsons_r_times_list
         self.slope_times_list = slope_times_list
