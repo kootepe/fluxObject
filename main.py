@@ -265,6 +265,7 @@ def man_push(inifile, env_vars, test_mode=0):
             filter_tuple,
             defaults_dict.get("excel_directory"),
             defaults_dict.get("excel_sort"),
+            defaults_dict,
         )
     else:
         excel = None
