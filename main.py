@@ -428,9 +428,14 @@ def main(ini_path):
     logger = init_logger()
 
     for inifile in ini_files:
+        logger.debug(f"Reading ini: {inifile}")
         config = configparser.ConfigParser(env_vars, allow_no_value=True)
         config.read(inifile)
-        active = config.getboolean("defaults", "active")
+        try:
+            active = config.getboolean("defaults", "active")
+        except configparser.NoSectionError:
+            logger.debug(f"Skipped {inifile}, no defaults section.")
+            continue
         if active:
             use_dotenv = dict(config.items("defaults")).get("use_dotenv")
             if use_dotenv == "1":
