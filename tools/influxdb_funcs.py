@@ -217,3 +217,53 @@ def check_oldest_db_ts(influxdb_dict, start="2022-10-01T00:00:00Z"):
     return last_ts
 
 
+def check_newest_db_ts(influxdb_dict, start="2022-10-01T00:00:00Z"):
+    """
+    Extract latest date from influxDB
+
+    args:
+    ---
+
+    returns:
+    ---
+    Tables -- object with infludbtimestamps
+    """
+    url = influxdb_dict.get("url")
+    token = influxdb_dict.get("token")
+    org = influxdb_dict.get("organization")
+    bucket = influxdb_dict.get("bucket")
+    measurement_name = influxdb_dict.get("measurement_name")
+    # inflxudb query to get the timestamp of the last input
+    # NOTE: this query needs to be optimized, it currently fetches all data to
+    # check for a single timestamp
+    # query = (
+    #     f'from(bucket: "{bucket}")'
+    #     "|> range(start: 0, stop: now())"
+    #     f'|> filter(fn: (r) => r["_measurement"] == "{measurement_name}")'
+    #     '|> filter(fn: (r) => r["_field"] == "CH4")'
+    #     '|> last(column: "_time")'
+    #     '|> yield(name: "last")'
+    # )
+    query = mk_last_ts_q(bucket, start, "ac_csv", ["CH4"])
+    print(query)
+
+    client = ifdb.InfluxDBClient(
+        url=url,
+        token=token,
+        org=org,
+    )
+    try:
+        tables = client.query_api().query(query=query)
+    except NewConnectionError:
+        logging.warning(f"Couldn't connect to database at {url}")
+        return None
+    try:
+        newest_ts = tables[0].records[0]["_time"].replace(tzinfo=None)
+        print(f"this is newest_ts {newest_ts}")
+    except IndexError:
+        logging.warning(
+            "Couldn't get timestamp from influxdb, using season_start from .ini"
+        )
+        return None
+
+    return newest_ts
