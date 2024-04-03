@@ -2,8 +2,33 @@ import datetime
 import re
 import logging
 from numpy import array
+from pandas.api.types import is_datetime64_any_dtype
 
 logger = logging.getLogger("defaultLogger")
+
+
+def rm_tz(df):
+    """
+    Localizes datetime columns in a pandas DataFrame by removing timezone information.
+
+    Parameters
+    ----------
+    - df: A pandas DataFrame.
+
+    Returns
+    -------
+    - The DataFrame with timezone information removed from datetime columns.
+    """
+
+    for col in df.columns:
+        # Check if the column is a datetime type
+        if is_datetime64_any_dtype(df[col]):
+            # Check if the column has timezone information
+            if df[col].dt.tz is not None:
+                # logger.debug(f"Removed tz info from colum: {col}")
+                # Remove timezone information
+                df[col] = df[col].dt.tz_localize(None)
+    return df
 
 
 def ordinal_timer(time):
