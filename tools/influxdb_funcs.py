@@ -53,7 +53,7 @@ def mk_query(bucket, start, stop, measurement, fields):
     return query
 
 
-def mk_first_ts_q(bucket, start, measurement, fields):
+def mk_oldest_ts_q(bucket, start, measurement, fields):
     query = (
         f"{mk_bucket_q(bucket)}"
         f"{mk_range_q(0, 'now()')}"
@@ -65,7 +65,7 @@ def mk_first_ts_q(bucket, start, measurement, fields):
     return query
 
 
-def mk_last_ts_q(bucket, start, measurement, fields):
+def mk_newest_ts_q(bucket, start, measurement, fields):
     query = (
         f"{mk_bucket_q(bucket)}"
         f"{mk_range_q(0, 'now()')}"
@@ -192,7 +192,7 @@ def check_oldest_db_ts(influxdb_dict, start="2022-10-01T00:00:00Z"):
         '|> first(column: "_time")'
         '|> yield(name: "first")'
     )
-    query = mk_first_ts_q(bucket, start, "ac_csv", ["CH4"])
+    query = mk_oldest_ts_q(bucket, start, "ac_csv", ["CH4"])
     print(query)
 
     client = ifdb.InfluxDBClient(
@@ -244,7 +244,7 @@ def check_newest_db_ts(influxdb_dict, start="2022-10-01T00:00:00Z"):
     #     '|> last(column: "_time")'
     #     '|> yield(name: "last")'
     # )
-    query = mk_last_ts_q(bucket, start, "ac_csv", ["CH4"])
+    query = mk_newest_ts_q(bucket, start, "ac_csv", ["CH4"])
     print(query)
 
     client = ifdb.InfluxDBClient(
