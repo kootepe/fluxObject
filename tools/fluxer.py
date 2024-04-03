@@ -238,7 +238,7 @@ class gas_flux_calculator:
 
     def get_start_ts(self):
         """
-        Extract latest date from influxDB
+        Extract first date from influxDB measurement
 
         args:
         ---
