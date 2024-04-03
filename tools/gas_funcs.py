@@ -58,7 +58,9 @@ def calculate_gas_flux(
     # universal gas constant
     r = 8.314
 
-    if measurement_name == "ch4":
+    # BUG: IF COLUMN NAME DOESN'T MATCH THERE, SCRIPT WILL CRASH
+    # MAYBE ADD A DICTIONARY OF MOLAR MASSES FOR THIS
+    if measurement_name == "CH4":
         # molar mass of CH4, C mass is 12 and H mass is 1
         m = df["molar_mass"] = 12 + 4
         # ch4 measurement is in ppb, convert to ppm
