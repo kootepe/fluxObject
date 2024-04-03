@@ -82,21 +82,33 @@ def read_ifdb(ifdb_dict, meas_dict, start_ts=None, stop_ts=None):
         logger.debug("Query:\n" + query)
         df = q_api.query_data_frame(query)[["_time"] + fields]
         df = df.rename(columns={"_time": "datetime"})
-        df["datetime"] = df.datetime.dt.tz_convert(None)
-        df["DATE"] = df["datetime"].dt.strftime("%Y-%m-%d")
-        df["TIME"] = df["datetime"].dt.strftime("%H:%M:%S")
-        df["checks"] = ""
-        df["is_valid"] = ""
-
-        df["ordinal_date"] = pd.to_datetime(df["DATE"]).map(
-            datetime.datetime.toordinal
-        )
-        df["ordinal_time"] = ordinal_timer(df["TIME"].values)
-        df["ordinal_datetime"] = df["ordinal_time"] + df["ordinal_date"]
-
-        df.set_index("datetime", inplace=True)
-        logger.debug(f"\n{df}")
+        add_cols_to_ifdb_q(df, meas_dict)
         return df
+
+
+def add_cols_to_ifdb_q(df, meas_dict):
+    """
+    current version cant use dataframes returned by ifdb as is, this function
+    will add necessary columns
+    """
+    name = meas_dict.get("name")
+    if name == "man_ts":
+        df["start_time"] = df["datetime"]
+        df["end_time"] = df["start_time"] + pd.Timedelta(seconds=300)
+        df["chamber"] = df["Plot Number"]
+    # df["datetime"] = df.datetime.dt.tz_convert(None)
+    df["DATE"] = df["datetime"].dt.strftime("%Y-%m-%d")
+    df["TIME"] = df["datetime"].dt.strftime("%H:%M:%S")
+    df["checks"] = ""
+    df["is_valid"] = ""
+
+    df["ordinal_date"] = pd.to_datetime(df["DATE"]).map(
+        datetime.datetime.toordinal
+    )
+    df["ordinal_time"] = ordinal_timer(df["TIME"].values)
+    df["ordinal_datetime"] = df["ordinal_time"] + df["ordinal_date"]
+    df.set_index("datetime", inplace=True)
+    logger.debug(f"\n{df}")
 
 
 def ifdb_push(df, ifdb_dict, tag_columns):
