@@ -704,6 +704,7 @@ class gas_flux_calculator:
             mdf = date_filter(data, date).copy()
             if mdf.empty:
                 measurement_list.append(mdf)
+                logger.debug(f"Df empty at {date[0]}")
                 continue
             if "has errors" in mdf.iloc[0]["checks"]:
                 logger.debug(
