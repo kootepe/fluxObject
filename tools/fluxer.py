@@ -582,11 +582,15 @@ class gas_flux_calculator:
     def read_aux_data(self):
         self.aux_dfs = []
         for f in self.aux_cfgs:
-            dfs = pd.DataFrame()
+            dfs = []
             for file in f.get("files"):
                 argss = f.get("args")
                 df = pd.read_csv(file, **argss)
-                dfs = pd.concat([dfs, df])
+                dfs.append(df)
+            if len(dfs) == 0:
+                logger.debug(f"No files found for aux_data {f.get('name')}")
+                continue
+            dfs = pd.concat(dfs)
             dfs.sort_index(inplace=True)
             f["df"] = dfs
 
