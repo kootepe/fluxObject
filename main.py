@@ -62,7 +62,8 @@ def class_calc(inifile, env_vars):
     logger = init_logger(log_level)
     # gas_flux_calculator(inifile, env_vars, instrument_class, measurement_class)
     # gas_flux_calculator(inifile, env_vars, instrument_class)
-    gas_flux_calculator(inifile, env_vars)
+    data = gas_flux_calculator(inifile, env_vars)
+    return data
 
 
 def main(ini_path):
