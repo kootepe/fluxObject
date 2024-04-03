@@ -546,6 +546,11 @@ class gas_flux_calculator:
             name_key = cfg["name"]
             path = Path(cfg.get("path"))
             files = list(path.rglob(cfg.get("file_name")))
+            if len(files) == 0:
+                logger.debug(
+                    f"No files found for aux_data {name_key}, skipped."
+                )
+                continue
             merge_method = cfg.get("merge_method")
             direction = cfg.get("direction")
             tolerance = cfg.get("tolerance")
