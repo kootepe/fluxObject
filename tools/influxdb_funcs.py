@@ -53,13 +53,26 @@ def mk_query(bucket, start, stop, measurement, fields):
     return query
 
 
-def mk_ts_query(bucket, start, measurement, fields):
+def mk_first_ts_q(bucket, start, measurement, fields):
     query = (
         f"{mk_bucket_q(bucket)}"
-        f"{mk_range_q(start, 'now()')}"
+        f"{mk_range_q(0, 'now()')}"
         f"{mk_meas_q(measurement)}"
         f"{mk_field_q(fields)}"
-        '\t|> pivot(rowKey:["_time"], columnKey: ["_field"], valueColumn: "_value")'
+        '|> first(column: "_time")\n'
+        '|> yield(name: "first")'
+    )
+    return query
+
+
+def mk_last_ts_q(bucket, start, measurement, fields):
+    query = (
+        f"{mk_bucket_q(bucket)}"
+        f"{mk_range_q(0, 'now()')}"
+        f"{mk_meas_q(measurement)}"
+        f"{mk_field_q(fields)}"
+        '|> last(column: "_time")\n'
+        '|> yield(name: "last")'
     )
     return query
 
@@ -175,11 +188,12 @@ def check_oldest_db_ts(influxdb_dict, start="2022-10-01T00:00:00Z"):
         f'from(bucket: "{bucket}")'
         "|> range(start: 0, stop: now())"
         f'|> filter(fn: (r) => r["_measurement"] == "{measurement_name}")'
-        '|> keep(columns: ["_time"])'
-        '|> sort(columns: ["_time"], desc: false)'
-        '|> last(column: "_time")'
+        '|> filter(fn: (r) => r["_field"] == "CH4")'
+        '|> first(column: "_time")'
+        '|> yield(name: "first")'
     )
-    query = mk_ts_query(bucket, start, "ac_csv", ["CH4"])
+    query = mk_first_ts_q(bucket, start, "ac_csv", ["CH4"])
+    print(query)
 
     client = ifdb.InfluxDBClient(
         url=url,
@@ -192,11 +206,14 @@ def check_oldest_db_ts(influxdb_dict, start="2022-10-01T00:00:00Z"):
         logging.warning(f"Couldn't connect to database at {url}")
         return None
     try:
-        oldest_ts = tables[0].records[0]["_time"].replace(tzinfo=None)
+        last_ts = tables[0].records[0]["_time"].replace(tzinfo=None)
+        print(f"this is last_ts {last_ts}")
     except IndexError:
         logging.warning(
             "Couldn't get timestamp from influxdb, using season_start from .ini"
         )
         return None
 
-    return oldest_ts
+    return last_ts
+
+
