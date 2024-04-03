@@ -627,8 +627,14 @@ class gas_flux_calculator:
         for date in self.fltr_tuple:
             df = date_filter(self.merged, date)
             has_errors = df[self.device.diag_col].sum() != 0
-            no_air_temp = df["air_temperature"].isna().all()
-            no_air_pressure = df["air_pressure"].isna().all()
+            if "air_temperature" not in df.columns:
+                no_air_temp = True
+            else:
+                no_air_temp = df["air_temperature"].isna().all()
+            if "air_pressure" not in df.columns:
+                no_air_pressure = True
+            else:
+                no_air_pressure = df["air_pressure"].isna().all()
             is_empty = df.empty
             if has_errors or no_air_temp or no_air_pressure or is_empty:
                 checks = []
