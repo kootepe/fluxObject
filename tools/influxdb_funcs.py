@@ -152,7 +152,7 @@ def ifdb_push(df, ifdb_dict, tag_columns):
         logging.info(f"Pushed data between {first}-{last} to DB")
 
 
-def check_last_db_ts(influxdb_dict, start="2022-10-01T00:00:00Z"):
+def check_oldest_db_ts(influxdb_dict, start="2022-10-01T00:00:00Z"):
     """
     Extract latest date from influxDB
 
@@ -192,11 +192,11 @@ def check_last_db_ts(influxdb_dict, start="2022-10-01T00:00:00Z"):
         logging.warning(f"Couldn't connect to database at {url}")
         return None
     try:
-        last_ts = tables[0].records[0]["_time"].replace(tzinfo=None)
+        oldest_ts = tables[0].records[0]["_time"].replace(tzinfo=None)
     except IndexError:
         logging.warning(
             "Couldn't get timestamp from influxdb, using season_start from .ini"
         )
         return None
 
-    return last_ts
+    return oldest_ts

@@ -24,7 +24,7 @@ from tools.time_funcs import (
     extract_date,
     convert_seconds,
 )
-from tools.influxdb_funcs import ifdb_push, check_last_db_ts, read_ifdb
+from tools.influxdb_funcs import ifdb_push, check_oldest_db_ts, read_ifdb
 from tools.gas_funcs import (
     calculate_gas_flux,
     calculate_pearsons_r,
@@ -64,6 +64,7 @@ class gas_flux_calculator:
         self.start_ts = self.get_last_ts()
         # self.end_ts = self.extract_date(
         #     get_newest(self.data_path, self.data_ext)
+        self.start_ts = self.get_start_ts()
         # )
         self.end_ts = datetime.datetime.strptime(
             "2024-01-01 00:00:00", "%Y-%m-%d %H:%M:%S"
@@ -234,7 +235,8 @@ class gas_flux_calculator:
         dfs.set_index("datetime", inplace=True)
         return dfs
 
-    def get_last_ts(self):
+
+    def get_start_ts(self):
         """
         Extract latest date from influxDB
 
@@ -243,25 +245,21 @@ class gas_flux_calculator:
 
         returns:
         ---
-        lastTs -- datetime.datetime
-            Either the last timestamp in influxdb or season_start from .ini
+        first_ts -- datetime.datetime
+            Either the oldest timestamp in influxdb or season_start from .ini
         """
         season_start = self.defs.get("season_start")
         ifdb_ts_format = self.ifdb_dict.get("influxdb_timestamp_format")
 
         if not self.ifdb_dict.get("url"):
-            last_ts = datetime.datetime.strptime(season_start, ifdb_ts_format)
-            used_ini_date = 1
+            first_ts = datetime.datetime.strptime(season_start, ifdb_ts_format)
         else:
             logging.debug("Checking latest ts from DB.")
-            last_ts = check_last_db_ts(self.ifdb_dict)
-            logging.debug(f"Newest ts in db: {last_ts}")
-        if last_ts is None:
-            last_ts = datetime.datetime.strptime(
-                season_start,
-                ifdb_ts_format,
-            )
-        return last_ts
+            first_ts = check_oldest_db_ts(self.ifdb_dict)
+            logging.debug(f"Newest ts in db: {first_ts}")
+        if first_ts is None:
+            first_ts = datetime.datetime.strptime(season_start, ifdb_ts_format)
+        return first_ts
 
     def extract_date(self, datestring):
         """
