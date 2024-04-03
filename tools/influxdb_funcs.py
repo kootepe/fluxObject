@@ -65,7 +65,7 @@ def mk_oldest_ts_q(bucket, start, measurement, fields):
     return query
 
 
-def mk_newest_ts_q(bucket, start, measurement, fields):
+def mk_newest_ts_q(bucket, measurement, fields):
     query = (
         f"{mk_bucket_q(bucket)}"
         f"{mk_range_q(0, 'now()')}"
@@ -208,7 +208,7 @@ def check_oldest_db_ts(influxdb_dict, start="2022-10-01T00:00:00Z"):
     return last_ts
 
 
-def check_newest_db_ts(influxdb_dict, start="2022-10-01T00:00:00Z"):
+def check_newest_db_ts(influxdb_dict):
     """
     Extract latest date from influxDB
     Faster query here if you can get it working:
@@ -249,7 +249,7 @@ def check_newest_db_ts(influxdb_dict, start="2022-10-01T00:00:00Z"):
     bucket = influxdb_dict.get("bucket")
     measurement_name = influxdb_dict.get("measurement_name")
     # inflxudb query to get the timestamp of the last input
-    query = mk_newest_ts_q(bucket, start, "ac_csv", ["CH4"])
+    query = mk_newest_ts_q(bucket, "ac_csv", ["CH4"])
 
     client = ifdb.InfluxDBClient(
         url=url,
@@ -263,7 +263,6 @@ def check_newest_db_ts(influxdb_dict, start="2022-10-01T00:00:00Z"):
         return None
     try:
         newest_ts = tables[0].records[0]["_time"].replace(tzinfo=None)
-        print(f"this is newest_ts {newest_ts}")
     except IndexError:
         logging.warning(
             "Couldn't get timestamp from influxdb, using season_start from .ini"
