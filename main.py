@@ -1,16 +1,15 @@
 import os
 import sys
-from pathlib import Path
-import functools
-import configparser
 import timeit
-from dotenv import dotenv_values
+import functools
 import importlib
+import configparser
+
+from dotenv import dotenv_values
+from pathlib import Path
 
 from tools.fluxer import gas_flux_calculator
-
 from tools.time_funcs import convert_seconds
-
 from tools.logger import init_logger
 
 
@@ -37,10 +36,9 @@ def list_inis(ini_path):
     List files ending in .ini in given directory
     """
     folder = Path(ini_path)
-    files = [file for file in folder.glob("*") if file.is_file()]
-    filtered_files = [file for file in files if ".ini" in file.name]
+    files = [file for file in folder.glob("*.ini") if file.is_file()]
 
-    return filtered_files
+    return files
 
 
 @timer
