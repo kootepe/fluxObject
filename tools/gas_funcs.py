@@ -43,25 +43,17 @@ def calculate_gas_flux(
     # molar mass of co2. C mass 12 and O mass 16
     m = df["molar_mass"] = 12 + 16 + 16
     # temperature in K
-    if df["air_temperature"].isnull().values.sum() > 0:
-        is_valid = False
+    try:
+        t = df["air_temperature"].mean()
+    except Exception:
+        logger.debug("NO AIR TEMPERATURE IN FILE, USING DEFAULT")
         t = def_temp
-    else:
-        try:
-            t = df["air_temperature"].mean()
-        except Exception:
-            logger.debug("NO AIR TEMPERATURE IN FILE, USING DEFAULT")
-            t = def_temp
-            is_valid = False
-    if df["air_pressure"].isnull().values.sum() > 0:
+    try:
+        # HPa to Pa
+        p = df["air_pressure"].mean()
+    except Exception:
+        logger.debug("NO AIR PRESSURE IN FILE, USING DEFAULT")
         p = def_press
-    else:
-        try:
-            # HPa to Pa
-            p = df["air_pressure"].mean()
-        except Exception:
-            logger.debug("NO AIR PRESSURE IN FILE, USING DEFAULT")
-            p = def_press
 
     # universal gas constant
     r = 8.314
