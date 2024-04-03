@@ -588,7 +588,9 @@ class gas_flux_calculator:
                 df = pd.read_csv(file, **argss)
                 dfs.append(df)
             if len(dfs) == 0:
-                logger.debug(f"No files found for aux_data {f.get('name')}")
+                logger.debug(
+                    f"No data returned by files found for aux_data {f.get('name')}"
+                )
                 continue
             dfs = pd.concat(dfs)
             dfs.sort_index(inplace=True)
