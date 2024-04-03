@@ -135,12 +135,12 @@ class gas_flux_calculator:
                 )
             # measurement times dataframe
             self.time_data = self.read_man_meas_f()
+            self.merged = self.merge_chamber_ts()
             self.fltr_tuple = mk_fltr_tuple(
                 self.time_data, close="start_time", open="end_time"
             )
             # self.fltr_tuple = mk_fltr_tuple(self.time_data)
 
-            self.merged = self.merge_aux_data()
         if self.mode == "ac":
             self.meas_files = self.match_files(
                 self.gen_files(self.meas_dict),
@@ -154,7 +154,7 @@ class gas_flux_calculator:
             # self.data = ifdb_read(self.ifdb_dict)
             # measurement times dataframe
             self.time_data = self.mk_cham_cycle()
-            self.merged = self.merge_aux_data()
+            self.merged = self.merge_chamber_ts()
 
             self.w_fltr_tuple = mk_fltr_tuple(
                 self.time_data, close="start_time", open="end_time"
@@ -442,7 +442,7 @@ class gas_flux_calculator:
         dfs.sort_index(inplace=True)
         return dfs
 
-    def merge_aux_data(self):
+    def merge_chamber_ts(self):
         """
         Merges 'auxiliary' data to the dataframe, mainly air temperature,
         air pressure and snowdepth.
