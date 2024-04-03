@@ -793,14 +793,14 @@ class gas_flux_calculator:
         )
         for i, date in enumerate(w_times):
             data = date_filter(self.w_merged, date).copy()
-            if data.empty:
-                continue
             day = date[0].date()
+            if data.empty:
+                daylist.append(day)
+                continue
             # logger.debug(self.fltr_tuple[i][0])
             # logger.debug(self.ready_data.index[i])
             smask = self.ready_data.index == times[i][0]
-            if day not in daylist:
-                daylist.append(day)
+            daylist.append(day)
             try:
                 day = str(date[0].date())
                 name = date[0].strftime("%Y%m%d%H%M%S")
@@ -820,6 +820,8 @@ class gas_flux_calculator:
                     f"Error when creating graph with matplotlib, "
                     f"most likely not enough memory. Error: {e}"
                 )
+        # converting list to dict and then to list again removes duplicate items
+        daylist = list(dict.fromkeys(daylist))
         for day in daylist:
             data = self.ready_data[self.ready_data.index.date == day]
             if data.empty:
