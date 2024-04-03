@@ -184,16 +184,7 @@ def check_oldest_db_ts(influxdb_dict, start="2022-10-01T00:00:00Z"):
     # inflxudb query to get the timestamp of the last input
     # NOTE: this query needs to be optimized, it currently fetches all data to
     # check for a single timestamp
-    query = (
-        f'from(bucket: "{bucket}")'
-        "|> range(start: 0, stop: now())"
-        f'|> filter(fn: (r) => r["_measurement"] == "{measurement_name}")'
-        '|> filter(fn: (r) => r["_field"] == "CH4")'
-        '|> first(column: "_time")'
-        '|> yield(name: "first")'
-    )
     query = mk_oldest_ts_q(bucket, start, "ac_csv", ["CH4"])
-    print(query)
 
     client = ifdb.InfluxDBClient(
         url=url,
@@ -220,6 +211,30 @@ def check_oldest_db_ts(influxdb_dict, start="2022-10-01T00:00:00Z"):
 def check_newest_db_ts(influxdb_dict, start="2022-10-01T00:00:00Z"):
     """
     Extract latest date from influxDB
+    Faster query here if you can get it working:
+    ############
+    indices = {
+        _data = from(bucket: "Desktop")
+            |> range(start: 0)
+            |> filter(fn: (r) => r._measurement == "Simulated" and r._field == "index")
+            |> limit(n: 1000)
+
+        return union(tables:[
+            _data |> first(),
+            _data |> last(),
+        ]) |> findColumn(fn: (key) => true, column: "_time")
+    }
+    // Returns a array with the first time as the first element and the
+    // last time as the second element
+
+    // Use an array reference to reference the timestamps
+    rstart = indices[0]
+    rstop = indices[1]
+    ############
+    query from:
+    https://community.influxdata.com/t/how-to-efficiently-get-the-timestamp-of-the-first-and-last-records-in-a-table/23901
+
+
 
     args:
     ---
@@ -234,18 +249,7 @@ def check_newest_db_ts(influxdb_dict, start="2022-10-01T00:00:00Z"):
     bucket = influxdb_dict.get("bucket")
     measurement_name = influxdb_dict.get("measurement_name")
     # inflxudb query to get the timestamp of the last input
-    # NOTE: this query needs to be optimized, it currently fetches all data to
-    # check for a single timestamp
-    # query = (
-    #     f'from(bucket: "{bucket}")'
-    #     "|> range(start: 0, stop: now())"
-    #     f'|> filter(fn: (r) => r["_measurement"] == "{measurement_name}")'
-    #     '|> filter(fn: (r) => r["_field"] == "CH4")'
-    #     '|> last(column: "_time")'
-    #     '|> yield(name: "last")'
-    # )
     query = mk_newest_ts_q(bucket, start, "ac_csv", ["CH4"])
-    print(query)
 
     client = ifdb.InfluxDBClient(
         url=url,
