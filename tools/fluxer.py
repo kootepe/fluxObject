@@ -191,6 +191,7 @@ class gas_flux_calculator:
         else:
             self.meas_perc = int(self.meas_perc)
         self.chamber_h = float(self.chamber_dict.get("chamber_height"))
+        self.use_def_t_p = int(self.defs.get("use_def_t_p"))
         self.def_press = float(self.defs.get("default_pressure"))
         self.def_temp = float(self.defs.get("default_temperature"))
         self.excel_path = self.defs.get("excel_directory")
@@ -737,6 +738,7 @@ class gas_flux_calculator:
                 self.chamber_h,
                 self.def_temp,
                 self.def_press,
+                self.use_def_t_p,
             )
             mdf[f"{meas_name}_flux"] = flux
 

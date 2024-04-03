@@ -7,7 +7,7 @@ logger = logging.getLogger("defaultLogger")
 
 
 def calculate_gas_flux(
-    data, measurement_name, chamber_height, def_temp, def_press
+    data, measurement_name, chamber_height, def_temp, def_press, use_defs
 ):
     """
     Calculates gas flux
@@ -43,18 +43,21 @@ def calculate_gas_flux(
     # molar mass of co2. C mass 12 and O mass 16
     m = df["molar_mass"] = 12 + 16 + 16
     # temperature in K
-    try:
-        t = df["air_temperature"].mean()
-    except Exception:
-        logger.debug("NO AIR TEMPERATURE IN FILE, USING DEFAULT")
+    if use_defs == 1:
         t = def_temp
-    try:
-        # HPa to Pa
-        p = df["air_pressure"].mean()
-    except Exception:
-        logger.debug("NO AIR PRESSURE IN FILE, USING DEFAULT")
         p = def_press
-
+    else:
+        try:
+            t = df["air_temperature"].mean()
+        except Exception:
+            logger.debug("NO AIR TEMPERATURE IN FILE, USING DEFAULT")
+            t = def_temp
+        try:
+            # HPa to Pa
+            p = df["air_pressure"].mean()
+        except Exception:
+            logger.debug("NO AIR PRESSURE IN FILE, USING DEFAULT")
+            p = def_press
     # universal gas constant
     r = 8.314
 
