@@ -1,5 +1,4 @@
 import os
-import re
 
 import sys
 import shutil
@@ -18,6 +17,7 @@ from tools.filter import (
     subs_from_fltr_tuple,
     add_to_fltr_tuple,
 )
+from tools.file_tools import get_newest, mk_date_dict
 from tools.time_funcs import (
     ordinal_timer,
     strftime_to_regex,
@@ -161,6 +161,26 @@ class gas_flux_calculator:
                 self.time_data, close="start_time", open="end_time"
             )
             self.fltr_tuple = mk_fltr_tuple(self.time_data)
+
+    def file_finder(self, file_dict):
+        path = file_dict.get("path")
+        ts_fmt = file_dict.get("file_timestamp_format")
+
+        # list all files in directory
+        fls = list(Path(path).glob("*"))
+
+        # create dictionary of files and a datetime from the file name
+        file_date_dict = mk_date_dict(fls, ts_fmt)
+
+        # filter file list to be between two dates
+        sd = self.start_ts
+        ed = self.end_ts
+        filtered_files = {
+            key: value
+            for key, value in file_date_dict.items()
+            if (sd is None or value >= sd) and (ed is None or value <= ed)
+        }
+        return list(filtered_files.keys())
 
     def read_ini(self):
         # config = cfgparser.ConfigParser(self.env_vars, allow_no_value=True)
