@@ -103,6 +103,42 @@ class gas_flux_calculator:
             self.timestamp_file = measurement_class()
         pass
 
+    def read_ini(self):
+        # config = cfgparser.ConfigParser(self.env_vars, allow_no_value=True)
+        config = cfgparser.ConfigParser(allow_no_value=True)
+        config.read(self.inifile)
+        self.cfg = config
+        self.defs = dict(config.items("defaults"))
+        self.ifdb_dict = dict(config.items("influxDB"))
+        self.ifdb_dict = dict(config.items("influxDB"))
+        self.cham_cycle = dict(config.items("chamber_start_stop"))
+        self.chamber_dict = dict(config.items("measuring_chamber"))
+        self.meas_dict = dict(config.items("measurement_data"))
+        # this defines chamber close and open time for manual mode
+        self.meas_t_dict = dict(config.items("manual_measurement_time_data"))
+        # this defines chamber close and  open times for ac mode
+        self.chamber_cycle_file = self.defs.get("chamber_cycle_file")
+        self.use_ini_dates = self.defs.get("use_ini_dates")
+        self.mode = self.defs.get("mode")
+
+        self.data_path = self.meas_dict.get("path")
+        self.data_ext = self.meas_dict.get("file_extension")
+        self.file_ts_fmt = self.meas_dict.get("file_timestamp_format")
+        self.scan_or_gen = int(self.meas_dict.get("scan_or_generate"))
+        self.ch_ct = int(self.cham_cycle.get("start_of_measurement"))
+        self.ch_ot = int(self.cham_cycle.get("end_of_measurement"))
+        self.meas_et = int(self.cham_cycle.get("end_of_cycle"))
+        mprc = self.defs.get("measurement_perc")
+        if mprc:
+            self.meas_perc = int(mprc)
+        else:
+            self.meas_perc = 20
+        self.chamber_h = float(self.chamber_dict.get("chamber_height"))
+        self.use_def_t_p = int(self.defs.get("use_def_t_p"))
+        self.def_press = float(self.defs.get("default_pressure"))
+        self.def_temp = float(self.defs.get("default_temperature"))
+        self.excel_path = self.defs.get("excel_directory")
+
     def create_dfs(self):
         """Create dataframes with gas measurements and the chamber rotation"""
         if self.mode == "man":
@@ -181,41 +217,6 @@ class gas_flux_calculator:
             if (sd is None or value >= sd) and (ed is None or value <= ed)
         }
         return list(filtered_files.keys())
-
-    def read_ini(self):
-        # config = cfgparser.ConfigParser(self.env_vars, allow_no_value=True)
-        config = cfgparser.ConfigParser(allow_no_value=True)
-        config.read(self.inifile)
-        self.cfg = config
-        self.defs = dict(config.items("defaults"))
-        self.ifdb_dict = dict(config.items("influxDB"))
-        self.mode = self.defs.get("mode")
-        self.ifdb_dict = dict(config.items("influxDB"))
-        self.cham_cycle = dict(config.items("chamber_start_stop"))
-        self.chamber_dict = dict(config.items("measuring_chamber"))
-        self.meas_dict = dict(config.items("measurement_data"))
-        # this defines chamber close and open time for manual mode
-        self.meas_t_dict = dict(config.items("manual_measurement_time_data"))
-        # this defines chamber close and  open times for ac mode
-        self.chamber_cycle_file = self.defs.get("chamber_cycle_file")
-
-        self.data_path = self.meas_dict.get("path")
-        self.data_ext = self.meas_dict.get("file_extension")
-        self.file_ts_fmt = self.meas_dict.get("file_timestamp_format")
-        self.scan_or_gen = int(self.meas_dict.get("scan_or_generate"))
-        self.ch_ct = int(self.cham_cycle.get("start_of_measurement"))
-        self.ch_ot = int(self.cham_cycle.get("end_of_measurement"))
-        self.meas_et = int(self.cham_cycle.get("end_of_cycle"))
-        self.meas_perc = int(self.defs.get("measurement_perc"))
-        if self.meas_perc is None:
-            self.meas_perc = 20
-        else:
-            self.meas_perc = int(self.meas_perc)
-        self.chamber_h = float(self.chamber_dict.get("chamber_height"))
-        self.use_def_t_p = int(self.defs.get("use_def_t_p"))
-        self.def_press = float(self.defs.get("default_pressure"))
-        self.def_temp = float(self.defs.get("default_temperature"))
-        self.excel_path = self.defs.get("excel_directory")
 
     def mk_cham_cycle(self):
         """
