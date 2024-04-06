@@ -74,23 +74,25 @@ def class_calc(inifile, env_vars):
 
 def main(ini_path):
     ini_files = list_inis(ini_path)
-    # get environment variables
-    env_vars = os.environ
-    # python does not like % signs, remove them from keys and values
-    filtered_env = {
-        key: value
-        for key, value in env_vars.items()
-        if "%" not in key and "%" not in value
-    }
+    # NOTE: I think env vars are now handled by dotenv
 
+    # get environment variables
+    # env_vars = os.environ
+    # python does not like % signs, remove them from keys and values
+    # filtered_env = {
+    #     key: value
+    #     for key, value in env_vars.items()
+    #     if "%" not in key and "%" not in value
+    # }
     # Update os.environ with the filtered dictionary
-    env_vars.clear()
-    env_vars.update(filtered_env)
+    # env_vars.clear()
+    # env_vars.update(filtered_env)
+    env_vars = None
     logger = init_logger()
 
     for inifile in ini_files:
         logger.debug(f"Reading ini: {inifile}")
-        config = configparser.ConfigParser(env_vars, allow_no_value=True)
+        config = configparser.ConfigParser(allow_no_value=True)
         config.read(inifile)
         try:
             active = config.getboolean("defaults", "active")
@@ -107,18 +109,11 @@ def main(ini_path):
                     env_vars, allow_no_value=True
                 )
                 config.read(inifile)
-            mode = dict(config.items("defaults")).get("mode")
             logger.info(f"Running {inifile}.")
-            # if mode == "ac":
-            #     ac_push(inifile, env_vars)
-            # if mode == "man":
-            #     man_push(inifile, env_vars)
-            # if mode == "csv":
-            #     csv_push(inifile, env_vars)
-            # if mode == "eddypro":
-            #     eddypro_push(inifile, env_vars)
-            # if mode == "class":
-            class_calc(inifile, env_vars)
+            try:
+                class_calc(inifile, env_vars)
+            except Exception:
+                continue
         else:
             logger.info(f"Active set 0, skipped {inifile}")
 
