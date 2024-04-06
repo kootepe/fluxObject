@@ -801,10 +801,10 @@ class gas_flux_calculator:
             mdf = date_filter(data, date).copy()
             if mdf.empty:
                 measurement_list.append(mdf)
-                logger.debug(f"Df empty at {date[0]}")
+                logger.info(f"Df empty at {date[0]}")
                 continue
             if "has errors" in mdf.iloc[0]["checks"]:
-                logger.debug(
+                logger.info(
                     f"Skipping flux calculation at {date[0]} because of diagnostic flags"
                 )
                 measurement_list.append(mdf)
@@ -812,13 +812,15 @@ class gas_flux_calculator:
 
             slope = calculate_slope(mdf, date, meas_name)
             if np.isnan(slope):
-                logger.debug(f"slope returned as NaN at {date[0]}")
+                logger.info(f"slope returned as NaN at {date[0]}")
+                measurement_list.append(mdf)
                 continue
             mdf[f"{meas_name}_slope"] = slope
 
             pearsons = calculate_pearsons_r(mdf, date, meas_name)
             if np.isnan(pearsons):
                 logger.debug(f"pearsonsR returned as NaN at {date[0]}")
+                measurement_list.append(mdf)
                 continue
             mdf[f"{meas_name}_pearsons_r"] = pearsons
 
