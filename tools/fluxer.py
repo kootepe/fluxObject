@@ -962,6 +962,7 @@ class li7200:
         df["datetime"] = pd.to_datetime(
             df[self.date_col] + df[self.time_col],
             format=self.date_fmt + self.time_fmt,
+            # ).dt.tz_localize("UTC")
         )
         return df
 
@@ -991,5 +992,9 @@ class timestamps:
         df["snowdepth"] = df["snowdepth"].fillna(0)
         df["date"] = date
         df["datetime"] = df["date"] + df[self.time_col]
-        df["datetime"] = pd.to_datetime(df["datetime"], format=self.dt_fmt)
+        df["datetime"] = pd.to_datetime(
+            df["datetime"],
+            format=self.dt_fmt,
+            # ).dt.tz_localize("UTC")
+        )
         return df
