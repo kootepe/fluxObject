@@ -80,6 +80,7 @@ def mk_ifdb_ts(ts):
 
 def read_ifdb(ifdb_dict, meas_dict, start_ts=None, stop_ts=None):
     logger.debug(f"Running query from {start_ts} to {stop_ts}")
+
     bucket = ifdb_dict.get("bucket")
     measurement = meas_dict.get("measurement")
     fields = list(meas_dict.get("fields").split(","))
@@ -218,15 +219,14 @@ def check_oldest_db_ts(ifdb_dict, meas_dict, gas_cols):
         logging.warning(f"Couldn't connect to database at {url}")
         return None
     try:
-        last_ts = tables[0].records[0]["_time"].replace(tzinfo=None)
-        print(f"this is last_ts {last_ts}")
+        oldest_ts = tables[0].records[0]["_time"].replace(tzinfo=None)
     except IndexError:
         logging.warning(
             "Couldn't get timestamp from influxdb, using season_start from .ini"
         )
         return None
 
-    return last_ts
+    return oldest_ts
 
 
 def check_newest_db_ts(influxdb_dict):
