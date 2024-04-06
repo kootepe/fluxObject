@@ -13,12 +13,9 @@ def init_client(ifdb_dict):
     url = ifdb_dict.get("url")
     token = ifdb_dict.get("token")
     org = ifdb_dict.get("organization")
+    timeout = ifdb_dict.get("timeout")
 
-    client = ifdb.InfluxDBClient(
-        url=url,
-        token=token,
-        org=org,
-    )
+    client = ifdb.InfluxDBClient(url=url, token=token, org=org, timeout=timeout)
     return client
 
 
