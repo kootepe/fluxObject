@@ -340,17 +340,19 @@ class gas_flux_calculator:
         first_ts -- datetime.datetime
             Either the oldest timestamp in influxdb or season_start from .ini
         """
-        season_start = self.defs.get("season_start")
+        start_ts = self.defs.get("start_ts")
         ifdb_ts_format = self.ifdb_dict.get("influxdb_timestamp_format")
 
         if not self.ifdb_dict.get("url"):
-            first_ts = datetime.datetime.strptime(season_start, ifdb_ts_format)
+            first_ts = datetime.datetime.strptime(start_ts, ifdb_ts_format)
         else:
-            logging.debug("Checking latest ts from DB.")
-            first_ts = check_oldest_db_ts(self.ifdb_dict)
-            logging.debug(f"Newest ts in db: {first_ts}")
+            logger.info("Checking latest ts from DB.")
+            first_ts = check_oldest_db_ts(
+                self.ifdb_dict, self.meas_dict, self.device.gas_cols
+            )
+            logger.info(f"Oldest ts in db: {first_ts}")
         if first_ts is None:
-            first_ts = datetime.datetime.strptime(season_start, ifdb_ts_format)
+            first_ts = datetime.datetime.strptime(start_ts, ifdb_ts_format)
         return first_ts
 
     def extract_date(self, datestring):
