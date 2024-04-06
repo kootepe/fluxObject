@@ -372,9 +372,7 @@ class gas_flux_calculator:
                 "No strftime formatting in filename, returning current date"
             )
             return datetime.datetime.today()
-        date = re.search(strftime_to_regex(self.file_ts_fmt), datestring).group(
-            0
-        )
+        date = search(strftime_to_regex(self.file_ts_fmt), datestring).group(0)
         return datetime.datetime.strptime(date, self.file_ts_fmt)
 
     def gen_files(self, config):
