@@ -9,6 +9,7 @@ import numpy as np
 import pandas as pd
 from pathlib import Path
 from traceback import format_exc
+from re import search
 
 # modules from this repo
 from tools.filter import (
@@ -982,7 +983,7 @@ class timestamps:
         self.dt_fmt = "%y%m%d%H%M"
 
     def read_file(self, f):
-        date = re.search("\d{6}", str(f.name))[0]
+        date = search("\d{6}", str(f.name))[0]
         df = pd.read_csv(
             f,
             skiprows=self.skiprows,
