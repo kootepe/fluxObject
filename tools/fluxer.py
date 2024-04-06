@@ -172,6 +172,42 @@ class gas_flux_calculator:
         if self.mode == "man":
             # if meas_dict has a path, look for files
             if self.meas_dict.get("path"):
+                self.meas_files = self.file_finder(self.meas_dict)
+                if not self.meas_files:
+                    logger.info(
+                        f"No files found from {self.start_ts.date()} to {self.end_ts.date()} in {self.data_path}."
+                    )
+                    logger.info("Exiting.")
+                    sys.exit()
+                else:
+                    logger.debug(
+                        f"Found {len(self.meas_files)} in folder {self.data_path}."
+                    )
+                self.meas_t_files = self.file_finder(self.meas_t_dict)
+                self.data = self.read_meas()
+                self.time_data = self.read_man_meas_f()
+            else:
+                self.data = read_ifdb(
+                    self.ifdb_dict, self.meas_dict, self.start_ts, self.end_ts
+                )
+                if self.data is None:
+                    logger.info("No data returned from db.")
+                    sys.exit()
+                self.time_data = read_ifdb(
+                    self.ifdb_dict, self.meas_t_dict, self.start_ts, self.end_ts
+                )
+                self.time_data["chamber"] = self.time_data["chamber"].astype(
+                    int
+                )
+            # measurement times dataframe
+            self.merged = self.merge_chamber_ts()
+            self.fltr_tuple = mk_fltr_tuple(
+                self.time_data, close="start_time", open="end_time"
+            )
+            self.fltr_tuple = mk_fltr_tuple(self.time_data)
+
+        if self.mode == "ac":
+            if self.meas_dict.get("path"):
                 self.meas_files = self.match_files(
                     self.gen_files(self.meas_dict),
                     self.meas_dict,
@@ -181,48 +217,23 @@ class gas_flux_calculator:
                 )
             else:
                 pass
-
-            # list of measurement_time files
-            self.meas_t_files = self.match_files(
-                self.gen_files(self.meas_t_dict),
-                self.meas_t_dict,
-            )
-            logger.debug(
-                f"Found {len(self.meas_t_files)} in folder {self.data_path}."
-            )
-            # gas measurement dataframe
-            if self.meas_dict.get("path") is not None:
+            if self.meas_dict.get("path"):
                 self.data = self.read_meas()
+                self.time_data = self.mk_cham_cycle2()
             else:
                 self.data = read_ifdb(
                     self.ifdb_dict, self.meas_dict, self.start_ts, self.end_ts
                 )
-            # measurement times dataframe
-            self.time_data = self.read_man_meas_f()
-            self.merged = self.merge_chamber_ts()
-            self.fltr_tuple = mk_fltr_tuple(
-                self.time_data, close="start_time", open="end_time"
-            )
-            # self.fltr_tuple = mk_fltr_tuple(self.time_data)
+                if self.data is None:
+                    logger.info(
+                        "No data returned from db. Check your dates and fields."
+                    )
+                    sys.exit(0)
+                self.time_data = self.mk_cham_cycle2()
 
-        if self.mode == "ac":
-            self.meas_files = self.match_files(
-                self.gen_files(self.meas_dict),
-                self.meas_dict,
-            )
-            logger.debug(
-                f"Found {len(self.meas_files)} in folder {self.data_path}."
-            )
-            # gas measurement dataframe
-            self.data = self.read_meas()
-            # self.data = ifdb_read(self.ifdb_dict)
             # measurement times dataframe
-            self.time_data = self.mk_cham_cycle()
             self.merged = self.merge_chamber_ts()
 
-            self.w_fltr_tuple = mk_fltr_tuple(
-                self.time_data, close="start_time", open="end_time"
-            )
             self.fltr_tuple = mk_fltr_tuple(self.time_data)
 
     def file_finder(self, file_dict):
