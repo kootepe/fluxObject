@@ -185,7 +185,7 @@ def ifdb_push(df, ifdb_dict, tag_columns):
         logging.info(f"Pushed data between {first}-{last} to DB")
 
 
-def check_oldest_db_ts(influxdb_dict, start="2022-10-01T00:00:00Z"):
+def check_oldest_db_ts(ifdb_dict, meas_dict, gas_cols):
     """
     Extract latest date from influxDB
 
@@ -196,15 +196,16 @@ def check_oldest_db_ts(influxdb_dict, start="2022-10-01T00:00:00Z"):
     ---
     Tables -- object with infludbtimestamps
     """
-    url = influxdb_dict.get("url")
-    token = influxdb_dict.get("token")
-    org = influxdb_dict.get("organization")
-    bucket = influxdb_dict.get("bucket")
-    measurement_name = influxdb_dict.get("measurement_name")
+    url = ifdb_dict.get("url")
+    token = ifdb_dict.get("token")
+    org = ifdb_dict.get("organization")
+    bucket = ifdb_dict.get("bucket")
+
+    measurement = meas_dict.get("measurement")
     # inflxudb query to get the timestamp of the last input
     # NOTE: this query needs to be optimized, it currently fetches all data to
     # check for a single timestamp
-    query = mk_oldest_ts_q(bucket, start, "ac_csv", ["CH4"])
+    query = mk_oldest_ts_q(bucket, measurement, gas_cols)
 
     client = ifdb.InfluxDBClient(
         url=url,
