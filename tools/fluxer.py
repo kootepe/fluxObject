@@ -751,24 +751,6 @@ class gas_flux_calculator:
         dfa = pd.concat(dfa)
         self.merged = dfa
 
-    def check_valid2(self, df):
-        check_df = df
-        has_errors = check_df["error_code"].sum() != 0
-        no_air_temp = check_df["air_temperature"].isna().all()
-        no_air_pressure = check_df["air_pressure"].isna().all()
-        if has_errors or no_air_temp or no_air_pressure:
-            checks = []
-            if has_errors:
-                checks.append("has errors,")
-            if no_air_temp:
-                checks.append("no air temp,")
-            if no_air_pressure:
-                checks.append("no air pressure,")
-            checks_str = "".join(checks)
-            check_df.loc[:, "checks"] += checks_str
-            check_df.loc[:, "is_valid"] = False
-        return check_df
-
     def calc_slope_pearsR(self, data, measurement_name):
         """
         Calculates Pearsons R (correlation) and the slope of
