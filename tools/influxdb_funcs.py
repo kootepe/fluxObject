@@ -98,8 +98,14 @@ def read_ifdb(ifdb_dict, meas_dict, start_ts=None, stop_ts=None):
         q_api = client.query_api()
         query = mk_query(bucket, start, stop, measurement, fields)
         logger.debug("Query:\n" + query)
-        df = q_api.query_data_frame(query)[["_time"] + fields]
+        try:
+            df = q_api.query_data_frame(query)[["_time"] + fields]
+        except Exception:
+            logger.info("No data with query.")
+            return None
+
         df = df.rename(columns={"_time": "datetime"})
+        df["datetime"] = df.datetime.dt.tz_convert(None)
         df = add_cols_to_ifdb_q(df, meas_dict)
         logger.debug(f"\n{df}")
         return df
