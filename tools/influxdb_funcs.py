@@ -50,14 +50,14 @@ def mk_query(bucket, start, stop, measurement, fields):
     return query
 
 
-def mk_oldest_ts_q(bucket, start, measurement, fields):
+def mk_oldest_ts_q(bucket, measurement, fields):
     query = (
         f"{mk_bucket_q(bucket)}"
         f"{mk_range_q(0, 'now()')}"
         f"{mk_meas_q(measurement)}"
         f"{mk_field_q(fields)}"
-        '|> first(column: "_time")\n'
-        '|> yield(name: "first")'
+        '\t|> first(column: "_time")\n'
+        '\t|> yield(name: "first")'
     )
     return query
 
