@@ -23,8 +23,11 @@ from tools.time_funcs import (
     strftime_to_regex,
     extract_date,
     convert_seconds,
+from tools.influxdb_funcs import (
+    check_oldest_db_ts,
+    check_newest_db_ts,
+    read_ifdb,
 )
-from tools.influxdb_funcs import ifdb_push, check_oldest_db_ts, read_ifdb
 from tools.gas_funcs import (
     calculate_gas_flux,
     calculate_pearsons_r,
@@ -58,21 +61,9 @@ class gas_flux_calculator:
         self.read_ini()
         self.init_meas_reader(self.instrument_class, self.measurement_class)
 
-        # self.device = instrument_class
-        # self.timestamp_file = measurement_class
-        # these two variables define from what timeframe files be read from
-        self.start_ts = self.get_last_ts()
-        # self.end_ts = self.extract_date(
-        #     get_newest(self.data_path, self.data_ext)
-        self.start_ts = self.get_start_ts()
-        # )
-        self.end_ts = datetime.datetime.strptime(
-            "2024-01-01 00:00:00", "%Y-%m-%d %H:%M:%S"
-        )
-        # if self.defs.get("limit_data"):
-        #     if int(self.defs.get("limit_data")) > 0:
-        #         to_add = int(self.defs.get("limit_data"))
-        #         self.end_ts = self.start_ts + datetime.timedelta(days=to_add)
+        # start_ts and end_ts define the timeframe from which data will be
+        # processed
+        self.start_ts, self.end_ts = self.get_start_end()
 
         self.create_dfs()
         self.parse_aux_cfg()
@@ -139,12 +130,48 @@ class gas_flux_calculator:
         self.def_temp = float(self.defs.get("default_temperature"))
         self.excel_path = self.defs.get("excel_directory")
 
+    def get_start_end(self):
+        s_ts = None
+        e_ts = None
+        if self.use_ini_dates == "1":
+            logger.info("Using dates define in .ini to calculate data")
+            s_ts = self.defs.get("start_ts")
+            if s_ts is not None:
+                s_ts = datetime.datetime.strptime(s_ts, "%Y-%m-%d %H:%M:%S")
+            e_ts = self.defs.get("end_ts")
+            if e_ts is not None:
+                e_ts = datetime.datetime.strptime(e_ts, "%Y-%m-%d %H:%M:%S")
+            logger.info(f"Start date: {s_ts}, End date: {e_ts}")
+        else:
+            s_ts = self.get_start_ts()
+            # if measurement dict defines a path, get the ending timestamp from the
+            # last modified file
+            if self.meas_dict.get("path"):
+                e_ts = self.extract_date(
+                    get_newest(self.data_path, self.data_ext)
+                )
+            # measurement defines the name of the influxdb measurement
+            if self.meas_dict.get("measurement"):
+                e_ts = check_newest_db_ts(self.ifdb_dict)
+                logger.info(f"Newest ts in db: {e_ts}")
+
+        if s_ts:
+            if self.defs.get("limit_data"):
+                if int(self.defs.get("limit_data")) > 0:
+                    to_add = int(self.defs.get("limit_data"))
+                    e_ts = s_ts + datetime.timedelta(days=to_add)
+        if not s_ts and e_ts:
+            logger.debug(f"No start ts, processing all data until {e_ts}")
+        if not s_ts and not e_ts:
+            logger.debug("No start or end timestamps, processing all data.")
+
+        return s_ts, e_ts
+
     def create_dfs(self):
         """Create dataframes with gas measurements and the chamber rotation"""
         if self.mode == "man":
             # if meas_dict has a path, look for files
             if self.meas_dict.get("path"):
-                print("no path")
                 self.meas_files = self.match_files(
                     self.gen_files(self.meas_dict),
                     self.meas_dict,
