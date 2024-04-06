@@ -83,9 +83,17 @@ def read_ifdb(ifdb_dict, meas_dict, start_ts=None, stop_ts=None):
     bucket = ifdb_dict.get("bucket")
     measurement = meas_dict.get("measurement")
     fields = list(meas_dict.get("fields").split(","))
-    start = mk_ifdb_ts(start_ts)
-    stop = mk_ifdb_ts(stop_ts)
-    fields = fields
+
+    if start_ts is not None:
+        start = mk_ifdb_ts(start_ts)
+    else:
+        start = 0
+
+    if stop_ts is not None:
+        stop = mk_ifdb_ts(stop_ts)
+    else:
+        stop_ts = "now()"
+
     with init_client(ifdb_dict) as client:
         q_api = client.query_api()
         query = mk_query(bucket, start, stop, measurement, fields)
