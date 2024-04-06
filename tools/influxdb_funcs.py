@@ -112,6 +112,9 @@ def read_ifdb(ifdb_dict, meas_dict, start_ts=None, stop_ts=None):
 
 
 def add_cols_to_ifdb_q(df, meas_dict):
+    # NOTE: need to figure out a better way of doing this, maybe a matte
+    # reformatting what columns are expected down the pipeline. Does there need
+    # to be a separate .ini for specifying settings of the whole pipeline?
     """
     current version cant use dataframes returned by ifdb as is, this function
     will add necessary columns
@@ -120,16 +123,20 @@ def add_cols_to_ifdb_q(df, meas_dict):
     if name == "man_ts":
         df["start_time"] = df["datetime"]
         df["end_time"] = df["start_time"] + pd.Timedelta(seconds=300)
-        df["chamber"] = df["Plot Number"]
+        diff = float(
+            get_time_diff(df.iloc[0]["start_time"], df.iloc[0]["end_time"])
+        ) * (20 / 100)
+        df["open_time"] = df["end_time"] - pd.to_timedelta(diff, unit="s")
+        df["close_time"] = df["start_time"] + pd.to_timedelta(diff, unit="s")
+        # df["chamber"] = df["Plot Number"]
     # df["datetime"] = df.datetime.dt.tz_convert(None)
     df["DATE"] = df["datetime"].dt.strftime("%Y-%m-%d")
     df["TIME"] = df["datetime"].dt.strftime("%H:%M:%S")
     df["checks"] = ""
     df["is_valid"] = ""
 
-    df["ordinal_date"] = pd.to_datetime(df["DATE"]).map(
-        datetime.datetime.toordinal
-    )
+    logger.info("Calculating ordinal times.")
+    df["ordinal_date"] = pd.to_dt(df["DATE"]).map(datetime.datetime.toordinal)
     df["ordinal_time"] = ordinal_timer(df["TIME"].values)
     df["ordinal_datetime"] = df["ordinal_time"] + df["ordinal_date"]
     df.set_index("datetime", inplace=True)
