@@ -3,7 +3,7 @@ from influxdb_client.client.write_api import SYNCHRONOUS
 import logging
 from urllib3.exceptions import NewConnectionError
 import datetime
-from tools.time_funcs import ordinal_timer
+from tools.time_funcs import ordinal_timer, get_time_diff
 import pandas as pd
 
 logger = logging.getLogger("defaultLogger")
@@ -229,7 +229,7 @@ def check_oldest_db_ts(ifdb_dict, meas_dict, gas_cols):
     return oldest_ts
 
 
-def check_newest_db_ts(influxdb_dict):
+def check_newest_db_ts(ifdb_dict, meas_dict, gas_cols):
     """
     Extract latest date from influxDB
     Faster query here if you can get it working:
@@ -264,13 +264,15 @@ def check_newest_db_ts(influxdb_dict):
     ---
     Tables -- object with infludbtimestamps
     """
-    url = influxdb_dict.get("url")
-    token = influxdb_dict.get("token")
-    org = influxdb_dict.get("organization")
-    bucket = influxdb_dict.get("bucket")
-    measurement_name = influxdb_dict.get("measurement_name")
+    url = ifdb_dict.get("url")
+    token = ifdb_dict.get("token")
+    org = ifdb_dict.get("organization")
+    bucket = ifdb_dict.get("bucket")
+    # measurement_name = influxdb_dict.get("measurement_name")
+
+    measurement = meas_dict.get("measurement")
     # inflxudb query to get the timestamp of the last input
-    query = mk_newest_ts_q(bucket, "ac_csv", ["CH4"])
+    query = mk_newest_ts_q(bucket, measurement, gas_cols)
 
     client = ifdb.InfluxDBClient(
         url=url,
