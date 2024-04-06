@@ -53,16 +53,22 @@ def class_calc(inifile, env_vars):
 
     if module:
         module = importlib.import_module(module)
+    else:
+        module = None
+
     if class_name:
-        instrument_class = getattr(module, class_name)
+        instr_class = getattr(module, class_name)
+    else:
+        instr_class = None
+
     if measurement_name:
-        measurement_class = getattr(module, measurement_name)
+        meas_class = getattr(module, measurement_name)
+    else:
+        meas_class = None
 
     log_level = dict(config.items("defaults")).get("logging_level")
-    logger = init_logger(log_level)
-    # gas_flux_calculator(inifile, env_vars, instrument_class, measurement_class)
-    # gas_flux_calculator(inifile, env_vars, instrument_class)
-    data = gas_flux_calculator(inifile, env_vars)
+    init_logger(log_level)
+    data = gas_flux_calculator(inifile, env_vars, instr_class, meas_class)
     return data
 
 
