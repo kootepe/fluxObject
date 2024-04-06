@@ -1,7 +1,6 @@
 import os
 
 import sys
-import shutil
 import logging
 import datetime
 import configparser as cfgparser
