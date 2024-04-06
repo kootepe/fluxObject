@@ -684,6 +684,10 @@ class gas_flux_calculator:
                 )
                 continue
             dfs = pd.concat(dfs)
+            if isinstance(dfs.index, pd.DatetimeIndex):
+                pass
+                # dfs.index = dfs.index.tz_localize("UTC")
+                # dfs.set_index(dfs.index.tz_convert("ETC/GMT-0"))
             dfs.sort_index(inplace=True)
             f["df"] = dfs
 
