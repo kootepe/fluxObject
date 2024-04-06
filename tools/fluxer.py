@@ -294,6 +294,38 @@ class gas_flux_calculator:
         dfs.set_index("datetime", inplace=True)
         return dfs
 
+    def mk_cham_cycle2(self):
+        tmp = []
+        # loop through files, read them into a pandas dataframe and
+        # create timestamps
+        dates = [str(date) for date in pd.unique(self.data.index.date)]
+        df = pd.read_csv(self.chamber_cycle_file, names=["time", "chamber"])
+        for date in dates:
+            dfa = df.copy()
+            dfa["date"] = date
+            # dfa["datetime"] = pd.to_datetime(
+            #     dfa["date"] + " " + dfa["time"].astype(str)
+            # ).tz_localize("UTC")
+            dfa["datetime"] = pd.to_datetime(
+                dfa["date"] + " " + dfa["time"].astype(str)
+            )
+            # dfa["datetime"] = dfa["datetime"].dt.tz_localize("UTC")
+            # dfa["datetime"] = dfa["datetime"].tz_convert(self.data.index.tz)
+            dfa["start_time"] = dfa["datetime"]
+            dfa["close_time"] = dfa["datetime"] + pd.to_timedelta(
+                self.ch_ct, unit="s"
+            )
+            dfa["open_time"] = dfa["datetime"] + pd.to_timedelta(
+                self.ch_ot, unit="s"
+            )
+            dfa["end_time"] = dfa["datetime"] + pd.to_timedelta(
+                self.meas_et, unit="s"
+            )
+            tmp.append(dfa)
+
+        dfs = pd.concat(tmp)
+        dfs.set_index("datetime", inplace=True)
+        return dfs
 
     def get_start_ts(self):
         """
