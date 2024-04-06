@@ -39,6 +39,22 @@ def get_newest(path: str, file_extension: str):
 
 
 def mk_date_dict(files, ts_fmt):
+    """
+    Creates a dictionary out of a list of files and the timestamps in the
+    filenames. Used for filtering the files to specific timeframe.
+
+    Parameters
+    ----------
+    files :
+
+    ts_fmt :
+
+
+    Returns
+    -------
+
+
+    """
     file_date_dict = {
         key: datetime.strptime(match.group(), ts_fmt)
         for i, key in enumerate(files)
