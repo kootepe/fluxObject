@@ -24,6 +24,8 @@ from tools.time_funcs import (
     strftime_to_regex,
     extract_date,
     convert_seconds,
+    get_time_diff,
+)
 from tools.influxdb_funcs import (
     check_oldest_db_ts,
     check_newest_db_ts,
@@ -514,15 +516,27 @@ class gas_flux_calculator:
             # measurement doesn't really have a closing time, the
             # variable is named like this
             df["start_time"] = df["datetime"]
-            df["close_time"] = df["datetime"] + pd.to_timedelta(
-                self.ch_ct, unit="s"
-            )
-            df["open_time"] = df["datetime"] + pd.to_timedelta(
-                self.ch_ot, unit="s"
-            )
             df["end_time"] = df["datetime"] + pd.to_timedelta(
                 self.meas_et, unit="s"
             )
+            # diff = df.iloc[0]["end_time"] - df.iloc[0]["start_time"] * (
+            #     self.meas_perc * 100
+            # )
+            # diff = float(
+            #     get_time_diff(df.iloc[0]["end_time"], df.iloc[0]["start_time"])
+            # ) * (self.meas_perc / 100)
+            diff = float(
+                get_time_diff(df.iloc[0]["start_time"], df.iloc[0]["end_time"])
+            ) * (self.meas_perc / 100)
+            df["open_time"] = df["end_time"] - pd.to_timedelta(diff, unit="s")
+            df["close_time"] = df["start_time"] + pd.to_timedelta(
+                diff, unit="s"
+            )
+            # df["end_time"] = df["datetime"] + pd.to_timedelta(
+            #     self.meas_et, unit="s"
+            # )
+            # df["open_time"] = df["start_time"] + pd.to_timedelta(diff, unit="s")
+            # df["end_time"] = df["end_time"] - pd.to_timedelta(diff, unit="s")
             df["snowdepth"] = df["snowdepth"].fillna(0)
             df["ts_file"] = str(f.name)
             tmp.append(df)
@@ -724,6 +738,7 @@ class gas_flux_calculator:
     def check_valid(self):
         # NOTE: Should this be moved inside one of the existing loops?
         logger.debug("Checking validity")
+        logger.debug(self.merged)
         dfa = []
         for date in self.fltr_tuple:
             df = date_filter(self.merged, date)
