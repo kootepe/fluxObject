@@ -158,6 +158,7 @@ def ifdb_push(df, ifdb_dict, tag_columns):
 
     """
     logger.debug("Attempting push.")
+    print("Attempting push.")
     url = ifdb_dict.get("url")
     bucket = ifdb_dict.get("bucket")
     measurement_name = ifdb_dict.get("measurement_name")
@@ -171,7 +172,8 @@ def ifdb_push(df, ifdb_dict, tag_columns):
                 record=df,
                 data_frame_measurement_name=measurement_name,
                 data_frame_timestamp_timezone=timezone,
-                data_frame_tag_columns=tag_columns,
+                # NOTE: figure out a good way of handling tag cols
+                # data_frame_tag_columns="ac",
                 debug=True,
             )
         except NewConnectionError:
