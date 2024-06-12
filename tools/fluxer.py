@@ -49,6 +49,10 @@ from tools.create_excel import (
     create_rects,
 )
 
+from tools.aux_cfg_parser import parse_aux_cfg
+from tools.aux_data_reader import read_aux_data
+
+
 logger = logging.getLogger("defaultLogger")
 
 
@@ -68,8 +72,8 @@ class gas_flux_calculator:
         self.start_ts, self.end_ts = self.get_start_end()
 
         self.create_dfs()
-        self.parse_aux_cfg()
-        self.read_aux_data()
+        self.aux_cfgs = parse_aux_cfg(self.cfg)
+        self.aux_cfgs = read_aux_data(self.aux_cfgs)
         self.merge_aux()
         self.w_merged = self.merged
         self.check_valid()
@@ -634,75 +638,6 @@ class gas_flux_calculator:
                 parsed_args[key] = value
 
         return parsed_args
-
-    def parse_aux_cfg(self):
-        """
-        Creates a list of dictionaries out of .ini sections with have
-        "aux_data_" in them.
-        """
-        # list all config sections with aux_data_ in them
-        cfg_names = [s for s in self.cfg.sections() if "aux_data_" in s]
-        # config sections to dictionaries
-        aux_cfgs = [dict(self.cfg.items(c)) for c in cfg_names]
-        # initiate list for the parsed configs
-        self.aux_cfgs = []
-        for cfg in aux_cfgs:
-            name_key = cfg["name"]
-            path = Path(cfg.get("path"))
-            files = list(path.rglob(cfg.get("file_name")))
-            if len(files) == 0:
-                logger.debug(
-                    f"No files found for aux_data {name_key}, skipped."
-                )
-                continue
-            merge_method = cfg.get("merge_method")
-            direction = cfg.get("direction")
-            tolerance = cfg.get("tolerance")
-            # possible values in the .ini that we don't want passed to pandas
-            # read_csv
-            excluded = [
-                "name",
-                "path",
-                "file_name",
-                "merge_method",
-                "direction",
-                "tolerance",
-            ]
-
-            # create dict with pandas read_csv compatible args
-            pd_args = {k: v for k, v in cfg.items() if k not in excluded}
-            pd_args = self.parse_read_csv_args(pd_args)
-
-            new_dict = {
-                "name": name_key,
-                "merge_method": merge_method,
-                "files": files,
-                "args": pd_args,
-                "direction": direction,
-                "tolerance": tolerance,
-            }
-            self.aux_cfgs.append(new_dict)
-
-    def read_aux_data(self):
-        self.aux_dfs = []
-        for f in self.aux_cfgs:
-            dfs = []
-            for file in f.get("files"):
-                argss = f.get("args")
-                df = pd.read_csv(file, **argss)
-                dfs.append(df)
-            if len(dfs) == 0:
-                logger.debug(
-                    f"No data returned by files found for aux_data {f.get('name')}"
-                )
-                continue
-            dfs = pd.concat(dfs)
-            if isinstance(dfs.index, pd.DatetimeIndex):
-                pass
-                # dfs.index = dfs.index.tz_localize("UTC")
-                # dfs.set_index(dfs.index.tz_convert("ETC/GMT-0"))
-            dfs.sort_index(inplace=True)
-            f["df"] = dfs
 
     def merge_aux(self):
         for cfg in self.aux_cfgs:
