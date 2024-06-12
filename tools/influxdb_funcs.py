@@ -130,7 +130,7 @@ def read_ifdb(ifdb_dict, meas_dict, start_ts=None, stop_ts=None):
     if stop_ts is not None:
         stop = mk_ifdb_ts(stop_ts)
     else:
-        stop_ts = "now()"
+        stop = "now()"
 
     with init_client(ifdb_dict) as client:
         q_api = client.query_api()
