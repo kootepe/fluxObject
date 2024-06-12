@@ -153,9 +153,7 @@ class gas_flux_calculator:
             # if measurement dict defines a path, get the ending timestamp from the
             # last modified file
             if self.meas_dict.get("path"):
-                e_ts = self.extract_date(
-                    get_newest(self.data_path, self.data_ext)
-                )
+                e_ts = self.extract_date(get_newest(self.data_path, self.data_ext))
             # measurement defines the name of the influxdb measurement
             if self.meas_dict.get("measurement"):
                 e_ts = check_newest_db_ts(self.ifdb_dict)
@@ -202,9 +200,7 @@ class gas_flux_calculator:
                 self.time_data = read_ifdb(
                     self.ifdb_dict, self.meas_t_dict, self.start_ts, self.end_ts
                 )
-                self.time_data["chamber"] = self.time_data["chamber"].astype(
-                    int
-                )
+                self.time_data["chamber"] = self.time_data["chamber"].astype(int)
             # measurement times dataframe
             self.merged = self.merge_chamber_ts()
             self.fltr_tuple = mk_fltr_tuple(
@@ -278,6 +274,7 @@ class gas_flux_calculator:
         tmp = []
         # loop through files, read them into a pandas dataframe and
         # create timestamps
+
         for file in self.meas_files:
             df = pd.read_csv(self.chamber_cycle_file, names=["time", "chamber"])
             date = extract_date(self.file_ts_fmt, os.path.splitext(file)[0])
@@ -286,15 +283,9 @@ class gas_flux_calculator:
                 df["date"].astype(str) + " " + df["time"].astype(str)
             )
             df["start_time"] = df["datetime"]
-            df["close_time"] = df["datetime"] + pd.to_timedelta(
-                self.ch_ct, unit="s"
-            )
-            df["open_time"] = df["datetime"] + pd.to_timedelta(
-                self.ch_ot, unit="s"
-            )
-            df["end_time"] = df["datetime"] + pd.to_timedelta(
-                self.meas_et, unit="s"
-            )
+            df["close_time"] = df["datetime"] + pd.to_timedelta(self.ch_ct, unit="s")
+            df["open_time"] = df["datetime"] + pd.to_timedelta(self.ch_ot, unit="s")
+            df["end_time"] = df["datetime"] + pd.to_timedelta(self.meas_et, unit="s")
             tmp.append(df)
         dfs = pd.concat(tmp)
         dfs.set_index("datetime", inplace=True)
@@ -318,15 +309,9 @@ class gas_flux_calculator:
             # dfa["datetime"] = dfa["datetime"].dt.tz_localize("UTC")
             # dfa["datetime"] = dfa["datetime"].tz_convert(self.data.index.tz)
             dfa["start_time"] = dfa["datetime"]
-            dfa["close_time"] = dfa["datetime"] + pd.to_timedelta(
-                self.ch_ct, unit="s"
-            )
-            dfa["open_time"] = dfa["datetime"] + pd.to_timedelta(
-                self.ch_ot, unit="s"
-            )
-            dfa["end_time"] = dfa["datetime"] + pd.to_timedelta(
-                self.meas_et, unit="s"
-            )
+            dfa["close_time"] = dfa["datetime"] + pd.to_timedelta(self.ch_ct, unit="s")
+            dfa["open_time"] = dfa["datetime"] + pd.to_timedelta(self.ch_ot, unit="s")
+            dfa["end_time"] = dfa["datetime"] + pd.to_timedelta(self.meas_et, unit="s")
             tmp.append(dfa)
 
         dfs = pd.concat(tmp)
@@ -375,9 +360,7 @@ class gas_flux_calculator:
             timestamp in datetime.datetime format
         """
         if self.file_ts_fmt == strftime_to_regex(self.file_ts_fmt):
-            logger.info(
-                "No strftime formatting in filename, returning current date"
-            )
+            logger.info("No strftime formatting in filename, returning current date")
             return datetime.datetime.today()
         date = search(strftime_to_regex(self.file_ts_fmt), datestring).group(0)
         return datetime.datetime.strptime(date, self.file_ts_fmt)
@@ -408,9 +391,7 @@ class gas_flux_calculator:
         #     Should generate filenames at least one timestep past the
         #     end_date to make sure the whole timeframe is covered.
         while current_date <= end_date:
-            filename = current_date.strftime(
-                config.get("file_timestamp_format")
-            )
+            filename = current_date.strftime(config.get("file_timestamp_format"))
             # if the filename in current loop is the same as the one
             # generated in previous loop, it means there's no timestamp
             # in the filename, assumsely there's only one file that
@@ -519,9 +500,7 @@ class gas_flux_calculator:
             # measurement doesn't really have a closing time, the
             # variable is named like this
             df["start_time"] = df["datetime"]
-            df["end_time"] = df["datetime"] + pd.to_timedelta(
-                self.meas_et, unit="s"
-            )
+            df["end_time"] = df["datetime"] + pd.to_timedelta(self.meas_et, unit="s")
             # diff = df.iloc[0]["end_time"] - df.iloc[0]["start_time"] * (
             #     self.meas_perc * 100
             # )
@@ -532,9 +511,7 @@ class gas_flux_calculator:
                 get_time_diff(df.iloc[0]["start_time"], df.iloc[0]["end_time"])
             ) * (self.meas_perc / 100)
             df["open_time"] = df["end_time"] - pd.to_timedelta(diff, unit="s")
-            df["close_time"] = df["start_time"] + pd.to_timedelta(
-                diff, unit="s"
-            )
+            df["close_time"] = df["start_time"] + pd.to_timedelta(diff, unit="s")
             # df["end_time"] = df["datetime"] + pd.to_timedelta(
             #     self.meas_et, unit="s"
             # )
@@ -590,9 +567,7 @@ class gas_flux_calculator:
 
     def parse_skiprows(self, skiprows):
         def parser(x):
-            return [
-                int(item) if item.isdigit() else item for item in x.split(",")
-            ]
+            return [int(item) if item.isdigit() else item for item in x.split(",")]
 
         value = parser(skiprows)
         if len(value) == 1:
@@ -602,16 +577,12 @@ class gas_flux_calculator:
     def parse_read_csv_args(self, args_dict):
         # Define converters for specific arguments known to require non-string types
         converters = {
-            "header": lambda x: int(x)
-            if x.isdigit()
-            else None
-            if x.lower() == "none"
-            else x,
-            "index_col": lambda x: int(x)
-            if x.isdigit()
-            else None
-            if x.lower() == "none"
-            else x,
+            "header": lambda x: (
+                int(x) if x.isdigit() else None if x.lower() == "none" else x
+            ),
+            "index_col": lambda x: (
+                int(x) if x.isdigit() else None if x.lower() == "none" else x
+            ),
             "usecols": lambda x: [
                 int(item) if item.isdigit() else item for item in x.split(",")
             ],
@@ -643,31 +614,30 @@ class gas_flux_calculator:
         for cfg in self.aux_cfgs:
             merge_met = cfg.get("merge_method")
             name = cfg.get("name")
-            logger.info(f"merging {name} with {merge_met}")
+            logger.info(f"merging {name} with method {merge_met}")
+            msg = logger.debug(f"Merged {name} with method {merge_met}")
 
             if merge_met == "timeid":
                 merged = merge_by_dtx_and_id(self.merged, cfg)
                 if merged is not None:
                     self.merged = merged
-                    logger.debug(f"Merged {name} with {merge_met}")
+                    msg
 
             if merge_met == "id":
                 merged = merge_by_id(self.merged, cfg)
                 if merged is not None:
                     self.merged = merged
-                    logger.debug(f"Merged {name} with {merge_met}")
+                    msg
 
             if merge_met == "time":
                 merged = merge_by_dtx(self.merged, cfg)
                 if merged is not None:
                     self.merged = merged
-                    logger.debug(f"Merged {name} with {merge_met}")
+                    msg
 
         if len(self.aux_cfgs) == 0:
             self.merged = self.merged
-        logger.info(
-            f"Completed merging {len(self.aux_cfgs)} auxiliary datasets."
-        )
+        logger.info(f"Completed merging {len(self.aux_cfgs)} auxiliary datasets.")
 
     def check_valid(self):
         # NOTE: Should this be moved inside one of the existing loops?
