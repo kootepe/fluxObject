@@ -9,7 +9,6 @@ import pandas as pd
 from pathlib import Path
 from traceback import format_exc
 from re import search
-from functools import partial
 
 # modules from this repo
 from tools.filter import (
@@ -75,7 +74,6 @@ class gas_flux_calculator:
         self.create_dfs()
         self.aux_cfgs = parse_aux_cfg(self.cfg)
         self.aux_cfgs = read_aux_data(self.aux_cfgs, self.start_ts, self.end_ts)
-        # self.read_aux_data()
         self.merge_aux()
         self.w_merged = self.merged
         self.check_valid()
@@ -89,7 +87,6 @@ class gas_flux_calculator:
             self.create_xlsx()
         else:
             logger.info("Excel creation disabled in .ini, skipping")
-        self.ready_data.to_csv("new_all.csv")
 
     def init_meas_reader(self, instrument_class, measurement_class):
         if self.instrument_class is None:
@@ -192,7 +189,6 @@ class gas_flux_calculator:
                     )
                 self.meas_t_files = self.file_finder(self.meas_t_dict)
                 self.data = self.read_meas()
-                print(self.data)
                 self.time_data = self.read_man_meas_f()
             else:
                 self.data = read_ifdb(
@@ -646,7 +642,7 @@ class gas_flux_calculator:
     def check_valid(self):
         # NOTE: Should this be moved inside one of the existing loops?
         logger.debug("Checking validity")
-        # logger.debug(self.merged)
+        logger.debug(self.merged)
         dfa = []
         for date in self.fltr_tuple:
             df = date_filter(self.merged, date)

@@ -37,5 +37,5 @@ def read_files(cfg):
 
 
 def read_db(cfg, s_ts, e_ts):
-    df = read_aux_ifdb(cfg, str(s_ts), (e_ts))
+    df = read_aux_ifdb(cfg, str(s_ts), str(e_ts))
     return df

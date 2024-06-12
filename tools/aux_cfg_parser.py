@@ -14,8 +14,6 @@ def parse_aux_cfg(main_cfg):
     # config sections to dictionaries
     aux_cfg_sects = [dict(main_cfg.items(c)) for c in cfg_names]
     influxdb_dict = dict(main_cfg.items("influxDB"))
-    # s_ts = main_cfg.items("defaults").get("start_ts")
-    # e_ts = main_cfg.items("defaults").get("end_ts")
     # initiate list for the parsed configs
     aux_cfgs = []
     for cfg in aux_cfg_sects:

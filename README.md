@@ -1,5 +1,5 @@
 # Flux calculator
-Script for calculating gas fluxes from automatic chamber and manual
+Script for calculating gas fluxes from automatic chambers and manual
 measurements measured with LI-COR LI-7810.
 
 # Intro
@@ -7,9 +7,8 @@ measurements measured with LI-COR LI-7810.
 Script is mainly meant to be automated with a docker container, but it
 can just as well be ran manually whenever you want.
 
-Currently there are no file outputs, by default the script pushes data
-into influxdb. Excel file outputs will be added and some point, and I
-also have some plans for a jupyter notebook output.
+Currently there's only an excel output and the possibility to push results into
+influxdb.
 
 ## ini files
 The ini files will define where to read files, what files to read, what

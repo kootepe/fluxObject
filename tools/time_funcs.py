@@ -1,8 +1,34 @@
 import datetime
 import re
 import logging
+from numpy import array
+from pandas.api.types import is_datetime64_any_dtype
 
 logger = logging.getLogger("defaultLogger")
+
+
+def rm_tz(df):
+    """
+    Localizes datetime columns in a pandas DataFrame by removing timezone information.
+
+    Parameters
+    ----------
+    - df: A pandas DataFrame.
+
+    Returns
+    -------
+    - The DataFrame with timezone information removed from datetime columns.
+    """
+
+    for col in df.columns:
+        # Check if the column is a datetime type
+        if is_datetime64_any_dtype(df[col]):
+            # Check if the column has timezone information
+            if df[col].dt.tz is not None:
+                # logger.debug(f"Removed tz info from colum: {col}")
+                # Remove timezone information
+                df[col] = df[col].dt.tz_localize(None)
+    return df
 
 
 def ordinal_timer(time):
@@ -19,11 +45,14 @@ def ordinal_timer(time):
     time -- numpy.array
         Array of float timestamps
     """
-    h, m, s = map(int, time.split(":"))
-    sec = 60
-    secondsInDay = 86400
-    ordinal_time = round((sec * (sec * h) + sec * m + s) / secondsInDay, 10)
-    return ordinal_time
+    # Split the HH:MM:SS strings; this creates a list of lists
+    split_times = [time.split(":") for time in time]
+    # Convert split times to hours, minutes, and seconds, and calculate the fractional day
+    ordinal_times = array(
+        [(int(h) * 3600 + int(m) * 60 + int(s)) / 86400 for h, m, s in split_times]
+    ).round(10)
+
+    return ordinal_times
 
 
 def strftime_to_regex(file_timestamp_format):
@@ -102,12 +131,61 @@ def extract_date(file_timestamp_format, datestring):
     #    print('Files are found in folder but no matching file found, is the format of the timestamp correct?')
     #    return None
     if file_timestamp_format == strftime_to_regex(file_timestamp_format):
-        logger.info(
-            "No strftime formatting in filename, returning current date")
+        logger.info("No strftime formatting in filename, returning current date")
         return datetime.datetime.today()
-    date = re.search(strftime_to_regex(
-        file_timestamp_format), datestring).group(0)
+    date = re.search(strftime_to_regex(file_timestamp_format), datestring).group(0)
     # class chamber_cycle calls this method and using an instance
     # variable here might cause issues if the timestamp formats
     # should be different
     return datetime.datetime.strptime(date, file_timestamp_format)
+
+
+def get_time_diff(start, stop):
+    return (stop - start).total_seconds()
+
+
+def convert_seconds(time_in_sec):
+    if time_in_sec < 60:
+        return f"{round(time_in_sec)} seconds"
+    elif time_in_sec < 3600:
+        minutes = round(time_in_sec // 60)
+        seconds = round(time_in_sec % 60)
+        return f"{minutes} minutes, {seconds} seconds"
+    else:
+        hours = round(time_in_sec // 3600)
+        remainder = round(time_in_sec % 3600)
+        minutes = round(remainder // 60)
+        seconds = round(remainder % 60)
+        return f"{hours} hours, {minutes} minutes, {seconds} seconds"
+
+
+def convert_timestamp_format(
+    timestamp_str, output_format, input_format="%Y-%m-%d %H:%M:%S"
+):
+    """
+    Convert string timestamps
+
+    Parameters
+    ----------
+    timestamp_str : str
+        String timestamp
+
+    output_format : str
+        Format which you want the output timestamp to be
+
+    input_format : str
+        Format of the input string
+
+
+    Returns
+    -------
+    converted_timestamp : str
+        timestamp_str converted to the format of output_format
+    """
+    # Parse the input timestamp string to a datetime object
+    dt_obj = datetime.datetime.strptime(timestamp_str, input_format)
+
+    # Format the datetime object to the desired output format
+    converted_timestamp = dt_obj.strftime(output_format)
+
+    return converted_timestamp
