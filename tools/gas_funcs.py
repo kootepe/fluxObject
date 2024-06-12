@@ -60,6 +60,8 @@ def calculate_gas_flux(data, measurement_name, chamber_height):
         ),
         6,
     )
+    # logger.debug(f"{data.index[0]} flux: {flux[0][0]}")
+    # logger.debug(f"{data.index[0]} flux: {flux.iloc[0]}")
 
     return flux
 

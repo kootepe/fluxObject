@@ -6,9 +6,17 @@ __pycache__
 *.gz
 *.tex
 *.fdb_latexmk
-# *.csv
+*.csv
+*.ipynb
 .jukit
 aux
 figs
 inifiles
 *.aux
+forsus
+snow_stuff
+eero_format
+*excel_directory*
+oula_flux_xlsx
+.~lock*
+student_fluxes_june
