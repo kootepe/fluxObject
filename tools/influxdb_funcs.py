@@ -139,7 +139,7 @@ def read_ifdb(ifdb_dict, meas_dict, start_ts=None, stop_ts=None):
         try:
             df = q_api.query_data_frame(query)[["_time"] + fields]
         except Exception:
-            logger.info("No data with query.")
+            logger.info(f"No data with query:\n {query}")
             return None
 
         df = df.rename(columns={"_time": "datetime"})
