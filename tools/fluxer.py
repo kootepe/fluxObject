@@ -73,7 +73,7 @@ class gas_flux_calculator:
 
         self.create_dfs()
         self.aux_cfgs = parse_aux_cfg(self.cfg)
-        self.aux_cfgs = read_aux_data(self.aux_cfgs)
+        self.aux_cfgs = read_aux_data(self.aux_cfgs, self.start_ts, self.end_ts)
         self.merge_aux()
         self.w_merged = self.merged
         self.check_valid()

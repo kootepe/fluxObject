@@ -3,7 +3,7 @@ from influxdb_client.client.write_api import SYNCHRONOUS
 import logging
 from urllib3.exceptions import NewConnectionError
 import datetime
-from tools.time_funcs import ordinal_timer, get_time_diff
+from tools.time_funcs import ordinal_timer, get_time_diff, convert_timestamp_format
 import pandas as pd
 
 logger = logging.getLogger("defaultLogger")
@@ -78,7 +78,7 @@ def mk_ifdb_ts(ts):
     return ts.strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
-def read_aux_ifdb(dict):
+def read_aux_ifdb(dict, s_ts=None, e_ts=None):
     logger.debug(dict)
     # logger.debug(f"Running query from {start_ts} to {stop_ts}")
 
@@ -95,12 +95,17 @@ def read_aux_ifdb(dict):
     #     stop = mk_ifdb_ts(stop_ts)
     # else:
     #     stop = "now()"
-    start = "2024-06-09T00:00:00Z"
-    stop = "now()"
+
+    logger.debug(s_ts)
+    if s_ts is not None:
+        s_ts = convert_timestamp_format(s_ts, "%Y-%m-%dT%H:%M:%SZ")
+        logger.debug(s_ts)
+    if e_ts is not None:
+        e_ts = convert_timestamp_format(e_ts, "%Y-%m-%dT%H:%M:%SZ")
 
     with init_client(dict) as client:
         q_api = client.query_api()
-        query = mk_query(bucket, start, stop, measurement, fields)
+        query = mk_query(bucket, s_ts, e_ts, measurement, fields)
         logger.debug("Query:\n" + query)
         try:
             df = q_api.query_data_frame(query)[["_time"] + fields]

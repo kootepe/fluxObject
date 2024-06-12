@@ -5,7 +5,7 @@ from tools.influxdb_funcs import read_aux_ifdb
 logger = logging.getLogger("defaultLogger")
 
 
-def read_aux_data(aux_cfgs):
+def read_aux_data(aux_cfgs, s_ts=None, e_ts=None):
     for f in aux_cfgs:
         # NOTE: implement better checks if data is in db or in files
         if f.get("files"):
@@ -18,7 +18,7 @@ def read_aux_data(aux_cfgs):
             f["df"] = dfs
         # NOTE: implement better checks if data is in db or in files
         if f.get("bucket"):
-            df = read_db(f)
+            df = read_db(f, s_ts, e_ts)
             df = df.rename(columns={f.get("field"): f.get("name")})
             f["df"] = df
     return aux_cfgs
@@ -36,6 +36,6 @@ def read_files(cfg):
     return dfs
 
 
-def read_db(cfg):
-    df = read_aux_ifdb(cfg)
+def read_db(cfg, s_ts, e_ts):
+    df = read_aux_ifdb(cfg, str(s_ts), str(e_ts))
     return df
