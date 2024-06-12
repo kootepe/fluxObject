@@ -164,3 +164,35 @@ def convert_seconds(time_in_sec):
         minutes = round(remainder // 60)
         seconds = round(remainder % 60)
         return f"{hours} hours, {minutes} minutes, {seconds} seconds"
+
+
+def convert_timestamp_format(
+    timestamp_str, output_format, input_format="%Y-%m-%d %H:%M:%S"
+):
+    """
+    Convert string timestamps
+
+    Parameters
+    ----------
+    timestamp_str : str
+        String timestamp
+
+    output_format : str
+        Format which you want the output timestamp to be
+
+    input_format : str
+        Format of the input string
+
+
+    Returns
+    -------
+    converted_timestamp : str
+        timestamp_str converted to the format of output_format
+    """
+    # Parse the input timestamp string to a datetime object
+    dt_obj = datetime.datetime.strptime(timestamp_str, input_format)
+
+    # Format the datetime object to the desired output format
+    converted_timestamp = dt_obj.strftime(output_format)
+
+    return converted_timestamp
