@@ -49,10 +49,7 @@ def ordinal_timer(time):
     split_times = [time.split(":") for time in time]
     # Convert split times to hours, minutes, and seconds, and calculate the fractional day
     ordinal_times = array(
-        [
-            (int(h) * 3600 + int(m) * 60 + int(s)) / 86400
-            for h, m, s in split_times
-        ]
+        [(int(h) * 3600 + int(m) * 60 + int(s)) / 86400 for h, m, s in split_times]
     ).round(10)
 
     return ordinal_times
@@ -134,13 +131,9 @@ def extract_date(file_timestamp_format, datestring):
     #    print('Files are found in folder but no matching file found, is the format of the timestamp correct?')
     #    return None
     if file_timestamp_format == strftime_to_regex(file_timestamp_format):
-        logger.info(
-            "No strftime formatting in filename, returning current date"
-        )
+        logger.info("No strftime formatting in filename, returning current date")
         return datetime.datetime.today()
-    date = re.search(
-        strftime_to_regex(file_timestamp_format), datestring
-    ).group(0)
+    date = re.search(strftime_to_regex(file_timestamp_format), datestring).group(0)
     # class chamber_cycle calls this method and using an instance
     # variable here might cause issues if the timestamp formats
     # should be different
