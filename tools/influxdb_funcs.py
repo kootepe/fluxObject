@@ -174,7 +174,7 @@ def add_cols_to_ifdb_q(df, meas_dict):
     df["is_valid"] = ""
 
     logger.info("Calculating ordinal times.")
-    df["ordinal_date"] = pd.to_dt(df["DATE"]).map(datetime.datetime.toordinal)
+    df["ordinal_date"] = pd.to_datetime(df["DATE"]).map(datetime.datetime.toordinal)
     df["ordinal_time"] = ordinal_timer(df["TIME"].values)
     df["ordinal_datetime"] = df["ordinal_time"] + df["ordinal_date"]
     df.set_index("datetime", inplace=True)
