@@ -78,6 +78,43 @@ def mk_ifdb_ts(ts):
     return ts.strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
+def read_aux_ifdb(dict):
+    logger.debug(dict)
+    # logger.debug(f"Running query from {start_ts} to {stop_ts}")
+
+    bucket = dict.get("bucket")
+    measurement = dict.get("measurement_name")
+    fields = list(dict.get("field").split(","))
+
+    # if start_ts is not None:
+    #     start = mk_ifdb_ts(start_ts)
+    # else:
+    #     start = 0
+    #
+    # if stop_ts is not None:
+    #     stop = mk_ifdb_ts(stop_ts)
+    # else:
+    #     stop = "now()"
+    start = "2024-06-09T00:00:00Z"
+    stop = "now()"
+
+    with init_client(dict) as client:
+        q_api = client.query_api()
+        query = mk_query(bucket, start, stop, measurement, fields)
+        logger.debug("Query:\n" + query)
+        try:
+            df = q_api.query_data_frame(query)[["_time"] + fields]
+        except Exception:
+            logger.info(f"No data with query:\n {query}")
+            return None
+
+        df = df.rename(columns={"_time": "datetime"})
+        df["datetime"] = df.datetime.dt.tz_convert(None)
+        df.set_index("datetime", inplace=True)
+        logger.debug(f"\n{df}")
+        return df
+
+
 def read_ifdb(ifdb_dict, meas_dict, start_ts=None, stop_ts=None):
     logger.debug(f"Running query from {start_ts} to {stop_ts}")
 
