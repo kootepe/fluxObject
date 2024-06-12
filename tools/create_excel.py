@@ -13,10 +13,14 @@ import matplotlib.patches as patches
 
 from matplotlib.dates import date2num
 
+from tools.time_funcs import rm_tz
+
 logger = logging.getLogger("defaultLogger")
 
 
 def create_excel(df, path, sort=None, name=None):
+    # excel can't handle timestamps with timezones
+    df = rm_tz(df)
     # initiate worksheet
     wb = Workbook()
     ws1 = wb.active
