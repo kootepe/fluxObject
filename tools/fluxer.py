@@ -165,6 +165,7 @@ class gas_flux_calculator:
             if self.defs.get("limit_data"):
                 if int(self.defs.get("limit_data")) > 0:
                     to_add = int(self.defs.get("limit_data"))
+                    logger.info(f"Limiting data from {s_ts} + {to_add} days")
                     e_ts = s_ts + datetime.timedelta(days=to_add)
         if not s_ts and e_ts:
             logger.debug(f"No start ts, processing all data until {e_ts}")
@@ -697,6 +698,7 @@ class gas_flux_calculator:
         """
         logger.debug(f"Calculating gas flux for {measurement_name}.")
         # TODO: Clean this mess up
+        # BUG: Crash here if dataframe is empty in AC mode?
         meas_name = measurement_name
         measurement_list = []
         # self.calc_tuple = [
@@ -841,6 +843,7 @@ class gas_flux_calculator:
             sort = None
             create_excel(data, self.excel_path, sort)
         create_excel(self.ready_data, self.excel_path, sort, "all_data")
+        logger.info(f"Saved output .xlsx in {self.excel_path}")
 
     # def ifdb_push():
     #     pass
@@ -867,6 +870,7 @@ class li7200:
         self.gas_cols = ["CO2", "CH4"]
 
     def read_file(self, f):
+        li_id = search(r"TG10-\d\d\d\d\d")
         df = pd.read_csv(
             f,
             skiprows=self.skiprows,
@@ -874,6 +878,7 @@ class li7200:
             usecols=self.usecols,
             dtype=self.dtypes,
         )
+        df["li_id"] = li_id
         df["datetime"] = pd.to_datetime(
             df[self.date_col] + df[self.time_col],
             format=self.date_fmt + self.time_fmt,
