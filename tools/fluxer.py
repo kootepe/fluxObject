@@ -116,6 +116,7 @@ class gas_flux_calculator:
         # this defines chamber close and open time for manual mode
         self.meas_t_dict = dict(config.items("manual_measurement_time_data"))
         # this defines chamber close and  open times for ac mode
+        self.ini_name = self.defs.get("name")
         self.chamber_cycle_file = self.defs.get("chamber_cycle_file")
         self.use_ini_dates = self.defs.get("use_ini_dates")
         self.mode = self.defs.get("mode")
