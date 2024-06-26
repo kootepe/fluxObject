@@ -56,6 +56,8 @@ from tools.aux_data_reader import read_aux_data
 logger = logging.getLogger("defaultLogger")
 
 
+# BUG: Feeding one big measurement file instead of several smaller ones causes
+# the script to not honor the starting and ending times
 class gas_flux_calculator:
     def __init__(
         self, inifile, env_vars, instrument_class=None, measurement_class=None
@@ -715,6 +717,7 @@ class gas_flux_calculator:
                 measurement_list.append(mdf)
                 continue
 
+            logger.info("Calculating slope")
             slope = calculate_slope(mdf, date, meas_name)
             if np.isnan(slope):
                 logger.info(f"slope returned as NaN at {date[0]}")
@@ -722,6 +725,7 @@ class gas_flux_calculator:
                 continue
             mdf[f"{meas_name}_slope"] = slope
 
+            logger.info("Calculating pearsons")
             pearsons = calculate_pearsons_r(mdf, date, meas_name)
             if np.isnan(pearsons):
                 logger.debug(f"pearsonsR returned as NaN at {date[0]}")
@@ -729,6 +733,7 @@ class gas_flux_calculator:
                 continue
             mdf[f"{meas_name}_pearsons_r"] = pearsons
 
+            logger.info("Calculating gas flux")
             flux = calculate_gas_flux(
                 mdf,
                 meas_name,
@@ -741,6 +746,7 @@ class gas_flux_calculator:
 
             measurement_list.append(mdf)
         all_measurements_df = pd.concat(measurement_list)
+        logger.info("Flux calculations completed")
         return all_measurements_df
 
     def summarize(self):
