@@ -89,6 +89,7 @@ class gas_flux_calculator:
             self.create_xlsx()
         else:
             logger.info("Excel creation disabled in .ini, skipping")
+        logger.info(f"Run completed.")
 
     def init_meas_reader(self, instrument_class, measurement_class):
         if self.instrument_class is None:
@@ -707,6 +708,7 @@ class gas_flux_calculator:
         # ]
 
         # NOTE: not using filter_tuple here will cause issuess in excel creation
+        logger.info(f"Starting gas flux calculations.")
         for date in self.fltr_tuple:
             mdf = date_filter(data, date).copy()
             if mdf.empty:
@@ -720,7 +722,7 @@ class gas_flux_calculator:
                 measurement_list.append(mdf)
                 continue
 
-            logger.info("Calculating slope")
+            # logger.info("Calculating slope")
             slope = calculate_slope(mdf, date, meas_name)
             if np.isnan(slope):
                 logger.info(f"slope returned as NaN at {date[0]}")
@@ -728,7 +730,7 @@ class gas_flux_calculator:
                 continue
             mdf[f"{meas_name}_slope"] = slope
 
-            logger.info("Calculating pearsons")
+            # logger.info("Calculating pearsons")
             pearsons = calculate_pearsons_r(mdf, date, meas_name)
             if np.isnan(pearsons):
                 logger.debug(f"pearsonsR returned as NaN at {date[0]}")
@@ -736,7 +738,7 @@ class gas_flux_calculator:
                 continue
             mdf[f"{meas_name}_pearsons_r"] = pearsons
 
-            logger.info("Calculating gas flux")
+            # logger.info("Calculating gas flux")
             flux = calculate_gas_flux(
                 mdf,
                 meas_name,
@@ -871,7 +873,7 @@ class li7200:
         self.gas_cols = ["CO2", "CH4"]
 
     def read_file(self, f):
-        li_id = search(r"TG10-\d\d\d\d\d")
+        li_id = search(r"TG10-\d\d\d\d\d", f.name)
         df = pd.read_csv(
             f,
             skiprows=self.skiprows,
