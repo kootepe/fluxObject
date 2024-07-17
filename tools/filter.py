@@ -49,8 +49,10 @@ def mk_fltr_tuple(df, close="close_time", open="open_time"):
 
 
 def subs_from_fltr_tuple(filter_tuple, percentage):
-    """Remove percentage from both ends of the filter tuple, eg. shorten the
-    time between the timestamps"""
+    """
+    'Remove' percentage from both ends of the filter tuple, eg. shorten the
+    time between the timestamps
+    """
     time_difference = (filter_tuple[1] - filter_tuple[0]).seconds
     time_to_remove = pd.to_timedelta(time_difference * (percentage / 100), "s")
     start = filter_tuple[0] + time_to_remove
