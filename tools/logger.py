@@ -1,10 +1,23 @@
 import logging
 import logging.config
 
-import logging
-
 
 class CustomFormatter(logging.Formatter):
+
+    COLORS = {
+        logging.DEBUG: "\033[36m",  # Cyan
+        logging.INFO: "\033[32m",  # Green
+        logging.WARNING: "\033[33m",  # Yellow
+        logging.ERROR: "\033[31m",  # Red
+        logging.CRITICAL: "\033[35m",  # Magenta
+    }
+    RESET = "\033[0m"
+
+    def format(self, record):
+        log_color = self.COLORS.get(record.levelno)
+        log_message = super().format(record)
+        return f"{log_color}{log_message}{self.RESET}"
+
     def formatTime(self, record, datefmt=None):
         # Original formatTime provides time up to seconds
         original_formatted_time = super().formatTime(
