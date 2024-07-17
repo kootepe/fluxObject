@@ -19,6 +19,7 @@ def date_filter_list(data_to_filter, filter_tuple_list):
 def date_filter(data_to_filter, filter_tuple):
     """
     Filters dataframes with two dates provided in a tuple
+    Equivalent to using a boolean mask but considerably faster.
 
     args:
     ---
@@ -31,10 +32,12 @@ def date_filter(data_to_filter, filter_tuple):
     ---
     Data that is between these timestamps
     """
+    # NOTE: this check should probably come before, and it should already be sorted
+    # before getting to this point...
     if not data_to_filter.index.is_monotonic_increasing:
         data_to_filter.sort_index(inplace=True)
-    start_time = data_to_filter.index.searchsorted(filter_tuple[0])
-    end_time = data_to_filter.index.searchsorted(filter_tuple[1])
+    start_time = data_to_filter.index.searchsorted(filter_tuple[0], side="left")
+    end_time = data_to_filter.index.searchsorted(filter_tuple[1], side="left")
     df = data_to_filter.iloc[start_time:end_time]
     return df
 
