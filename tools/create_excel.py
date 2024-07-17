@@ -37,17 +37,21 @@ def create_excel(df, path, sort=None, name=None):
         xlsx_name = f"{path}/{file_date}.xlsx"
     else:
         xlsx_name = f"{path}/{name}.xlsx"
+    logger.debug(f"Creating file {xlsx_name}.")
 
     # dataframe rows to excel rows
+    logger.debug(f"Dataframe to excel rows")
     for idx, r in enumerate(dataframe_to_rows(df, index=False, header=True)):
         ws1.append(r)
         ws1.row_dimensions[idx + 1].height = 15
 
     # columns which are appended with "fig_dir_" have paths to figs
+    logger.debug(f"{df.columns}")
     cols = [d for d in df.columns if "fig_dir_" in d]
     # each column with plot paths to list
     figs = [df[col].to_list() for col in cols]
 
+    logger.info(f"Adding figs to xlsx.")
     for idxx, fig_ls in enumerate(figs):
         # add column for each different gas
         ws1.insert_cols(idxx + 1)
@@ -69,6 +73,7 @@ def create_excel(df, path, sort=None, name=None):
         path.mkdir(parents=True)
     # NOTE: CHECK IF FILE EXISTS AND USE ANOTHER NAME IF IT DOES
     wb.save(xlsx_name)
+    logger.info(f"Saved .xlsx in {xlsx_name}")
 
 
 def create_fig():
@@ -101,9 +106,7 @@ def create_sparkline(df, filename, gas, fig, ax, rects):
     ax.set_xticks([], [])
     ax.set_yticks([], [])
     canvas = FigureCanvas(fig)
-    canvas.print_figure(
-        filename, dpi=150, bbox_inches="tight", pad_inches=0.005
-    )
+    canvas.print_figure(filename, dpi=150, bbox_inches="tight", pad_inches=0.005)
     ax.cla()
 
 
