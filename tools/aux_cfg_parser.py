@@ -13,23 +13,33 @@ def parse_aux_cfg(main_cfg):
     cfg_names = [s for s in main_cfg.sections() if "aux_data_" in s]
     # config sections to dictionaries
     aux_cfg_sects = [dict(main_cfg.items(c)) for c in cfg_names]
+    logger.info(f"Attempting to parse {len(aux_cfg_sects)} aux configs.")
     influxdb_dict = dict(main_cfg.items("influxDB"))
     # initiate list for the parsed configs
     aux_cfgs = []
     for cfg in aux_cfg_sects:
-        if cfg.get("type") == "file":
+        data_type = cfg.get("type")
+        data_name = cfg.get("name")
+        if data_type != "file" and data_type != "db":
+            logger.info(
+                f"Aux cfg {cfg.get('name')} doesn't have proper type for merging, type must be 'db' or 'file'"
+            )
+            continue
+        logger.info(f"Attempting to parse {data_name} cfg with type {data_type}")
+        if data_type == "file":
             new_dict = parse_file_cfg(cfg)
             if new_dict:
                 aux_cfgs.append(new_dict)
             else:
                 continue
-        if cfg.get("type") == "db":
+        if data_type == "db":
             new_db_dict = parse_df_cfg(cfg, influxdb_dict)
             if new_db_dict:
                 aux_cfgs.append(new_db_dict)
             else:
                 continue
 
+    logger.debug(f"Parsed {len(aux_cfgs)} aux cfgs")
     return aux_cfgs
 
 
@@ -41,6 +51,8 @@ def parse_df_cfg(cfg, ifdb_cfg):
 def parse_file_cfg(cfg):
     name_key = cfg["name"]
     path = Path(cfg.get("path"))
+    # NOTE: rglob is used so multiple files can be matched, needs regex
+    # implementation...
     files = list(path.rglob(cfg.get("file_name")))
     if len(files) == 0:
         logger.debug(f"No files found for aux_data {name_key}, skipped.")
@@ -58,6 +70,7 @@ def parse_file_cfg(cfg):
         "direction",
         "tolerance",
         "type",
+        "id_col",
     ]
 
     # create dict with pandas read_csv compatible args
