@@ -51,6 +51,7 @@ from tools.create_excel import (
 
 from tools.aux_cfg_parser import parse_aux_cfg
 from tools.aux_data_reader import read_aux_data
+from tools.validation import check_valid
 
 
 logger = logging.getLogger("defaultLogger")
@@ -78,7 +79,7 @@ class gas_flux_calculator:
         self.aux_cfgs = read_aux_data(self.aux_cfgs, self.start_ts, self.end_ts)
         self.merge_aux()
         self.w_merged = self.merged
-        self.check_valid()
+        check_valid(self.merged, self.fltr_tuple, self.device)
         gases = self.device.gas_cols
         for gas in gases:
             self.merged = self.calc_slope_pearsR(self.merged, gas)
@@ -643,41 +644,6 @@ class gas_flux_calculator:
         if len(self.aux_cfgs) == 0:
             self.merged = self.merged
         logger.info(f"Completed merging {len(self.aux_cfgs)} auxiliary datasets.")
-
-    def check_valid(self):
-        # NOTE: Should this be moved inside one of the existing loops?
-        logger.debug("Checking validity")
-        logger.debug(self.merged)
-        dfa = []
-        for date in self.fltr_tuple:
-            df = date_filter(self.merged, date)
-            has_errors = df[self.device.diag_col].sum() != 0
-            if "air_temperature" not in df.columns:
-                no_air_temp = True
-            else:
-                no_air_temp = df["air_temperature"].isna().all()
-            if "air_pressure" not in df.columns:
-                no_air_pressure = True
-            else:
-                no_air_pressure = df["air_pressure"].isna().all()
-            is_empty = df.empty
-            if has_errors or no_air_temp or no_air_pressure or is_empty:
-                checks = []
-                if has_errors:
-                    checks.append("has errors,")
-                if no_air_temp:
-                    checks.append("no air temp,")
-                if no_air_pressure:
-                    checks.append("no air pressure,")
-                if is_empty:
-                    checks.append("no data,")
-                checks_str = "".join(checks)
-                df.loc[:, "checks"] += checks_str
-                df.loc[:, "is_valid"] = False
-
-            dfa.append(df)
-        dfa = pd.concat(dfa)
-        self.merged = dfa
 
     def calc_slope_pearsR(self, data, measurement_name):
         """
