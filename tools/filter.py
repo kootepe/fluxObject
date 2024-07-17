@@ -70,3 +70,14 @@ def add_to_fltr_tuple(filter_tuple, percentage):
     end = filter_tuple[1] + time_to_remove
     time_tuple = (start, end, filter_tuple[2])
     return time_tuple
+
+
+def add_min_to_fltr_tuple(filter_tuple):
+    """Add percentage to both ends of the filter tuple, eg. lengthen the time
+    between the timestamps"""
+    # time_difference = (filter_tuple[1] - filter_tuple[0]).seconds
+    time_to_remove = pd.to_timedelta(1, "min")
+    start = filter_tuple[0] - time_to_remove
+    end = filter_tuple[1] + time_to_remove
+    time_tuple = (start, end, filter_tuple[2])
+    return time_tuple
