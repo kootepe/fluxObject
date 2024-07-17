@@ -28,16 +28,14 @@ def calculate_gas_flux(
 
     is_valid = True
     df = data.copy()
-    # from mm to m
+
     if "snowdepth" not in df.columns:
         df["snowdepth"] = 0
 
-    height = (chamber_height * 0.001) - (df["snowdepth"].mean() / 100)
-
+    # this value must in cm
+    h = df.calc_height.mean()
     # slope of the linear fit of the measurement
-    slope = df[f"{measurement_name}_slope"]
-    # chamber_height
-    h = df["height"] = height
+    slope = df[f"{measurement_name}_slope"].mean()
     # value to convert ppb to ppm etc.
     conv = 1
     # molar mass of co2. C mass 12 and O mass 16
@@ -53,7 +51,6 @@ def calculate_gas_flux(
             logger.debug("NO AIR TEMPERATURE IN FILE, USING DEFAULT")
             t = def_temp
         try:
-            # HPa to Pa
             p = df["air_pressure"].mean()
         except Exception:
             logger.debug("NO AIR PRESSURE IN FILE, USING DEFAULT")
@@ -69,19 +66,34 @@ def calculate_gas_flux(
         # ch4 measurement is in ppb, convert to ppm
         conv = df["conv"] = 1000
 
+    # flux = round(
+    #     (
+    #         (slope / conv)
+    #         * (60 / 1000000)
+    #         * (h)
+    #         * ((m * (p * 100)) / (r * (273.15 + t)))
+    #         * 1000
+    #         * 60
+    #     ),
+    #     6,
+    # )
+    # this function is identical to excel
     flux = round(
-        (
-            (slope / conv)
-            * (60 / 1000000)
-            * (h)
-            * ((m * (p * 100)) / (r * (273.15 + t)))
-            * 1000
-            * 60
-        ),
-        6,
+        ((slope / conv) * 60)
+        * h
+        * m
+        * p
+        * 100
+        / 1000000
+        / r
+        / (273.15 + t)
+        * 1000
+        * 60,
+        8,
     )
-    # logger.debug(f"{data.index[0]} flux: {flux[0][0]}")
-    # logger.debug(f"{data.index[0]} flux: {flux.iloc[0]}")
+    logger.debug(
+        f"(({slope} / {conv} * 60 * {h} * {m} * {p} * 100 / 1000000 / 8.314 / (273.15 + {t}) * 1000 * 60"
+    )
 
     return flux
 
