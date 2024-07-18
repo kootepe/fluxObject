@@ -28,10 +28,17 @@ def read_files(cfg):
     dfs = []
     for file in cfg.get("files"):
         argss = cfg.get("args")
-        df = pd.read_csv(file, **argss)
+        logger.debug(cfg)
+        if len(argss) == 0:
+            logger.warning(f"No pandas arguments defined for .ini {cfg.get('name')}")
+            df = pd.read_csv(file, header=0)
+        else:
+            df = pd.read_csv(file, **argss)
         dfs.append(df)
     if len(df) == 0:
-        logger.debug(f"No data returned by files found for aux_data {cfg.get('name')}")
+        logger.warning(
+            f"No data returned by files found for aux_data {cfg.get('name')}"
+        )
     dfs = pd.concat(dfs)
     return dfs
 
