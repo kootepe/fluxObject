@@ -7,7 +7,7 @@ logger = logging.getLogger("defaultLogger")
 
 
 def calculate_gas_flux(
-    data, measurement_name, chamber_height, def_temp, def_press, use_defs
+    data, measurement_name, slope, chamber_height, def_temp, def_press, use_defs
 ):
     """
     Calculates gas flux
@@ -34,8 +34,6 @@ def calculate_gas_flux(
 
     # this value must in cm
     h = df.calc_height.mean()
-    # slope of the linear fit of the measurement
-    slope = df[f"{measurement_name}_slope"].mean()
     # value to convert ppb to ppm etc.
     conv = 1
     # molar mass of co2. C mass 12 and O mass 16
@@ -43,7 +41,9 @@ def calculate_gas_flux(
     # temperature in K
     if use_defs == 1:
         t = def_temp
+        df["air_temperature"] = def_temp
         p = def_press
+        df["air_pressure"] = def_temp
     else:
         try:
             t = df["air_temperature"].mean()
@@ -91,14 +91,15 @@ def calculate_gas_flux(
         * 60,
         8,
     )
-    logger.debug(
-        f"(({slope} / {conv} * 60 * {h} * {m} * {p} * 100 / 1000000 / 8.314 / (273.15 + {t}) * 1000 * 60"
-    )
+    # logger.debug(
+    #     f"(({slope} / {conv} * 60 * {h} * {m} * {p} * 100 / 1000000 / 8.314 / (273.15 + {t}) * 1000 * 60"
+    # )
+    # logger.debug(flux)
 
     return flux
 
 
-def calculate_pearsons_r(df, date, measurement_name):
+def calculate_pearsons_r(df, measurement_name):
     """
     Calculates pearsons R for a measurement
 
@@ -117,22 +118,20 @@ def calculate_pearsons_r(df, date, measurement_name):
     pearsons_r : pd.Series
         Dataframe column with calculated pearsons R
     """
-    start = date[0]
-    end = date[1]
-    filter_tuple = (start, end)
-    time_array = date_filter(df["ordinal_datetime"], filter_tuple)
-    gas_array = date_filter(df[measurement_name], filter_tuple)
+    time_array = df["ordinal_datetime"]
+    gas_array = df[measurement_name]
 
     pearsons_r = round(abs(np.corrcoef(time_array, gas_array).item(1)), 8)
+    # logger.debug(pearsons_r)
     return pearsons_r
 
 
 def calculate_slope(df, date, measurement_name):
-    start = date[0]
-    end = date[1]
-    filter_tuple = (start, end)
-    time_array = date_filter(df["ordinal_datetime"], filter_tuple)
-    gas_array = date_filter(df[measurement_name], filter_tuple)
+    # start = date[0]
+    # end = date[1]
+    # filter_tuple = (start, end)
+    time_array = df["ordinal_datetime"]
+    gas_array = df[measurement_name]
     if len(time_array) == 0:
         logger.debug(f"TIME ARRAY IS EMPTY AT {date[0]}")
         slope = None
@@ -147,4 +146,9 @@ def calculate_slope(df, date, measurement_name):
         / 86400,
         8,
     )
+    # logger.debug(slope)
+    # slope = round(
+    #     np.polyfit(time_array.astype(float), gas_array.astype(float), 1).item(0),
+    #     8,
+    # )
     return slope
