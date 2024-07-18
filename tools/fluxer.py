@@ -51,7 +51,7 @@ from tools.create_excel import (
 
 from tools.aux_cfg_parser import parse_aux_cfg
 from tools.aux_data_reader import read_aux_data
-from tools.validation import check_valid
+from tools.validation import check_valid, overlap_test
 
 
 logger = logging.getLogger("defaultLogger")
@@ -78,8 +78,9 @@ class gas_flux_calculator:
         self.aux_cfgs = parse_aux_cfg(self.cfg)
         self.aux_cfgs = read_aux_data(self.aux_cfgs, self.start_ts, self.end_ts)
         self.merge_aux()
-        self.w_merged = self.merged
-        check_valid(self.merged, self.fltr_tuple, self.device)
+        self.merged = check_valid(
+            self.merged, self.fltr_tuple, self.device, self.meas_et
+        )
         gases = self.device.gas_cols
         for gas in gases:
             self.merged = self.calc_slope_pearsR(self.merged, gas)
