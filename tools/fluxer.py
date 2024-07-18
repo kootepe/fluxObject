@@ -16,6 +16,7 @@ from tools.filter import (
     mk_fltr_tuple,
     subs_from_fltr_tuple,
     add_to_fltr_tuple,
+    add_min_to_fltr_tuple,
 )
 from tools.file_tools import get_newest, mk_date_dict
 from tools.time_funcs import (
@@ -81,9 +82,9 @@ class gas_flux_calculator:
         self.merged = check_valid(
             self.merged, self.fltr_tuple, self.device, self.meas_et
         )
-        gases = self.device.gas_cols
-        for gas in gases:
-            self.merged = self.calc_slope_pearsR(self.merged, gas)
+        self.merged = self.calc_slope_pearsR(self.merged)
+        # BUG: datetime is now the chamber close time instead of the measurement
+        # start time since what self.merged gets filtered down to.
         self.ready_data = self.summarize()
 
         if self.defs.get("create_excel") == "1":
@@ -91,7 +92,7 @@ class gas_flux_calculator:
             self.create_xlsx()
         else:
             logger.info("Excel creation disabled in .ini, skipping")
-        logger.info(f"Run completed.")
+        logger.info("Run completed.")
 
     def init_meas_reader(self, instrument_class, measurement_class):
         if self.instrument_class is None:
@@ -117,6 +118,7 @@ class gas_flux_calculator:
         self.chamber_dict = dict(config.items("measuring_chamber"))
         self.meas_dict = dict(config.items("measurement_data"))
         # this defines chamber close and open time for manual mode
+        # NOTE: this still gets looked for even on AC mode
         self.meas_t_dict = dict(config.items("manual_measurement_time_data"))
         # this defines chamber close and  open times for ac mode
         self.ini_name = self.defs.get("name")
@@ -133,7 +135,7 @@ class gas_flux_calculator:
         self.meas_et = int(self.cham_cycle.get("end_of_cycle"))
         mprc = self.defs.get("measurement_perc")
         if mprc:
-            self.meas_perc = int(mprc)
+            self.meas_perc = float(mprc)
         else:
             self.meas_perc = 20
         self.chamber_h = float(self.chamber_dict.get("chamber_height"))
@@ -209,11 +211,9 @@ class gas_flux_calculator:
                 )
                 self.time_data["chamber"] = self.time_data["chamber"].astype(int)
             # measurement times dataframe
-            self.merged = self.merge_chamber_ts()
-            self.fltr_tuple = mk_fltr_tuple(
-                self.time_data, close="start_time", open="end_time"
-            )
-            # self.fltr_tuple = mk_fltr_tuple(self.time_data)
+            self.w_merged = self.data
+            self.merged = self.merge_main_and_time()
+            self.fltr_tuple = mk_fltr_tuple(self.time_data)
 
         if self.mode == "ac":
             if self.meas_dict.get("path"):
@@ -241,7 +241,8 @@ class gas_flux_calculator:
                 self.time_data = self.mk_cham_cycle2()
 
             # measurement times dataframe
-            self.merged = self.merge_chamber_ts()
+            self.w_merged = self.data
+            self.merged = self.merge_main_and_time()
 
             self.fltr_tuple = mk_fltr_tuple(self.time_data)
 
@@ -251,6 +252,7 @@ class gas_flux_calculator:
 
         # list all files in directory
         fls = list(Path(path).glob("*"))
+        fls = [f for f in fls if "~" not in f.name]
 
         # create dictionary of files and a datetime from the file name
         file_date_dict = mk_date_dict(fls, ts_fmt)
@@ -468,7 +470,7 @@ class gas_flux_calculator:
             try:
                 df = self.device.read_file(f)
             except Exception as e:
-                logger.info(f"Read fail: {f.name}")
+                logger.warning(f"Read fail: {f.name}")
                 logger.debug(f"Error: {e}")
                 logger.debug(format_exc())
                 continue
@@ -502,39 +504,26 @@ class gas_flux_calculator:
             # with open(f) as f:
             #    first_line = f.read_line()
             # date = first_line
+            logger.debug(f"Reading measurement {f.name}.")
             df = self.timestamp_file.read_file(f)
             # NOTE: for the sake of consisteny, even though the manual
             # measurement doesn't really have a closing time, the
             # variable is named like this
             df["start_time"] = df["datetime"]
             df["end_time"] = df["datetime"] + pd.to_timedelta(self.meas_et, unit="s")
-            # diff = df.iloc[0]["end_time"] - df.iloc[0]["start_time"] * (
-            #     self.meas_perc * 100
-            # )
-            # diff = float(
-            #     get_time_diff(df.iloc[0]["end_time"], df.iloc[0]["start_time"])
-            # ) * (self.meas_perc / 100)
-            diff = float(
-                get_time_diff(df.iloc[0]["start_time"], df.iloc[0]["end_time"])
-            ) * (self.meas_perc / 100)
-            df["open_time"] = df["end_time"] - pd.to_timedelta(diff, unit="s")
-            df["close_time"] = df["start_time"] + pd.to_timedelta(diff, unit="s")
-            # df["end_time"] = df["datetime"] + pd.to_timedelta(
-            #     self.meas_et, unit="s"
-            # )
-            # df["open_time"] = df["start_time"] + pd.to_timedelta(diff, unit="s")
-            # df["end_time"] = df["end_time"] - pd.to_timedelta(diff, unit="s")
+            df["close_time"] = df["datetime"] + pd.to_timedelta(self.ch_ct, unit="s")
+            df["open_time"] = df["datetime"] + pd.to_timedelta(self.ch_ot, unit="s")
             df["snowdepth"] = df["snowdepth"].fillna(0)
             df["ts_file"] = str(f.name)
             tmp.append(df)
         dfs = pd.concat(tmp)
         dfs.set_index("datetime", inplace=True)
         dfs["notes"] = dfs["notes"].fillna("")
-        # dfs["validity"] = dfs["notes"].fillna(1)
+        dfs = overlap_test(dfs)
         dfs.sort_index(inplace=True)
         return dfs
 
-    def merge_chamber_ts(self):
+    def merge_main_and_time(self):
         """
         Merges 'auxiliary' data to the dataframe, mainly air temperature,
         air pressure and snowdepth.
@@ -551,25 +540,17 @@ class gas_flux_calculator:
         df -- pandas.dataframe
             dataframe with aux_data merged into the main gas measurement dataframe
         """
-        # BUG: IF THERE'S A NA VALUES THE SCRIPT WILL CRASH
+        logger.debug("Attaching measurement times to gas measurement.")
+        df = self.data.copy()
         self.time_data.dropna(inplace=True, axis=1)
-        if is_df_valid(self.data) and is_df_valid(self.time_data):
-            self.data["temp_index"] = self.data.index
-            df = pd.merge_asof(
-                self.data,
-                self.time_data,
-                left_on="datetime",
-                right_on="datetime",
-                tolerance=pd.Timedelta("60m"),
-                direction="nearest",
-                suffixes=("", "_y"),
-            )
-            df.drop("temp_index", axis=1, inplace=True)
-            df.drop(df.filter(regex="_y$").columns, axis=1, inplace=True)
-            df.set_index("datetime", inplace=True)
-        else:
-            logger.info("Dataframes are not properly sorted by datetimeindex")
-            sys.exit(0)
+        for idx, row in self.time_data.iterrows():
+            start = row["start_time"]
+            end = row["end_time"]
+            st, et = get_datetime_index(df, (start, end))
+            for col, value in row.items():
+                if col not in df.columns:
+                    df[col] = pd.NA
+                df.iloc[st:et, df.columns.get_loc(col)] = value
         return df
 
     def parse_skiprows(self, skiprows):
@@ -622,31 +603,32 @@ class gas_flux_calculator:
             merge_met = cfg.get("merge_method")
             name = cfg.get("name")
             logger.info(f"merging {name} with method {merge_met}")
-            msg = logger.debug(f"Merged {name} with method {merge_met}")
+            msg = f"Merged {name} with method {merge_met}"
 
             if merge_met == "timeid":
                 merged = merge_by_dtx_and_id(self.merged, cfg)
                 if merged is not None:
                     self.merged = merged
-                    msg
+                    logger.debug(msg)
 
             if merge_met == "id":
                 merged = merge_by_id(self.merged, cfg)
                 if merged is not None:
                     self.merged = merged
-                    msg
+                    logger.debug(msg)
 
             if merge_met == "time":
                 merged = merge_by_dtx(self.merged, cfg)
                 if merged is not None:
                     self.merged = merged
-                    msg
+                    logger.debug(msg)
 
+        # if there's no aux cfgs, return original
         if len(self.aux_cfgs) == 0:
             self.merged = self.merged
         logger.info(f"Completed merging {len(self.aux_cfgs)} auxiliary datasets.")
 
-    def calc_slope_pearsR(self, data, measurement_name):
+    def calc_slope_pearsR(self, data):
         """
         Calculates Pearsons R (correlation) and the slope of
         the CH4 flux.
@@ -665,60 +647,62 @@ class gas_flux_calculator:
             same dataframe with additional slope, pearsons_r and
             flux columns
         """
-        logger.debug(f"Calculating gas flux for {measurement_name}.")
         # TODO: Clean this mess up
         # BUG: Crash here if dataframe is empty in AC mode?
-        meas_name = measurement_name
         measurement_list = []
-        # self.calc_tuple = [
-        #     subs_from_fltr_tuple(t, self.meas_perc) for t in self.fltr_tuple
-        # ]
 
         # NOTE: not using filter_tuple here will cause issuess in excel creation
+        # NOTE: Cause issues how exactly??
+
         logger.info(f"Starting gas flux calculations.")
         for date in self.fltr_tuple:
-            mdf = date_filter(data, date).copy()
+            df = date_filter(data, (date[2], date[3], date[-1])).copy()
+            mdf = date_filter(df, date).copy()
+            logger.info(f"Calculating flux from {date[0]} to {date[1]}")
             if mdf.empty:
-                measurement_list.append(mdf)
-                logger.info(f"Df empty at {date[0]}")
+                measurement_list.append(df)
+                logger.warning(f"Df empty at {date[0]}")
                 continue
             if "has errors" in mdf.iloc[0]["checks"]:
-                logger.info(
+                logger.warning(
                     f"Skipping flux calculation at {date[0]} because of diagnostic flags"
                 )
-                measurement_list.append(mdf)
+                measurement_list.append(df)
+                continue
+            if df.overlap.any():
+                logger.warning(f"Overlapping measurement at {date[0]} skipping.")
+                measurement_list.append(df)
                 continue
 
-            # logger.info("Calculating slope")
-            slope = calculate_slope(mdf, date, meas_name)
-            if np.isnan(slope):
-                logger.info(f"slope returned as NaN at {date[0]}")
-                measurement_list.append(mdf)
-                continue
-            mdf[f"{meas_name}_slope"] = slope
+            gases = self.device.gas_cols
+            for gas in gases:
+                slope = calculate_slope(mdf, date, gas)
+                df[f"{gas}_slope"] = slope
 
-            # logger.info("Calculating pearsons")
-            pearsons = calculate_pearsons_r(mdf, date, meas_name)
-            if np.isnan(pearsons):
-                logger.debug(f"pearsonsR returned as NaN at {date[0]}")
-                measurement_list.append(mdf)
-                continue
-            mdf[f"{meas_name}_pearsons_r"] = pearsons
+                pearsons = calculate_pearsons_r(mdf, gas)
+                if np.isnan(pearsons):
+                    logger.warning(f"pearsonsR returned as NaN at {date[0]}")
+                df[f"{gas}_pearsons_r"] = pearsons
 
-            # logger.info("Calculating gas flux")
-            flux = calculate_gas_flux(
-                mdf,
-                meas_name,
-                self.chamber_h,
-                self.def_temp,
-                self.def_press,
-                self.use_def_t_p,
-            )
-            mdf[f"{meas_name}_flux"] = flux
+                cham_h = round(self.chamber_h / 1000, 2)
+                snow_h = round(df.iloc[1]["snowdepth"] / 100, 2)
+                height = round(cham_h - snow_h, 2)
+                df["calc_height"] = height
 
-            measurement_list.append(mdf)
+                mdf = date_filter(df, date).copy()
+                flux = calculate_gas_flux(
+                    mdf,
+                    gas,
+                    slope,
+                    self.chamber_h,
+                    self.def_temp,
+                    self.def_press,
+                    self.use_def_t_p,
+                )
+                df[f"{gas}_flux"] = flux
+
+                measurement_list.append(df)
         all_measurements_df = pd.concat(measurement_list)
-        logger.info("Flux calculations completed")
         return all_measurements_df
 
     def summarize(self):
@@ -748,10 +732,11 @@ class gas_flux_calculator:
             + [col for col in self.merged.columns if "idx_cp" in col]
         )
         for date in self.fltr_tuple:
-            dfa = date_filter(self.merged, date)
+            dfa = date_filter(self.merged, (date[2], date[3]))
             dfList.append(dfa.iloc[:1])
         summary = pd.concat(dfList)
-        summary.drop(labels=drop_cols, axis=1, inplace=True)
+        if "test" not in self.ini_name:
+            summary.drop(labels=drop_cols, axis=1, inplace=True)
         # convert True/False to 1/0
         summary["is_valid"] = summary["is_valid"] * 1
 
@@ -764,10 +749,9 @@ class gas_flux_calculator:
         fig, ax = create_fig()
         times = self.fltr_tuple
 
-        # tuples with that cover the whole measurement / cycle
-        w_times = [add_to_fltr_tuple(time, self.meas_perc) for time in times]
-        # tuples that cover the time where the calculations are from
-        m_times = [subs_from_fltr_tuple(time, self.meas_perc) for time in times]
+        w_times = [add_min_to_fltr_tuple(time) for time in times]
+
+        m_times = times
 
         gases = self.device.gas_cols
         logger.info(f"Creating {len(times) * len(gases)} sparklines.")
@@ -776,13 +760,10 @@ class gas_flux_calculator:
         )
         for i, date in enumerate(w_times):
             data = date_filter(self.w_merged, date).copy()
-            logger.debug(data)
             day = date[0].date()
             if data.empty:
                 daylist.append(day)
                 continue
-            # logger.debug(self.fltr_tuple[i][0])
-            # logger.debug(self.ready_data.index[i])
             smask = self.ready_data.index == times[i][0]
             daylist.append(day)
             try:
@@ -800,7 +781,8 @@ class gas_flux_calculator:
                     rects = create_rects(y, times[i], m_times[i])
                     create_sparkline(data[[gas]], fig_path, gas, fig, ax, rects)
             except Exception as e:
-                logger.error(
+                logger.debug("Failed sparkline creation.")
+                logger.debug(
                     f"Error when creating graph with matplotlib, "
                     f"most likely not enough memory. Error: {e}"
                 )
@@ -811,12 +793,11 @@ class gas_flux_calculator:
             if data.empty:
                 continue
             sort = None
+            logger.debug(f"Columns in data passed to create_excel: {data.columns}")
+            logger.debug(f"{data.head()}")
             create_excel(data, self.excel_path, sort)
         create_excel(self.ready_data, self.excel_path, sort, "all_data")
         logger.info(f"Saved output .xlsx in {self.excel_path}")
-
-    # def ifdb_push():
-    #     pass
 
 
 class li7200:
@@ -840,7 +821,7 @@ class li7200:
         self.gas_cols = ["CO2", "CH4"]
 
     def read_file(self, f):
-        li_id = search(r"TG10-\d\d\d\d\d", f.name)
+        li_id = search(r"TG10-\d\d\d\d\d", f.name).group(0)
         df = pd.read_csv(
             f,
             skiprows=self.skiprows,
@@ -872,7 +853,7 @@ class timestamps:
         self.dt_fmt = "%y%m%d%H%M"
 
     def read_file(self, f):
-        date = search("\d{6}", str(f.name))[0]
+        date = search("\d{6}", str(f.name)).group(0)
         df = pd.read_csv(
             f,
             skiprows=self.skiprows,

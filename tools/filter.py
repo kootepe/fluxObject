@@ -47,9 +47,9 @@ def date_filter(data_to_filter, filter_tuple):
     return df
 
 
-def mk_fltr_tuple(df, close="close_time", open="open_time"):
+def mk_fltr_tuple(df, st="start_time", ct="close_time", ot="open_time", et="end_time"):
     """create filter tuple from given column names"""
-    filter_tuple = list(zip(df[close], df[open], df["chamber"]))
+    filter_tuple = list(zip(df[ct], df[ot], df[st], df[et], df["chamber"]))
     return filter_tuple
 
 
