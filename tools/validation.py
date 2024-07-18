@@ -26,10 +26,6 @@ def overlap_test(df):
     return df
 
 
-def check_too_many(df, measurement_time):
-    return len(df) > measurement_time * 1.1
-
-
 def validate_checks(list, string):
     """
     Overlap check sets the next measurement to also have overlap so there can be
@@ -52,6 +48,10 @@ def check_air_press_col(df, col):
 
 def check_too_few(df, measurement_time):
     return measurement_time * 0.9 > len(df)
+
+
+def check_too_many(df, measurement_time):
+    return len(df) > measurement_time * 1.1
 
 
 def check_valid(dataframe, filter_tuple, device, measurement_time):
