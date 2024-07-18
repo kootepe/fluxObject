@@ -16,6 +16,12 @@ def date_filter_list(data_to_filter, filter_tuple_list):
     return df
 
 
+def get_datetime_index(df, filter_tuple):
+    start = df.index.searchsorted(filter_tuple[0], side="left")
+    end = df.index.searchsorted(filter_tuple[1], side="left")
+    return start, end
+
+
 def date_filter(data_to_filter, filter_tuple):
     """
     Filters dataframes with two dates provided in a tuple
@@ -36,9 +42,8 @@ def date_filter(data_to_filter, filter_tuple):
     # before getting to this point...
     if not data_to_filter.index.is_monotonic_increasing:
         data_to_filter.sort_index(inplace=True)
-    start_time = data_to_filter.index.searchsorted(filter_tuple[0], side="left")
-    end_time = data_to_filter.index.searchsorted(filter_tuple[1], side="left")
-    df = data_to_filter.iloc[start_time:end_time]
+    start, end = get_datetime_index(data_to_filter, filter_tuple)
+    df = data_to_filter.iloc[start:end]
     return df
 
 
