@@ -22,7 +22,7 @@ def overlap_test(df):
     df = df.sort_values(by="start_time")
     df["next_start_time"] = df["start_time"].shift(-1)
     df["overlap"] = df["end_time"] > df["next_start_time"]
-    # df = set_next_true(df, "overlap")
+    df = set_next_true(df, "overlap")
     return df
 
 
