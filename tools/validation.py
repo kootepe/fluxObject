@@ -38,11 +38,11 @@ def check_diag_col(df, device):
     return df[device.diag_col].sum() != 0
 
 
-def check_air_temp_col(df, col):
+def check_air_temp_col(df):
     return "air_temperature" not in df.columns
 
 
-def check_air_press_col(df, col):
+def check_air_press_col(df):
     return "air_pressure" not in df.columns
 
 
@@ -65,8 +65,8 @@ def check_valid(dataframe, filter_tuple, device, measurement_time):
         df = date_filter(dataframe, (date[2], date[3])).copy()
 
         has_errors = check_diag_col(df, device)
-        no_air_temp = check_air_temp_col(df, "air_temperature")
-        no_air_pressure = check_air_press_col(df, "air_pressure")
+        no_air_temp = check_air_temp_col(df)
+        no_air_pressure = check_air_press_col(df)
         is_empty = df.empty
         has_overlap = df.overlap.any()
         too_many = check_too_many(df, measurement_time)
