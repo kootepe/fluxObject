@@ -654,7 +654,7 @@ class gas_flux_calculator:
         # NOTE: not using filter_tuple here will cause issuess in excel creation
         # NOTE: Cause issues how exactly??
 
-        logger.info(f"Starting gas flux calculations.")
+        logger.info("Starting gas flux calculations.")
         for date in self.fltr_tuple:
             df = date_filter(data, (date[2], date[3], date[-1])).copy()
             mdf = date_filter(df, date).copy()
@@ -676,12 +676,10 @@ class gas_flux_calculator:
 
             gases = self.device.gas_cols
             for gas in gases:
-                slope = calculate_slope(mdf, date, gas)
+                slope = calculate_slope(mdf["ordinal_datetime"], mdf[gas])
                 df[f"{gas}_slope"] = slope
 
                 pearsons = calculate_pearsons_r(mdf, gas)
-                if np.isnan(pearsons):
-                    logger.warning(f"pearsonsR returned as NaN at {date[0]}")
                 df[f"{gas}_pearsons_r"] = pearsons
 
                 cham_h = round(self.chamber_h / 1000, 2)
@@ -689,12 +687,11 @@ class gas_flux_calculator:
                 height = round(cham_h - snow_h, 2)
                 df["calc_height"] = height
 
-                mdf = date_filter(df, date).copy()
                 flux = calculate_gas_flux(
                     mdf,
                     gas,
                     slope,
-                    self.chamber_h,
+                    height,
                     self.def_temp,
                     self.def_press,
                     self.use_def_t_p,

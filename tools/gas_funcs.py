@@ -5,9 +5,12 @@ import logging
 
 logger = logging.getLogger("defaultLogger")
 
+masses = {"CH4": 16, "CO2": 44, "H2O": 18}
+convs = {"CH4": 1000, "CO2": 1, "H2O": 1}
+
 
 def calculate_gas_flux(
-    data, measurement_name, slope, chamber_height, def_temp, def_press, use_defs
+    df, measurement_name, slope, chamber_height, def_temp, def_press, use_defs
 ):
     """
     Calculates gas flux
@@ -25,19 +28,12 @@ def calculate_gas_flux(
         one column for the dataframe with the calculated gas
         flux
     """
-
-    is_valid = True
-    df = data.copy()
-
-    if "snowdepth" not in df.columns:
-        df["snowdepth"] = 0
-
-    # this value must in cm
-    h = df.calc_height.mean()
+    # this value must in m
+    h = chamber_height
+    # molar_mass
+    m = masses.get(measurement_name)
     # value to convert ppb to ppm etc.
-    conv = 1
-    # molar mass of co2. C mass 12 and O mass 16
-    m = df["molar_mass"] = 12 + 16 + 16
+    conv = convs.get(measurement_name)
     # temperature in K
     if use_defs == 1:
         t = def_temp
@@ -58,35 +54,8 @@ def calculate_gas_flux(
     # universal gas constant
     r = 8.314
 
-    # BUG: IF COLUMN NAME DOESN'T MATCH THERE, SCRIPT WILL CRASH
-    # MAYBE ADD A DICTIONARY OF MOLAR MASSES FOR THIS
-    if measurement_name == "CH4":
-        # molar mass of CH4, C mass is 12 and H mass is 1
-        m = df["molar_mass"] = 12 + 4
-        # ch4 measurement is in ppb, convert to ppm
-        conv = df["conv"] = 1000
-
-    # flux = round(
-    #     (
-    #         (slope / conv)
-    #         * (60 / 1000000)
-    #         * (h)
-    #         * ((m * (p * 100)) / (r * (273.15 + t)))
-    #         * 1000
-    #         * 60
-    #     ),
-    #     6,
-    # )
-    # this function is identical to excel
     flux = round(
-        ((slope / conv) * 60)
-        * h
-        * m
-        * p
-        * 100
-        / 1000000
-        / r
-        / (273.15 + t)
+        ((slope / conv) * 60 * h * m * (p * 100) / 1000000 / r / (273.15 + t))
         * 1000
         * 60,
         8,
