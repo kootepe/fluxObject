@@ -9,6 +9,52 @@ import sys
 logger = logging.getLogger("defaultLogger")
 
 
+def get_files(dict, start_ts, end_ts):
+    path = dict.get("path")
+    ts_fmt = dict.get("file_timestamp_format")
+    fls = find_files(path)
+    file_date_dict = mk_date_dict(fls, ts_fmt)
+    filtered_files = filter_between_dates(start_ts, end_ts, file_date_dict)
+    return filtered_files
+
+
+def find_files(path):
+    files = list(Path(path).glob("*"))
+    files = [f for f in files if "~" not in f.name]
+    return files
+
+
+def filter_between_dates(sd, ed, date_dict):
+    """
+    Drops files from date dict if they don't fall between given dates
+
+
+    Parameters
+    ----------
+    sd : datetime
+    starting date
+
+    ed : datetime
+    ending date
+
+    date_dict : dict
+    dictionary of filename:date
+
+
+    Returns
+    -------
+
+
+
+    """
+    filtered_files = {
+        key: value
+        for key, value in date_dict.items()
+        if (sd is None or value >= sd) and (ed is None or value <= ed)
+    }
+    return list(filtered_files.keys())
+
+
 def get_newest(path: str, file_extension: str):
     """
     Fetchest name of the newest file in a folder
