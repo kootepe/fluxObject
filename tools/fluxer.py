@@ -14,11 +14,16 @@ from re import search
 from tools.filter import (
     date_filter,
     mk_fltr_tuple,
-    subs_from_fltr_tuple,
-    add_to_fltr_tuple,
     add_min_to_fltr_tuple,
+    get_datetime_index,
 )
-from tools.file_tools import get_newest, mk_date_dict
+from tools.file_tools import (
+    get_newest,
+    mk_date_dict,
+    find_files,
+    filter_between_dates,
+    get_files,
+)
 from tools.time_funcs import (
     ordinal_timer,
     strftime_to_regex,
@@ -40,7 +45,6 @@ from tools.merging import (
     merge_by_dtx,
     merge_by_id,
     merge_by_dtx_and_id,
-    is_df_valid,
 )
 
 from tools.create_excel import (
@@ -185,7 +189,7 @@ class gas_flux_calculator:
         if self.mode == "man":
             # if meas_dict has a path, look for files
             if self.meas_dict.get("path"):
-                self.meas_files = self.file_finder(self.meas_dict)
+                self.meas_files = get_files(self.meas_dict, self.start_ts, self.end_ts)
                 if not self.meas_files:
                     logger.info(
                         f"No files found from {self.start_ts.date()} to {self.end_ts.date()} in {self.data_path}."
@@ -196,7 +200,9 @@ class gas_flux_calculator:
                     logger.debug(
                         f"Found {len(self.meas_files)} in folder {self.data_path}."
                     )
-                self.meas_t_files = self.file_finder(self.meas_t_dict)
+                self.meas_t_files = get_files(
+                    self.meas_t_dict, self.start_ts, self.end_ts
+                )
                 self.data = self.read_meas()
                 self.time_data = self.read_man_meas_f()
             else:
@@ -245,27 +251,6 @@ class gas_flux_calculator:
             self.merged = self.merge_main_and_time()
 
             self.fltr_tuple = mk_fltr_tuple(self.time_data)
-
-    def file_finder(self, file_dict):
-        path = file_dict.get("path")
-        ts_fmt = file_dict.get("file_timestamp_format")
-
-        # list all files in directory
-        fls = list(Path(path).glob("*"))
-        fls = [f for f in fls if "~" not in f.name]
-
-        # create dictionary of files and a datetime from the file name
-        file_date_dict = mk_date_dict(fls, ts_fmt)
-
-        # filter file list to be between two dates
-        sd = self.start_ts
-        ed = self.end_ts
-        filtered_files = {
-            key: value
-            for key, value in file_date_dict.items()
-            if (sd is None or value >= sd) and (ed is None or value <= ed)
-        }
-        return list(filtered_files.keys())
 
     def mk_cham_cycle(self):
         """
