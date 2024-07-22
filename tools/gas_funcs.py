@@ -95,29 +95,9 @@ def calculate_pearsons_r(df, measurement_name):
     return pearsons_r
 
 
-def calculate_slope(df, date, measurement_name):
-    # start = date[0]
-    # end = date[1]
-    # filter_tuple = (start, end)
-    time_array = df["ordinal_datetime"]
-    gas_array = df[measurement_name]
-    if len(time_array) == 0:
-        logger.debug(f"TIME ARRAY IS EMPTY AT {date[0]}")
-        slope = None
-        return slope
-    if len(gas_array) == 0:
-        logger.debug(f"GAS ARRAY IS EMPTY AT {date[0]}")
-        slope = None
-        return slope
-
+def calculate_slope(x, y):
     slope = round(
-        np.polyfit(time_array.astype(float), gas_array.astype(float), 1).item(0)
-        / 86400,
+        np.polyfit(x.astype(float) / 86400, y.astype(float) / 86400, 1).item(0),
         8,
     )
-    # logger.debug(slope)
-    # slope = round(
-    #     np.polyfit(time_array.astype(float), gas_array.astype(float), 1).item(0),
-    #     8,
-    # )
     return slope
