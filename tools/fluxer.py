@@ -784,10 +784,13 @@ class gas_flux_calculator:
 
 class li7200:
     def __init__(self):
-        self.usecols = ["DIAG", "DATE", "TIME", "CO2", "CH4"]
+        self.usecols = ["DIAG", "DATE", "TIME", "SECONDS", "NANOSECONDS", "CO2", "CH4"]
         self.dtypes = {
             "DIAG": "int",
+            "DATE": "str",
             "TIME": "str",
+            "SECONDS": "str",
+            "NANOSECONDS": "str",
             "H2O": "float",
             "CO2": "float",
             "CH4": "float",
@@ -796,6 +799,8 @@ class li7200:
         self.delimiter = "\t"
         self.date_col = "DATE"
         self.time_col = "TIME"
+        self.sec_col = "SECONDS"
+        self.nsec_col = "NANOSECONDS"
         self.datetime_col = None
         self.date_fmt = "%Y-%m-%d"
         self.time_fmt = "%H:%M:%S"
@@ -816,6 +821,9 @@ class li7200:
             df[self.date_col] + df[self.time_col],
             format=self.date_fmt + self.time_fmt,
             # ).dt.tz_localize("UTC")
+        )
+        df["ordinal_datetime"] = (df[self.sec_col] + "." + df[self.nsec_col]).astype(
+            float
         )
         return df
 
