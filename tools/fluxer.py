@@ -662,6 +662,11 @@ class gas_flux_calculator:
                 measurement_list.append(df)
                 continue
 
+            cham_h = round(self.chamber_h / 1000, 2)
+            snow_h = round(df.iloc[1]["snowdepth"] / 100, 2)
+            height = round(cham_h - snow_h, 2)
+            df["calc_height"] = height
+
             gases = self.device.gas_cols
             for gas in gases:
                 slope = calculate_slope(mdf["numeric_datetime"], mdf[gas])
@@ -670,10 +675,6 @@ class gas_flux_calculator:
                 pearsons = calculate_pearsons_r(mdf["numeric_datetime"], mdf[gas])
                 df[f"{gas}_pearsons_r"] = pearsons
 
-                cham_h = round(self.chamber_h / 1000, 2)
-                snow_h = round(df.iloc[1]["snowdepth"] / 100, 2)
-                height = round(cham_h - snow_h, 2)
-                df["calc_height"] = height
                 if use_defaults(df, self.use_def_t_p):
                     # NOTE: figure out a better way of using default temp and
                     # pressure
