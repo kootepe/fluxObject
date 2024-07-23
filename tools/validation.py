@@ -1,9 +1,13 @@
 import pandas as pd
 import logging
 from tools.filter import date_filter
-from tools.time_funcs import get_time_diff
 
 logger = logging.getLogger("defaultLogger")
+
+
+def use_defaults(df, use_defaults):
+    cols = df.columns
+    return "air_temperature" not in cols or "air_pressure" not in cols
 
 
 def set_next_true(df, column):

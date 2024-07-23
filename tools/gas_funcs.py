@@ -3,7 +3,9 @@ import logging
 
 logger = logging.getLogger("defaultLogger")
 
+# molar masses
 masses = {"CH4": 16, "CO2": 44, "H2O": 18}
+# conversions to ppm
 convs = {"CH4": 1000, "CO2": 1, "H2O": 1}
 
 

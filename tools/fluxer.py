@@ -56,7 +56,7 @@ from tools.create_excel import (
 
 from tools.aux_cfg_parser import parse_aux_cfg
 from tools.aux_data_reader import read_aux_data
-from tools.validation import check_valid, overlap_test
+from tools.validation import check_valid, overlap_test, use_defaults
 
 from tools.instruments import li7810
 
@@ -672,7 +672,7 @@ class gas_flux_calculator:
                 snow_h = round(df.iloc[1]["snowdepth"] / 100, 2)
                 height = round(cham_h - snow_h, 2)
                 df["calc_height"] = height
-                if self.use_def_t_p == 1:
+                if use_defaults(df, self.use_def_t_p):
                     # NOTE: figure out a better way of using default temp and
                     # pressure
                     df["air_pressure"] = self.def_press
