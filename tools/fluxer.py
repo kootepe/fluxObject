@@ -58,6 +58,7 @@ from tools.aux_cfg_parser import parse_aux_cfg
 from tools.aux_data_reader import read_aux_data
 from tools.validation import check_valid, overlap_test
 
+from tools.instruments import li7810
 
 logger = logging.getLogger("defaultLogger")
 
@@ -100,7 +101,7 @@ class gas_flux_calculator:
 
     def init_meas_reader(self, instrument_class, measurement_class):
         if self.instrument_class is None:
-            self.device = li7200()
+            self.device = li7810()
         else:
             self.device = instrument_class()
 
@@ -790,52 +791,6 @@ class gas_flux_calculator:
             create_excel(data, self.excel_path, sort)
         create_excel(self.ready_data, self.excel_path, sort, "all_data")
         logger.info(f"Saved output .xlsx in {self.excel_path}")
-
-
-class li7200:
-    def __init__(self):
-        self.usecols = ["DIAG", "DATE", "TIME", "SECONDS", "NANOSECONDS", "CO2", "CH4"]
-        self.dtypes = {
-            "DIAG": "int",
-            "DATE": "str",
-            "TIME": "str",
-            "SECONDS": "str",
-            "NANOSECONDS": "str",
-            "H2O": "float",
-            "CO2": "float",
-            "CH4": "float",
-        }
-        self.skiprows = [0, 1, 2, 3, 4, 6]
-        self.delimiter = "\t"
-        self.date_col = "DATE"
-        self.time_col = "TIME"
-        self.sec_col = "SECONDS"
-        self.nsec_col = "NANOSECONDS"
-        self.datetime_col = None
-        self.date_fmt = "%Y-%m-%d"
-        self.time_fmt = "%H:%M:%S"
-        self.diag_col = "DIAG"
-        self.gas_cols = ["CO2", "CH4"]
-
-    def read_file(self, f):
-        li_id = search(r"TG10-\d\d\d\d\d", f.name).group(0)
-        df = pd.read_csv(
-            f,
-            skiprows=self.skiprows,
-            delimiter=self.delimiter,
-            usecols=self.usecols,
-            dtype=self.dtypes,
-        )
-        df["li_id"] = li_id
-        df["datetime"] = pd.to_datetime(
-            df[self.date_col] + df[self.time_col],
-            format=self.date_fmt + self.time_fmt,
-            # ).dt.tz_localize("UTC")
-        )
-        df["ordinal_datetime"] = (df[self.sec_col] + "." + df[self.nsec_col]).astype(
-            float
-        )
-        return df
 
 
 class timestamps:
