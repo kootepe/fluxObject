@@ -1,6 +1,4 @@
 import numpy as np
-import pandas as pd
-from tools.filter import date_filter
 import logging
 
 logger = logging.getLogger("defaultLogger")
@@ -10,7 +8,7 @@ convs = {"CH4": 1000, "CO2": 1, "H2O": 1}
 
 
 def calculate_gas_flux(
-    df, measurement_name, slope, chamber_height, def_temp, def_press, use_defs
+    df, measurement_name, slope, chamber_height, def_temp=10, def_press=1000
 ):
     """
     Calculates gas flux
@@ -32,38 +30,19 @@ def calculate_gas_flux(
     h = chamber_height
     # molar_mass
     m = masses.get(measurement_name)
-    # value to convert ppb to ppm etc.
+    # value to convert to ppm
     conv = convs.get(measurement_name)
-    # temperature in K
-    if use_defs == 1:
-        t = def_temp
-        df["air_temperature"] = def_temp
-        p = def_press
-        df["air_pressure"] = def_temp
-    else:
-        try:
-            t = df["air_temperature"].mean()
-        except Exception:
-            logger.debug("NO AIR TEMPERATURE IN FILE, USING DEFAULT")
-            t = def_temp
-        try:
-            p = df["air_pressure"].mean()
-        except Exception:
-            logger.debug("NO AIR PRESSURE IN FILE, USING DEFAULT")
-            p = def_press
+    # C temperature to K
+    t = df["air_temperature"].mean() + 273.15
+    # hPa to Pa
+    p = df["air_pressure"].mean() * 100
     # universal gas constant
     r = 8.314
 
     flux = round(
-        ((slope / conv) * 60 * h * m * (p * 100) / 1000000 / r / (273.15 + t))
-        * 1000
-        * 60,
+        ((slope / conv) * 60 * h * m * p / 1000000 / r / t) * 1000 * 60,
         8,
     )
-    # logger.debug(
-    #     f"(({slope} / {conv} * 60 * {h} * {m} * {p} * 100 / 1000000 / 8.314 / (273.15 + {t}) * 1000 * 60"
-    # )
-    # logger.debug(flux)
 
     return flux
 

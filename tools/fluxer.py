@@ -671,17 +671,27 @@ class gas_flux_calculator:
                 snow_h = round(df.iloc[1]["snowdepth"] / 100, 2)
                 height = round(cham_h - snow_h, 2)
                 df["calc_height"] = height
-
-                flux = calculate_gas_flux(
-                    mdf,
-                    gas,
-                    slope,
-                    height,
-                    self.def_temp,
-                    self.def_press,
-                    self.use_def_t_p,
-                )
-                df[f"{gas}_flux"] = flux
+                if self.use_def_t_p == 1:
+                    # NOTE: figure out a better way of using default temp and
+                    # pressure
+                    df["air_pressure"] = self.def_press
+                    df["air_temperature"] = self.def_temp
+                    mdf["air_pressure"] = self.def_press
+                    mdf["air_temperature"] = self.def_temp
+                    flux = calculate_gas_flux(
+                        mdf,
+                        gas,
+                        slope,
+                        height,
+                    )
+                else:
+                    flux = calculate_gas_flux(
+                        mdf,
+                        gas,
+                        slope,
+                        height,
+                    )
+                    df[f"{gas}_flux"] = flux
 
                 measurement_list.append(df)
         all_measurements_df = pd.concat(measurement_list)
