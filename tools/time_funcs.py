@@ -31,7 +31,7 @@ def rm_tz(df):
     return df
 
 
-def ordinal_timer(time):
+def time_to_numeric(time):
     """
     Helper function to calculate ordinal time from HH:MM:SS
 
@@ -48,11 +48,11 @@ def ordinal_timer(time):
     # Split the HH:MM:SS strings; this creates a list of lists
     split_times = [time.split(":") for time in time]
     # Convert split times to hours, minutes, and seconds, and calculate the fractional day
-    ordinal_times = array(
-        [(int(h) * 3600 + int(m) * 60 + int(s)) / 86400 for h, m, s in split_times]
+    numeric_times = array(
+        [(int(h) * 3600 + int(m) * 60 + int(s)) for h, m, s in split_times]
     ).round(10)
 
-    return ordinal_times
+    return numeric_times
 
 
 def strftime_to_regex(file_timestamp_format):

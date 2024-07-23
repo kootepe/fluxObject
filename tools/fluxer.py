@@ -25,7 +25,7 @@ from tools.file_tools import (
     get_files,
 )
 from tools.time_funcs import (
-    ordinal_timer,
+    time_to_numeric,
     strftime_to_regex,
     extract_date,
     convert_seconds,
@@ -467,12 +467,12 @@ class gas_flux_calculator:
         dfs = pd.concat(tmp)
         # combine individual date and time columns into datetime
         # column
-        logger.debug("Calculating ordinal times.")
-        dfs["ordinal_date"] = pd.to_datetime(dfs["datetime"]).map(
-            datetime.datetime.toordinal
-        )
-        dfs["ordinal_time"] = ordinal_timer(dfs[self.device.time_col].values)
-        dfs["ordinal_datetime"] = dfs["ordinal_time"] + dfs["ordinal_date"]
+        # logger.debug("Calculating ordinal times.")
+        # dfs["numeric_date"] = pd.to_datetime(dfs["datetime"]).map(
+        #     datetime.datetime.toordinal
+        # )
+        # dfs["numeric_time"] = numeric_timer(dfs[self.device.time_col].values)
+        # dfs["numeric_datetime"] = dfs["numeric_time"] + dfs["numeric_date"]
         dfs.set_index("datetime", inplace=True)
         dfs.sort_index(inplace=True)
         dfs["month"] = dfs.index.month
@@ -644,7 +644,9 @@ class gas_flux_calculator:
         for date in self.fltr_tuple:
             df = date_filter(data, (date[2], date[3], date[-1])).copy()
             mdf = date_filter(df, date).copy()
+
             logger.info(f"Calculating flux from {date[0]} to {date[1]}")
+
             if mdf.empty:
                 measurement_list.append(df)
                 logger.warning(f"Df empty at {date[0]}")
@@ -662,10 +664,10 @@ class gas_flux_calculator:
 
             gases = self.device.gas_cols
             for gas in gases:
-                slope = calculate_slope(mdf["ordinal_datetime"], mdf[gas])
+                slope = calculate_slope(mdf["numeric_datetime"], mdf[gas])
                 df[f"{gas}_slope"] = slope
 
-                pearsons = calculate_pearsons_r(mdf, gas)
+                pearsons = calculate_pearsons_r(mdf["numeric_datetime"], mdf[gas])
                 df[f"{gas}_pearsons_r"] = pearsons
 
                 cham_h = round(self.chamber_h / 1000, 2)
@@ -715,9 +717,9 @@ class gas_flux_calculator:
         dfList = []
         measurement_cols = self.device.usecols
         drop_cols = [
-            "ordinal_date",
-            "ordinal_time",
-            "ordinal_datetime",
+            # "numeric_date",
+            # "numeric_time",
+            # "numeric_datetime",
         ]
         drop_cols = (
             measurement_cols

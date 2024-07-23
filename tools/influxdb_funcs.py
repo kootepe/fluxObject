@@ -3,7 +3,7 @@ from influxdb_client.client.write_api import SYNCHRONOUS
 import logging
 from urllib3.exceptions import NewConnectionError
 import datetime
-from tools.time_funcs import ordinal_timer, get_time_diff, convert_timestamp_format
+from tools.time_funcs import time_to_numeric, get_time_diff, convert_timestamp_format
 import pandas as pd
 
 logger = logging.getLogger("defaultLogger")
@@ -169,9 +169,9 @@ def add_cols_to_ifdb_q(df, meas_dict):
     df["is_valid"] = ""
 
     logger.info("Calculating ordinal times.")
-    df["ordinal_date"] = pd.to_datetime(df["DATE"]).map(datetime.datetime.toordinal)
-    df["ordinal_time"] = ordinal_timer(df["TIME"].values)
-    df["ordinal_datetime"] = df["ordinal_time"] + df["ordinal_date"]
+    df["numeric_date"] = pd.to_datetime(df["DATE"]).map(datetime.datetime.toordinal)
+    df["numeric_time"] = time_to_numeric(df["TIME"].values)
+    df["numeric_datetime"] = df["numeric_time"] + df["numeric_date"]
     df.set_index("datetime", inplace=True)
     logger.debug(f"\n{df}")
     return df
