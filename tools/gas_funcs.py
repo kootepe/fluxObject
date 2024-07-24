@@ -49,7 +49,7 @@ def calculate_gas_flux(
     return flux
 
 
-def calculate_pearsons_r(df, measurement_name):
+def calculate_pearsons_r(x, y):
     """
     Calculates pearsons R for a measurement
 
@@ -68,11 +68,8 @@ def calculate_pearsons_r(df, measurement_name):
     pearsons_r : pd.Series
         Dataframe column with calculated pearsons R
     """
-    time_array = df["ordinal_datetime"]
-    gas_array = df[measurement_name]
 
-    pearsons_r = round(abs(np.corrcoef(time_array, gas_array).item(1)), 8)
-    # logger.debug(pearsons_r)
+    pearsons_r = round(abs(np.corrcoef(x, y).item(1)), 8)
     return pearsons_r
 
 
