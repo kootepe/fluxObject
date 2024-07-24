@@ -75,7 +75,7 @@ def calculate_pearsons_r(x, y):
 
 def calculate_slope(x, y):
     slope = round(
-        np.polyfit(x.astype(float) / 86400, y.astype(float) / 86400, 1).item(0),
+        np.polyfit(x.astype(float), y.astype(float), 1).item(0),
         8,
     )
     return slope
