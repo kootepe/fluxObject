@@ -38,11 +38,11 @@ def calculate_gas_flux(df, measurement_name, slope, chamber_height):
     p = df["air_pressure"].mean() * 100
     # universal gas constant
     r = 8.314
+    # convert slope from ppX/s to ppm/hour
+    slope = (slope / conv) * 60 * 60
 
-    flux = round(
-        ((slope / conv) * 60 * h * m * p / 1000000 / r / t) * 1000 * 60,
-        8,
-    )
+    # flux in mg/m2/h
+    flux = slope / 1000000 * h * ((m * p) / (r * t)) * 1000
 
     return flux
 
