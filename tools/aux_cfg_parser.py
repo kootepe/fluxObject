@@ -33,7 +33,7 @@ def parse_aux_cfg(main_cfg):
             else:
                 continue
         if data_type == "db":
-            new_db_dict = parse_df_cfg(cfg, influxdb_dict)
+            new_db_dict = parse_db_cfg(cfg, influxdb_dict)
             if new_db_dict:
                 aux_cfgs.append(new_db_dict)
             else:
@@ -43,7 +43,7 @@ def parse_aux_cfg(main_cfg):
     return aux_cfgs
 
 
-def parse_df_cfg(cfg, ifdb_cfg):
+def parse_db_cfg(cfg, ifdb_cfg):
     new_cfg = {**ifdb_cfg, **cfg}
     return new_cfg
 
