@@ -30,14 +30,6 @@ def overlap_test(df):
     return df
 
 
-def validate_checks(list, string):
-    """
-    Overlap check sets the next measurement to also have overlap so there can be
-    double validation strings in the checks column
-    """
-    return [item for item in list if item not in string]
-
-
 def check_diag_col(df, device):
     return df[device.diag_col].sum() != 0
 
