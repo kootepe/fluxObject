@@ -9,9 +9,7 @@ masses = {"CH4": 16, "CO2": 44, "H2O": 18}
 convs = {"CH4": 1000, "CO2": 1, "H2O": 1}
 
 
-def calculate_gas_flux(
-    df, measurement_name, slope, chamber_height, def_temp=10, def_press=1000
-):
+def calculate_gas_flux(df, measurement_name, slope, chamber_height):
     """
     Calculates gas flux
 
