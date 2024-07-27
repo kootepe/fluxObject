@@ -158,17 +158,16 @@ class fluxCalculator:
     def create_dfs_ac(self):
         # NOTE: clean this mess
         if self.mode == "ac":
-            if self.meas_dict.get("path"):
-                self.meas_files = self.match_files(
-                    self.gen_files(self.meas_dict),
-                    self.meas_dict,
+            if self.ini_handler.get("measurement_data", "path"):
+                self.meas_files = get_files(
+                    self.ini_handler.measurement_dict, self.start_ts, self.end_ts
                 )
                 logger.debug(
                     f"Found {len(self.meas_files)} in folder {self.data_path}."
                 )
             else:
                 pass
-            if self.meas_dict.get("path"):
+            if self.ini_handler.measurement_dict.get("path"):
                 self.data = self.read_meas()
                 self.time_data = self.mk_cham_cycle2()
             else:
@@ -241,7 +240,10 @@ class fluxCalculator:
         # loop through files, read them into a pandas dataframe and
         # create timestamps
         dates = [str(date) for date in pd.unique(self.data.index.date)]
-        df = pd.read_csv(self.chamber_cycle_file, names=["time", "chamber"])
+        df = pd.read_csv(
+            self.ini_handler.get("defaults", "chamber_cycle_file"),
+            names=["time", "chamber"],
+        )
         for date in dates:
             dfa = df.copy()
             dfa["date"] = date
