@@ -69,8 +69,8 @@ class fluxCalculator:
     def __init__(
         self, inifile, env_vars, instrument_class=None, measurement_class=None
     ):
-        self.ini_handler = iniHandler(inifile, env_vars)
         self.inifile = inifile
+        self.ini_handler = iniHandler(self.inifile, env_vars)
         self.instrument_class = instrument_class
         self.measurement_class = measurement_class
         self.use_defaults = self.ini_handler.use_defaults
