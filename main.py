@@ -66,7 +66,7 @@ def class_calc(inifile, env_vars):
     log_level = dict(config.items("defaults")).get("logging_level")
     init_logger(log_level)
     data = fluxCalculator(inifile, env_vars, instr_class, meas_class)
-    data.ready_data.to_csv(f"{data.ini_name}_flux.csv")
+    data.ready_data.to_csv(f"{data.ini_handler.ini_name}_flux.csv")
 
     return data
 
@@ -109,7 +109,8 @@ def main(ini_path):
             logger.info(f"Running {inifile}.")
             try:
                 class_calc(inifile, env_vars)
-            except Exception:
+            except Exception as e:
+                print(e)
                 continue
         else:
             logger.info(f"Active set 0, skipped {inifile}")
