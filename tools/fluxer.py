@@ -266,6 +266,7 @@ class fluxCalculator:
             tmp.append(dfa)
 
         dfs = pd.concat(tmp)
+        dfs = overlap_test(dfs)
         dfs.set_index("datetime", inplace=True)
         return dfs
 
@@ -544,7 +545,7 @@ class fluxCalculator:
                 )
                 measurement_list.append(df)
                 continue
-            if df.overlap.any():
+            if df["overlap"].any():
                 logger.warning(f"Overlapping measurement at {date[0]} skipping.")
                 measurement_list.append(df)
                 continue
