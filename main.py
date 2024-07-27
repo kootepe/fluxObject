@@ -65,8 +65,8 @@ def class_calc(inifile, env_vars):
 
     log_level = dict(config.items("defaults")).get("logging_level")
     init_logger(log_level)
-    data = gas_flux_calculator(inifile, env_vars, instr_class, meas_class)
     data.ready_data.to_csv(f"{data.ini_name}_flux.csv")
+    data = fluxCalculator(inifile, env_vars, instr_class, meas_class)
 
     return data
 
