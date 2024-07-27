@@ -94,6 +94,7 @@ class fluxCalculator:
         self.merged = check_valid(
             self.merged, self.fltr_tuple, self.device, self.ini_handler.meas_et
         )
+
         self.merged = self.calc_slope_pearsR(self.merged)
         # BUG: datetime is now the chamber close time instead of the measurement
         # start time since what self.merged gets filtered down to.

@@ -59,11 +59,6 @@ class iniHandler:
         self.def_press = float(self.defaults.get("default_pressure"))
         self.def_temp = float(self.defaults.get("default_temperature"))
         self.excel_path = self.defaults.get("excel_directory")
-        mprc = self.defaults.get("measurement_perc")
-        if mprc:
-            self.meas_perc = float(mprc)
-        else:
-            self.meas_perc = 20
         self.s_ts = self.defaults.get("start_ts")
         self.e_ts = self.defaults.get("end_ts")
 
