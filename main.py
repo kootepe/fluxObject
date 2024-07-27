@@ -7,7 +7,7 @@ import configparser
 from dotenv import dotenv_values
 from pathlib import Path
 
-from tools.fluxer import gas_flux_calculator
+from tools.fluxer import fluxCalculator
 from tools.time_funcs import convert_seconds
 from tools.logger import init_logger
 

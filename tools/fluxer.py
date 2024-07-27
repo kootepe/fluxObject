@@ -65,7 +65,7 @@ logger = logging.getLogger("defaultLogger")
 
 # BUG: Feeding one big measurement file instead of several smaller ones causes
 # the script to not honor the starting and ending times
-class gas_flux_calculator:
+class fluxCalculator:
     def __init__(
         self, inifile, env_vars, instrument_class=None, measurement_class=None
     ):
