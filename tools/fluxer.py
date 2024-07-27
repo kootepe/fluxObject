@@ -549,6 +549,9 @@ class fluxCalculator:
                 measurement_list.append(df)
                 continue
 
+            if "snowdepth" not in df.columns:
+                df["snowdepth"] = 0
+                mdf["snowdepth"] = 0
             cham_h = round(self.ini_handler.chamber_h / 1000, 2)
             snow_h = round(df.iloc[1]["snowdepth"] / 100, 2)
             height = round(cham_h - snow_h, 2)
