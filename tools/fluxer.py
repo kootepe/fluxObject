@@ -69,8 +69,8 @@ class fluxCalculator:
     def __init__(
         self, inifile, env_vars, instrument_class=None, measurement_class=None
     ):
-        self.ini_handler = iniHandler(inifile, env_vars)
         self.inifile = inifile
+        self.ini_handler = iniHandler(self.inifile, env_vars)
         self.instrument_class = instrument_class
         self.measurement_class = measurement_class
         self.use_defaults = self.ini_handler.use_defaults
@@ -94,6 +94,7 @@ class fluxCalculator:
         self.merged = check_valid(
             self.merged, self.fltr_tuple, self.device, self.ini_handler.meas_et
         )
+
         self.merged = self.calc_slope_pearsR(self.merged)
         # BUG: datetime is now the chamber close time instead of the measurement
         # start time since what self.merged gets filtered down to.
@@ -158,17 +159,16 @@ class fluxCalculator:
     def create_dfs_ac(self):
         # NOTE: clean this mess
         if self.mode == "ac":
-            if self.meas_dict.get("path"):
-                self.meas_files = self.match_files(
-                    self.gen_files(self.meas_dict),
-                    self.meas_dict,
+            if self.ini_handler.get("measurement_data", "path"):
+                self.meas_files = get_files(
+                    self.ini_handler.measurement_dict, self.start_ts, self.end_ts
                 )
                 logger.debug(
                     f"Found {len(self.meas_files)} in folder {self.data_path}."
                 )
             else:
                 pass
-            if self.meas_dict.get("path"):
+            if self.ini_handler.measurement_dict.get("path"):
                 self.data = self.read_meas()
                 self.time_data = self.mk_cham_cycle2()
             else:
@@ -241,7 +241,10 @@ class fluxCalculator:
         # loop through files, read them into a pandas dataframe and
         # create timestamps
         dates = [str(date) for date in pd.unique(self.data.index.date)]
-        df = pd.read_csv(self.chamber_cycle_file, names=["time", "chamber"])
+        df = pd.read_csv(
+            self.ini_handler.get("defaults", "chamber_cycle_file"),
+            names=["time", "chamber"],
+        )
         for date in dates:
             dfa = df.copy()
             dfa["date"] = date
@@ -266,6 +269,7 @@ class fluxCalculator:
             tmp.append(dfa)
 
         dfs = pd.concat(tmp)
+        dfs = overlap_test(dfs)
         dfs.set_index("datetime", inplace=True)
         return dfs
 
@@ -544,11 +548,14 @@ class fluxCalculator:
                 )
                 measurement_list.append(df)
                 continue
-            if df.overlap.any():
+            if df["overlap"].any():
                 logger.warning(f"Overlapping measurement at {date[0]} skipping.")
                 measurement_list.append(df)
                 continue
 
+            if "snowdepth" not in df.columns:
+                df["snowdepth"] = 0
+                mdf["snowdepth"] = 0
             cham_h = round(self.ini_handler.chamber_h / 1000, 2)
             snow_h = round(df.iloc[1]["snowdepth"] / 100, 2)
             height = round(cham_h - snow_h, 2)
