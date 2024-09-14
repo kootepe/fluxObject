@@ -507,29 +507,37 @@ class fluxCalculator:
 
     def calc_slope_pearsR(self, data):
         """
-        Calculates Pearsons R (correlation) and the slope of
-        the CH4 flux.
+        Calculates Pearson's R (correlation) and the slope of the CH4 flux.
 
-        args:
+        Args:
         ---
-        df -- pandas.dataframe
-            dataframe of the gas flux
-        measurement_name -- str
-            name of the gas that slope, pearsons_r and flux is
-            going to be calculated for
+        data -- pandas.DataFrame
+            DataFrame of the gas flux
 
-        returns:
+        Returns:
         ---
-        all_measurements_df -- pandas.dataframe
-            same dataframe with additional slope, pearsons_r and
-            flux columns
+        all_measurements_df -- pandas.DataFrame
+            DataFrame with additional slope, Pearson's R, and flux columns
         """
-        # TODO: Clean this mess up
-        # BUG: Crash here if dataframe is empty in AC mode?
         measurement_list = []
 
-        # NOTE: not using filter_tuple here will cause issuess in excel creation
-        # NOTE: Cause issues how exactly??
+        def append_df_with_logging(df, message, date):
+            logger.warning(message + f" at {date[0]}")
+            measurement_list.append(df)
+
+        def check_conditions_and_continue(mdf, df, date):
+            if mdf.empty:
+                append_df_with_logging(df, "DataFrame empty", date)
+                return True
+            if "has errors" in mdf.iloc[0]["checks"]:
+                append_df_with_logging(
+                    df, "Skipping flux calculation due to diagnostic flags", date
+                )
+                return True
+            if df["overlap"].any():
+                append_df_with_logging(df, "Overlapping measurement, skipping", date)
+                return True
+            return False
 
         logger.info("Starting gas flux calculations.")
         for date in self.fltr_tuple:
@@ -538,62 +546,52 @@ class fluxCalculator:
 
             logger.info(f"Calculating flux from {date[0]} to {date[1]}")
 
-            if mdf.empty:
-                measurement_list.append(df)
-                logger.warning(f"Df empty at {date[0]}")
-                continue
-            if "has errors" in mdf.iloc[0]["checks"]:
-                logger.warning(
-                    f"Skipping flux calculation at {date[0]} because of diagnostic flags"
-                )
-                measurement_list.append(df)
-                continue
-            if df["overlap"].any():
-                logger.warning(f"Overlapping measurement at {date[0]} skipping.")
-                measurement_list.append(df)
+            # Skip iteration if conditions are met
+            if check_conditions_and_continue(mdf, df, date):
                 continue
 
-            if "snowdepth" not in df.columns:
-                df["snowdepth"] = 0
-                mdf["snowdepth"] = 0
-            cham_h = round(self.ini_handler.chamber_h / 1000, 2)
-            snow_h = round(df.iloc[1]["snowdepth"] / 100, 2)
+            # Ensure snowdepth column exists
+            df["snowdepth"] = df.get("snowdepth", 0)
+            mdf["snowdepth"] = mdf.get("snowdepth", 0)
+
+            # Calculate height
+            mm_to_m = 1000
+            cm_to_m = 100
+            cham_h = round(self.ini_handler.chamber_h / mm_to_m, 2)
+            snow_h = round(df.iloc[1]["snowdepth"] / cm_to_m, 2)
             height = round(cham_h - snow_h, 2)
             df["calc_height"] = height
 
-            gases = self.device.gas_cols
-            for gas in gases:
-                slope = calculate_slope(mdf["numeric_datetime"], mdf[gas])
+            # Process each gas
+            for gas in self.device.gas_cols:
+                slope, pearsons, flux = self.calculate_gas_properties(
+                    mdf, df, gas, height
+                )
                 df[f"{gas}_slope"] = slope
-
-                pearsons = calculate_pearsons_r(mdf["numeric_datetime"], mdf[gas])
                 df[f"{gas}_pearsons_r"] = pearsons
+                df[f"{gas}_flux"] = flux
 
-                if use_defaults(df, self.use_defaults):
-                    # NOTE: figure out a better way of using default temp and
-                    # pressure
-                    df["air_pressure"] = self.def_press
-                    df["air_temperature"] = self.def_temp
-                    mdf["air_pressure"] = self.def_press
-                    mdf["air_temperature"] = self.def_temp
-                    flux = calculate_gas_flux(
-                        mdf,
-                        gas,
-                        slope,
-                        height,
-                    )
-                else:
-                    flux = calculate_gas_flux(
-                        mdf,
-                        gas,
-                        slope,
-                        height,
-                    )
-                    df[f"{gas}_flux"] = flux
+            measurement_list.append(df)
 
-                measurement_list.append(df)
         all_measurements_df = pd.concat(measurement_list)
         return all_measurements_df
+
+    def calculate_gas_properties(self, mdf, df, gas, height):
+        """
+        Helper function to calculate slope, Pearson's R, and flux for a specific gas.
+        """
+        slope = calculate_slope(mdf["numeric_datetime"], mdf[gas])
+        pearsons = calculate_pearsons_r(mdf["numeric_datetime"], mdf[gas])
+
+        # Use default temperature and pressure if necessary
+        if use_defaults(df, self.use_defaults):
+            df["air_pressure"] = self.def_press
+            df["air_temperature"] = self.def_temp
+            mdf["air_pressure"] = self.def_press
+            mdf["air_temperature"] = self.def_temp
+
+        flux = calculate_gas_flux(mdf, gas, slope, height)
+        return slope, pearsons, flux
 
     def summarize(self):
         """
