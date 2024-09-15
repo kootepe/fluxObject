@@ -1,4 +1,4 @@
-Date,210105
+Date,211003
 Name,ek
 Sky,cloudy
 Temp,-1
@@ -8,7 +8,7 @@ ACSnowdepth,
 FluxAvg,
 AcFluxAvg,
 Plot Number,Start Time,Notes,Chamber height
-51,0005,,5
-53,0020,,6
-41,0035,,8
-43,0050,,9
+71,0205
+67,0220
+45,0235
+47,0250
