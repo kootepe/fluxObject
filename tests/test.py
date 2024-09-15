@@ -1,14 +1,8 @@
 import pytest
-import pandas as pd
-import numpy as np
-import sys
-from pathlib import Path
-import datetime
 from tools.time_funcs import time_to_numeric
 
 # test_with_unittest discover
 import main
-from tools.snow_height import read_snow_measurement
 from tools.validation import check_air_temp_col
 from tools.file_tools import filter_between_dates, find_files, mk_date_dict, get_files
 from tools.gas_funcs import (
@@ -19,42 +13,20 @@ from tools.gas_funcs import (
 from tools.fluxer import li7810
 
 
-test_data_path = "tests/data/measurement_data/"
-test_data_files = [
-    Path("tests/data/measurement_data/TG10-01173-2021-10-03T000000.data"),
-    Path("tests/data/measurement_data/TG10-01173-2021-10-04T000000.data"),
-    Path("tests/data/measurement_data/TG10-01173-2021-10-05T000000.data"),
-    Path("tests/data/measurement_data/210105.DAT"),
-    Path("tests/data/measurement_data/210104.DAT"),
-    Path("tests/data/measurement_data/210103.DAT"),
-]
-
-dfa = pd.DataFrame(data={"air_temperature": [1, 2, 3, 4]})
-dfb = pd.DataFrame(data={"air_pressure": [1, 2, 3, 4]})
-dfc = None
-
-device = li7810()
-gas_df = device.read_file(
-    Path("tests/data/measurement_data/TG10-01173-2021-10-03T000000.data")
+from tests.test_data import (
+    test_data_files,
+    test_data_path,
+    dfa,
+    dfb,
+    dfc,
+    gas_df,
+    chamber_h,
+    def_temp,
+    def_press,
+    measurement_name,
+    use_defs,
+    man_f,
 )
-
-gas_df["numeric_datetime"] = (
-    gas_df[device.sec_col].astype(str) + "." + gas_df[device.nsec_col].astype(str)
-).astype(float)
-
-gas_df["numeric_date"] = pd.to_datetime(gas_df["datetime"]).map(
-    datetime.datetime.toordinal
-)
-gas_df["numeric_time"] = time_to_numeric(gas_df[device.time_col].values)
-gas_df["numeric_datetime"] = gas_df["numeric_time"] + gas_df["numeric_date"]
-gas_df["air_pressure"] = 1000
-gas_df["air_temperature"] = 10
-
-chamber_h = 500
-def_temp = 10
-def_press = 1000
-measurement_name = "CH4"
-use_defs = 0
 
 
 @pytest.mark.parametrize(
@@ -72,9 +44,16 @@ def test_slope_calc(input1, input2, expected):
         assert calculate_slope(input1, input2) == expected
 
 
-def test_gas_calc():
-    slope = calculate_slope(gas_df["numeric_datetime"], gas_df[measurement_name])
-    pearson = calculate_pearsons_r(gas_df["numeric_datetime"], gas_df[measurement_name])
+@pytest.mark.parametrize(
+    "input1,input2,expected",
+    [
+        (gas_df["numeric_datetime"], gas_df[measurement_name], -0.00957082),
+        (gas_df["datetime"], gas_df[measurement_name], pytest.raises(TypeError)),
+    ],
+)
+def test_gas_calc(input1, input2, expected):
+    slope = calculate_slope(input1, input2)
+    pearson = calculate_pearsons_r(input1, input2)
     flux = calculate_gas_flux(
         gas_df,
         "CH4",
@@ -84,7 +63,7 @@ def test_gas_calc():
     assert slope == -0.00957082
     assert pearson == 0.15986399
     assert flux == -11.708871776588436
-    pass
+    # pass
 
 
 @pytest.mark.parametrize(
@@ -100,8 +79,12 @@ def test_check_air_temp_col(input, expected):
 
 
 def test_file_find():
-    assert len(find_files(test_data_path)) == 6
+    assert len(find_files(test_data_path)) == 3
     assert find_files(test_data_path) == test_data_files
+
+
+def test_def_temp():
+    assert man_f.ini_handler.def_temp == 10.0
 
 
 # def test_ac_snowdepth():
