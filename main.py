@@ -11,6 +11,8 @@ from tools.fluxer import fluxCalculator
 from tools.time_funcs import convert_seconds
 from tools.logger import init_logger
 
+import traceback
+
 
 def timer(func):
     """Decorator for printing execution time of function."""
@@ -110,7 +112,8 @@ def main(ini_path):
             try:
                 class_calc(inifile, env_vars)
             except Exception as e:
-                print(e)
+                logger.warning(traceback.format_exc())
+                # logger.warning(e)
                 continue
         else:
             logger.info(f"Active set 0, skipped {inifile}")
