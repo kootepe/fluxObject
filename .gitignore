@@ -20,3 +20,5 @@ eero_format
 oula_flux_xlsx
 .~lock*
 student_fluxes_june
+/data/
+fen_excel_dir
