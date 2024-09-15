@@ -136,7 +136,8 @@ class fluxCalculator:
             # if measurement dict defines a path, get the ending timestamp from the
             # last modified file
             if self.ini_handler.get("measurement_data", "path"):
-                e_ts = extract_date(get_newest(self.data_path, self.data_ext))
+                ts_fmt = self.ini_handler.file_ts_fmt
+                e_ts = extract_date(ts_fmt, get_newest(self.data_path, self.data_ext))
             # measurement defines the name of the influxdb measurement
             # BUG: measurement data doesnt have a measurement value anymore
             if self.ini_handler.get("measurement_data", "measurement"):
@@ -285,10 +286,10 @@ class fluxCalculator:
         first_ts -- datetime.datetime
             Either the oldest timestamp in influxdb or season_start from .ini
         """
-        start_ts = self.ini_handler.start_ts
+        start_ts = self.ini_handler.get("defaults", "start_ts")
         ifdb_ts_format = "%Y-%m-%d %H:%M:%S"
 
-        if not self.ini_handler.get_value("influxDB", "url"):
+        if not self.ini_handler.get("influxDB", "url"):
             first_ts = datetime.datetime.strptime(start_ts, ifdb_ts_format)
         else:
             logger.info("Checking latest ts from DB.")
@@ -571,8 +572,29 @@ class fluxCalculator:
                 df[f"{gas}_pearsons_r"] = pearsons
                 df[f"{gas}_flux"] = flux
 
-            measurement_list.append(df)
+                if use_defaults(df, self.use_defaults):
+                    # NOTE: figure out a better way of using default temp and
+                    # pressure
+                    df["air_pressure"] = self.ini_handler.def_press
+                    df["air_temperature"] = self.ini_handler.def_temp
+                    mdf["air_pressure"] = self.ini_handler.def_press
+                    mdf["air_temperature"] = self.ini_handler.def_temp
+                    flux = calculate_gas_flux(
+                        mdf,
+                        gas,
+                        slope,
+                        height,
+                    )
+                else:
+                    flux = calculate_gas_flux(
+                        mdf,
+                        gas,
+                        slope,
+                        height,
+                    )
+                    df[f"{gas}_flux"] = flux
 
+            measurement_list.append(df)
         all_measurements_df = pd.concat(measurement_list)
         return all_measurements_df
 
@@ -683,9 +705,9 @@ class fluxCalculator:
             sort = None
             logger.debug(f"Columns in data passed to create_excel: {data.columns}")
             logger.debug(f"{data.head()}")
-            create_excel(data, self.excel_path, sort)
-        create_excel(self.ready_data, self.excel_path, sort, "all_data")
-        logger.info(f"Saved output .xlsx in {self.excel_path}")
+            create_excel(data, self.ini_handler.excel_path, sort)
+        create_excel(self.ready_data, self.ini_handler.excel_path, sort, "all_data")
+        logger.info(f"Saved output .xlsx in {self.ini_handler.excel_path}")
 
 
 class timestamps:
