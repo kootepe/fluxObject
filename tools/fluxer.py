@@ -659,6 +659,7 @@ class fluxCalculator:
         fig, ax = create_fig()
         times = self.fltr_tuple
 
+        # NOTE: these need to be as class attribute
         w_times = [add_min_to_fltr_tuple(time) for time in times]
 
         m_times = times
@@ -674,7 +675,7 @@ class fluxCalculator:
             if data.empty:
                 daylist.append(day)
                 continue
-            smask = self.ready_data.index == times[i][0]
+            smask = self.ready_data.index == w_times[i][0]
             daylist.append(day)
             try:
                 day = str(date[0].date())
@@ -691,11 +692,8 @@ class fluxCalculator:
                     rects = create_rects(y, times[i], m_times[i])
                     create_sparkline(data[[gas]], fig_path, gas, fig, ax, rects)
             except Exception as e:
-                logger.debug("Failed sparkline creation.")
-                logger.debug(
-                    f"Error when creating graph with matplotlib, "
-                    f"most likely not enough memory. Error: {e}"
-                )
+                logger.warning("Failed sparkline creation.")
+                logger.warning(e)
         # converting list to dict and then to list again removes duplicate items
         daylist = list(dict.fromkeys(daylist))
         for day in daylist:
