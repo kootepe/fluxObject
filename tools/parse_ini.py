@@ -5,6 +5,7 @@ from tools.aux_cfg_parser import (
     parse_db_cfg,
     parse_aux_cfg,
 )
+from pathlib import Path
 
 logger = logging.getLogger("defaultLogger")
 
@@ -64,6 +65,8 @@ class iniHandler:
 
     def get_measurement(self):
         self.data_path = self.measurement_dict.get("path")
+        if not Path(self.data_path).exists():
+            raise Exception(f"Path {self.data_path} does not exist.")
         self.data_ext = self.measurement_dict.get("file_extension")
         self.file_ts_fmt = self.measurement_dict.get("file_timestamp_format")
         self.scan_or_gen = int(self.measurement_dict.get("scan_or_generate"))
