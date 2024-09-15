@@ -139,10 +139,6 @@ class fluxCalculator:
                 ts_fmt = self.ini_handler.file_ts_fmt
                 e_ts = extract_date(ts_fmt, get_newest(self.data_path, self.data_ext))
             # measurement defines the name of the influxdb measurement
-            # BUG: measurement data doesnt have a measurement value anymore
-            if self.ini_handler.get("measurement_data", "measurement"):
-                e_ts = check_newest_db_ts(self.ini_handler.ifdb_dict)
-                logger.info(f"Newest ts in db: {e_ts}")
 
         if s_ts:
             limit = self.ini_handler.get("defaults", "limit_data")
