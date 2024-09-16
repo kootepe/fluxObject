@@ -26,6 +26,7 @@ from tests.test_data import (
     measurement_name,
     use_defs,
     man_f,
+    ac_f,
 )
 
 
@@ -45,37 +46,59 @@ def test_slope_calc(input1, input2, expected):
 
 
 @pytest.mark.parametrize(
-    "input1,input2,expected",
+    "input1,input2,expected1,expected2,expected3",
     [
-        (gas_df["numeric_datetime"], gas_df[measurement_name], -0.00957082),
-        (gas_df["datetime"], gas_df[measurement_name], pytest.raises(TypeError)),
+        (
+            gas_df["numeric_datetime"],
+            gas_df[measurement_name],
+            -0.00957082,
+            0.15986399,
+            -11.708871776588436,
+        ),
+        (
+            gas_df["datetime"],
+            gas_df[measurement_name],
+            -0.00957082,
+            0.15986399,
+            pytest.raises(TypeError),
+        ),
     ],
 )
-def test_gas_calc(input1, input2, expected):
-    slope = calculate_slope(input1, input2)
-    pearson = calculate_pearsons_r(input1, input2)
-    flux = calculate_gas_flux(
-        gas_df,
-        "CH4",
-        slope,
-        chamber_h,
-    )
-    assert slope == -0.00957082
-    assert pearson == 0.15986399
-    assert flux == -11.708871776588436
-    # pass
+def test_gas_calc(input1, input2, expected1, expected2, expected3):
+    if not isinstance(expected3, float):
+        with expected3:
+            assert calculate_slope(input1, input2) == expected3
+    else:
+        slope = calculate_slope(input1, input2)
+        pearson = calculate_pearsons_r(input1, input2)
+        flux = calculate_gas_flux(
+            gas_df,
+            "CH4",
+            slope,
+            chamber_h,
+        )
+        assert slope == -0.00957082
+        assert pearson == 0.15986399
+        assert flux == -11.708871776588436
 
 
 @pytest.mark.parametrize(
     "input,expected",
-    # [(dfa, False), (dfb, True), ([1, 2], pytest.raises(AttributeError))],
-    [(dfa, False), (dfb, True)],
+    [
+        (dfa, False),
+        (dfb, True),
+        ([1, 2], pytest.raises(AttributeError)),
+        (dfc, pytest.raises(AttributeError)),
+        (dfa, False),
+        (dfb, True),
+    ],
 )
 def test_check_air_temp_col(input, expected):
-    # if not isinstance(expected, bool):
-    #     with expected:
-    #         assert check_air_temp_col(input) == expected
-    assert check_air_temp_col(input) == expected
+    if not isinstance(expected, bool):
+        with expected:
+            assert check_air_temp_col(input) == expected
+    else:
+        assert check_air_temp_col(input) == expected
 
 
 def test_file_find():
@@ -83,8 +106,13 @@ def test_file_find():
     assert find_files(test_data_path) == test_data_files
 
 
-def test_def_temp():
-    assert man_f.ini_handler.def_temp == 10.0
+@pytest.mark.parametrize(
+    "input,expected",
+    [(man_f.ini_handler.def_temp, 10.0), (ac_f.ini_handler.def_temp, 10.0)],
+)
+def test_def_temp(input, expected):
+    assert input == expected
+    assert input == expected
 
 
 # def test_ac_snowdepth():
