@@ -603,10 +603,10 @@ class fluxCalculator:
 
         # Use default temperature and pressure if necessary
         if use_defaults(df, self.use_defaults):
-            df["air_pressure"] = self.def_press
-            df["air_temperature"] = self.def_temp
-            mdf["air_pressure"] = self.def_press
-            mdf["air_temperature"] = self.def_temp
+            df["air_pressure"] = self.ini_handler.def_press
+            df["air_temperature"] = self.ini_handler.def_temp
+            mdf["air_pressure"] = self.ini_handler.def_press
+            mdf["air_temperature"] = self.ini_handler.def_temp
 
         flux = calculate_gas_flux(mdf, gas, slope, height)
         return slope, pearsons, flux
