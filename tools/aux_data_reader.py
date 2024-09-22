@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import pandas as pd
 import logging
 from tools.influxdb_funcs import read_aux_ifdb

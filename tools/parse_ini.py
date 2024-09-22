@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import configparser
 import logging
 from tools.aux_cfg_parser import (

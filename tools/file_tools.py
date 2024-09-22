@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 from pathlib import Path
 from re import search
 from tools.time_funcs import strftime_to_regex

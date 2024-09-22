@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import influxdb_client as ifdb
 from influxdb_client.client.write_api import SYNCHRONOUS
 import logging
