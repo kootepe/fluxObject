@@ -60,7 +60,7 @@ def check_valid(dataframe, filter_tuple, device, measurement_time):
     dfa = []
     missing_data = False
     for date in filter_tuple:
-        df = date_filter(dataframe, (date[2], date[3])).copy()
+        df = date_filter(dataframe, date).copy()
 
         has_errors = check_diag_col(df, device)
         no_air_temp = check_air_temp_col(df)

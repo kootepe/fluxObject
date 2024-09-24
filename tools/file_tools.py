@@ -4,9 +4,12 @@ from pathlib import Path
 from re import search
 from tools.time_funcs import strftime_to_regex
 from datetime import datetime
+import pandas as pd
 import logging
 import os
 import sys
+
+from tools.validation import overlap_test
 
 logger = logging.getLogger("defaultLogger")
 
@@ -114,3 +117,34 @@ def mk_date_dict(files, ts_fmt):
         )
     }
     return file_date_dict
+
+
+def read_man_meas_f(measurement_files, chamber_cycle):
+    from tools.fluxer import timestamps
+
+    # NOTE: the format of the manual measurement is hardcoded
+    tmp = []
+    for f in measurement_files:
+        # with open(f) as f:
+        #    first_line = f.read_line()
+        # date = first_line
+        logger.debug(f"Reading measurement {f.name}.")
+        ts_reader = timestamps()
+        df = ts_reader.read_file(f)
+        # NOTE: for the sake of consisteny, even though the manual
+        # measurement doesn't really have a closing time, the
+        # variable is named like this
+        df["start_time"] = df["datetime"]
+        # NOTE: move to function in future
+        df["close_time"] = df["datetime"] + pd.to_timedelta(chamber_cycle[0], unit="s")
+        df["open_time"] = df["datetime"] + pd.to_timedelta(chamber_cycle[1], unit="s")
+        df["end_time"] = df["datetime"] + pd.to_timedelta(chamber_cycle[2], unit="s")
+        df["snowdepth"] = df["snowdepth"].fillna(0)
+        df["ts_file"] = str(f.name)
+        tmp.append(df)
+    dfs = pd.concat(tmp)
+    dfs.set_index("datetime", inplace=True)
+    dfs["notes"] = dfs["notes"].fillna("")
+    dfs = overlap_test(dfs)
+    dfs.sort_index(inplace=True)
+    return dfs

@@ -3,7 +3,6 @@
 import sys
 import logging
 import datetime
-import configparser as cfgparser
 import numpy as np
 import pandas as pd
 from pathlib import Path
@@ -13,8 +12,9 @@ from re import search
 # modules from this repo
 from tools.filter import (
     date_filter,
-    mk_fltr_tuple,
-    add_min_to_fltr_tuple,
+    mk_fltr_tuples,
+    add_min_to_cycle,
+    add_min_to_calc,
     get_datetime_index,
 )
 from tools.file_tools import (
@@ -22,6 +22,7 @@ from tools.file_tools import (
     mk_date_dict,
     find_files,
     filter_between_dates,
+    read_man_meas_f,
     get_files,
 )
 from tools.time_funcs import (
@@ -183,9 +184,10 @@ class fluxCalculator:
 
             # measurement times dataframe
             self.w_merged = self.data
+            self.fltr_tuple = mk_fltr_tuples(self.time_data)
             self.merged = self.merge_main_and_time()
 
-            self.fltr_tuple = mk_fltr_tuple(self.time_data)
+            # self.fltr_tuple = mk_fltr_tuple(self.time_data)
 
     def create_dfs_man(self):
         """Create dataframes with gas measurements and the chamber rotation"""
@@ -212,7 +214,9 @@ class fluxCalculator:
                     self.end_ts,
                 )
                 self.data = self.read_meas()
-                self.time_data = self.read_man_meas_f()
+                self.time_data = read_man_meas_f(
+                    self.meas_t_files, self.ini_handler.get_chamber_settings()
+                )
             else:
                 self.data = read_ifdb(
                     self.ini_handler.influxdb_dict,
@@ -232,8 +236,8 @@ class fluxCalculator:
                 self.time_data["chamber"] = self.time_data["chamber"].astype(int)
             # measurement times dataframe
             self.w_merged = self.data
+            self.fltr_tuple = mk_fltr_tuples(self.time_data)
             self.merged = self.merge_main_and_time()
-            self.fltr_tuple = mk_fltr_tuple(self.time_data)
 
     def mk_cham_cycle2(self):
         tmp = []
@@ -424,37 +428,37 @@ class fluxCalculator:
 
         return dfs
 
-    def read_man_meas_f(self):
-        # NOTE: the format of the manual measurement is hardcoded
-        tmp = []
-        for f in self.meas_t_files:
-            # with open(f) as f:
-            #    first_line = f.read_line()
-            # date = first_line
-            logger.debug(f"Reading measurement {f.name}.")
-            df = self.timestamp_file.read_file(f)
-            # NOTE: for the sake of consisteny, even though the manual
-            # measurement doesn't really have a closing time, the
-            # variable is named like this
-            df["start_time"] = df["datetime"]
-            df["end_time"] = df["datetime"] + pd.to_timedelta(
-                self.ini_handler.meas_et, unit="s"
-            )
-            df["close_time"] = df["datetime"] + pd.to_timedelta(
-                self.ini_handler.ch_ct, unit="s"
-            )
-            df["open_time"] = df["datetime"] + pd.to_timedelta(
-                self.ini_handler.ch_ot, unit="s"
-            )
-            df["snowdepth"] = df["snowdepth"].fillna(0)
-            df["ts_file"] = str(f.name)
-            tmp.append(df)
-        dfs = pd.concat(tmp)
-        dfs.set_index("datetime", inplace=True)
-        dfs["notes"] = dfs["notes"].fillna("")
-        dfs = overlap_test(dfs)
-        dfs.sort_index(inplace=True)
-        return dfs
+    # def read_man_meas_f(self):
+    #     # note: the format of the manual measurement is hardcoded
+    #     tmp = []
+    #     for f in self.meas_t_files:
+    #         # with open(f) as f:
+    #         #    first_line = f.read_line()
+    #         # date = first_line
+    #         logger.debug(f"reading measurement {f.name}.")
+    #         df = self.timestamp_file.read_file(f)
+    #         # note: for the sake of consisteny, even though the manual
+    #         # measurement doesn't really have a closing time, the
+    #         # variable is named like this
+    #         df["start_time"] = df["datetime"]
+    #         df["end_time"] = df["datetime"] + pd.to_timedelta(
+    #             self.ini_handler.meas_et, unit="s"
+    #         )
+    #         df["close_time"] = df["datetime"] + pd.to_timedelta(
+    #             self.ini_handler.ch_ct, unit="s"
+    #         )
+    #         df["open_time"] = df["datetime"] + pd.to_timedelta(
+    #             self.ini_handler.ch_ot, unit="s"
+    #         )
+    #         df["snowdepth"] = df["snowdepth"].fillna(0)
+    #         df["ts_file"] = str(f.name)
+    #         tmp.append(df)
+    #     dfs = pd.concat(tmp)
+    #     dfs.set_index("datetime", inplace=true)
+    #     dfs["notes"] = dfs["notes"].fillna("")
+    #     dfs = overlap_test(dfs)
+    #     dfs.sort_index(inplace=true)
+    #     return dfs
 
     def merge_main_and_time(self):
         """
@@ -464,14 +468,15 @@ class fluxCalculator:
         logger.debug("Attaching measurement times to gas measurement.")
         df = self.data.copy()
         self.time_data.dropna(inplace=True, axis=1)
-        for idx, row in self.time_data.iterrows():
-            start = row["start_time"]
-            end = row["end_time"]
-            st, et = get_datetime_index(df, (start, end))
-            for col, value in row.items():
-                if col not in df.columns:
-                    df[col] = pd.NA
-                df.iloc[st:et, df.columns.get_loc(col)] = value
+        for filter in self.fltr_tuple:
+            # start = filter.start
+            # end = filter.end
+            st, et = get_datetime_index(df, filter)
+            for idx, row in self.time_data.iterrows():
+                for col, value in row.items():
+                    if col not in df.columns:
+                        df[col] = pd.NA
+                    df.iloc[st:et, df.columns.get_loc(col)] = value
         return df
 
     def merge_aux(self):
@@ -540,10 +545,10 @@ class fluxCalculator:
 
         logger.info("Starting gas flux calculations.")
         for date in self.fltr_tuple:
-            df = date_filter(data, (date[2], date[3], date[-1])).copy()
+            df = date_filter(data, date).copy()
             mdf = date_filter(df, date).copy()
 
-            logger.info(f"Calculating flux from {date[0]} to {date[1]}")
+            logger.info(f"Calculating flux from {date.close} to {date.open}")
 
             # Skip iteration if conditions are met
             if check_conditions_and_continue(mdf, df, date):
@@ -640,7 +645,7 @@ class fluxCalculator:
             + [col for col in self.merged.columns if "idx_cp" in col]
         )
         for date in self.fltr_tuple:
-            dfa = date_filter(self.merged, (date[2], date[3]))
+            dfa = date_filter(self.merged, date)
             dfList.append(dfa.iloc[:1])
         summary = pd.concat(dfList)
         if "test" not in self.ini_handler.ini_name:
@@ -655,10 +660,11 @@ class fluxCalculator:
         daylist = []
         # initiate sparkline
         fig, ax = create_fig()
-        times = self.fltr_tuple
+        logger.debug(self.fltr_tuple)
+        times = self.fltr_tuple.copy()
 
         # NOTE: these need to be as class attribute
-        w_times = [add_min_to_fltr_tuple(time) for time in times]
+        w_times = [add_min_to_calc(time) for time in times]
 
         m_times = times
 
@@ -669,15 +675,15 @@ class fluxCalculator:
         )
         for i, date in enumerate(w_times):
             data = date_filter(self.w_merged, date).copy()
-            day = date[0].date()
+            day = date.close.date()
             if data.empty:
                 daylist.append(day)
                 continue
             smask = self.ready_data.index == w_times[i][0]
             daylist.append(day)
             try:
-                day = str(date[0].date())
-                name = date[0].strftime("%Y%m%d%H%M%S")
+                day = str(date.close.date())
+                name = date.close.strftime("%Y%m%d%H%M%S")
                 for gas in gases:
                     fig_root = "figs"
                     path = Path(f"{fig_root}/{gas}/{day}/")

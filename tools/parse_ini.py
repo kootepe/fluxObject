@@ -78,6 +78,7 @@ class iniHandler:
         self.ch_ot = int(self.chamber_cycle.get("end_of_measurement"))
         self.meas_et = int(self.chamber_cycle.get("end_of_cycle"))
         self.chamber_h = float(self.measuring_chamber_dict.get("chamber_height"))
+        return (self.ch_ct, self.ch_ot, self.meas_et)
 
 
 def parse_ini_to_dicts(ini_file):
