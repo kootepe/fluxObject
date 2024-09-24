@@ -12,7 +12,13 @@ import main
 # +from tools.merging import merge_aux_by_column
 from tools.snow_height import read_snow_measurement
 from tools.validation import check_air_temp_col
-from tools.file_tools import filter_between_dates, find_files, mk_date_dict, get_files
+from tools.file_tools import (
+    read_man_meas_f,
+    filter_between_dates,
+    find_files,
+    mk_date_dict,
+    get_files,
+)
 from tools.gas_funcs import (
     calculate_pearsons_r,
     calculate_slope,
@@ -20,6 +26,31 @@ from tools.gas_funcs import (
 )
 from tools.fluxer import fluxCalculator
 from tools.fluxer import li7810
+from tools.filter import mk_tuple
+
+man_time_files = list(Path("tests/data/manual_times/").glob("*.txt"))
+man_time_df = read_man_meas_f(man_time_files, (60, 240, 300))
+expected_tuple = [
+    mk_tuple(
+        (
+            pd.Timestamp("2021-10-03 02:05:00"),
+            pd.Timestamp("2021-10-03 02:06:00"),
+            pd.Timestamp("2021-10-03 02:09:00"),
+            pd.Timestamp("2021-10-03 02:10:00"),
+            71,
+        )
+    ),
+    mk_tuple(
+        (
+            pd.Timestamp("2021-10-03 02:20:00"),
+            pd.Timestamp("2021-10-03 02:21:00"),
+            pd.Timestamp("2021-10-03 02:24:00"),
+            pd.Timestamp("2021-10-03 02:25:00"),
+            67,
+        )
+    ),
+]
+
 
 man_ini_path = "tests/inis/test_ini_man.ini"
 env_vars = None

@@ -4,12 +4,19 @@ from tools.time_funcs import time_to_numeric
 # test_with_unittest discover
 import main
 from tools.validation import check_air_temp_col
-from tools.file_tools import filter_between_dates, find_files, mk_date_dict, get_files
+from tools.file_tools import (
+    read_man_meas_f,
+    filter_between_dates,
+    find_files,
+    mk_date_dict,
+    get_files,
+)
 from tools.gas_funcs import (
     calculate_pearsons_r,
     calculate_slope,
     calculate_gas_flux,
 )
+from tools.filter import mk_fltr_tuples
 from tools.fluxer import li7810
 
 
@@ -27,7 +34,14 @@ from tests.test_data import (
     use_defs,
     man_f,
     ac_f,
+    man_time_df,
+    expected_tuple,
 )
+
+
+@pytest.mark.parametrize("input,expected", [(man_time_df.head(2), expected_tuple)])
+def test_mk_fltr_tuple(input, expected):
+    assert mk_fltr_tuples(input) == expected
 
 
 @pytest.mark.parametrize(
