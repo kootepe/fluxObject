@@ -11,7 +11,7 @@ def base_tuple():
     return namedtuple("filter", "start close open end chamber")
 
 
-def update_tuple(old_tuple):
+def mk_tuple(old_tuple):
     tpl = base_tuple()
     updated_tuple = tpl(*old_tuple)
     return updated_tuple
