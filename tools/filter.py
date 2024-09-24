@@ -64,7 +64,7 @@ def mk_fltr_tuples(df, st="start_time", ct="close_time", ot="open_time", et="end
     """create filter tuple from given column names"""
     filter_tuple = base_tuple()
     # create a list of tuples out of pandas dataframe rows
-    tuple_init = list(zip(df[ct], df[ot], df[st], df[et], df["chamber"]))
+    tuple_init = list(zip(df[st], df[ct], df[ot], df[et], df["chamber"]))
     # unpack each  endnamedtuple
     filter_tuples = [filter_tuple(*t) for t in tuple_init]
     return filter_tuples
