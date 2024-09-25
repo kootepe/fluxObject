@@ -3,12 +3,24 @@
 import pandas as pd
 import logging
 from collections import namedtuple
+from tools.measurement import measurement
 
 logger = logging.getLogger("defaultLogger")
 
 
+def mk_fltr_tuples(df, st="start_time", ct="close_time", ot="open_time", et="end_time"):
+    """create filter tuple from given column names"""
+    filter_tuple = base_tuple()
+    # create a list of tuples out of pandas dataframe rows
+    tuple_init = list(zip(df[st], df[ct], df[ot], df[et], df["chamber"]))
+    # unpack each  endnamedtuple
+    init_tuples = [filter_tuple(*t) for t in tuple_init]
+    filter_tuples = [measurement(t) for t in init_tuples]
+    return filter_tuples
+
+
 def base_tuple():
-    return namedtuple("filter", "start close open end chamber")
+    return namedtuple("filter", "start close open end id")
 
 
 def mk_tuple(old_tuple):
@@ -60,16 +72,6 @@ def date_filter(data_to_filter, filter_tuple):
     return df
 
 
-def mk_fltr_tuples(df, st="start_time", ct="close_time", ot="open_time", et="end_time"):
-    """create filter tuple from given column names"""
-    filter_tuple = base_tuple()
-    # create a list of tuples out of pandas dataframe rows
-    tuple_init = list(zip(df[st], df[ct], df[ot], df[et], df["chamber"]))
-    # unpack each  endnamedtuple
-    filter_tuples = [filter_tuple(*t) for t in tuple_init]
-    return filter_tuples
-
-
 def subs_from_fltr_tuple(filter_tuple, percentage):
     """
     'Remove' percentage from both ends of the filter tuple, eg. shorten the
@@ -81,7 +83,7 @@ def subs_from_fltr_tuple(filter_tuple, percentage):
     start = filter_tuple.close + time_to_remove
     end = filter_tuple.open - time_to_remove
     base = base_tuple()
-    base = base(start, filter_tuple.close, filter_tuple.open, end, filter_tuple.chamber)
+    base = base(start, filter_tuple.close, filter_tuple.open, end, filter_tuple.id)
     return base
 
 
@@ -94,7 +96,7 @@ def add_to_fltr_tuple(filter_tuple, percentage):
     start = filter_tuple.close - time_to_remove
     end = filter_tuple.open + time_to_remove
     base = base_tuple()
-    base = base(start, filter_tuple.close, filter_tuple.open, end, filter_tuple.chamber)
+    base = base(start, filter_tuple.close, filter_tuple.open, end, filter_tuple.id)
     return base
 
 
@@ -105,7 +107,7 @@ def add_min_to_calc(filter_tuple):
     start = filter_tuple.close - time_to_remove
     end = filter_tuple.open + time_to_remove
     base = base_tuple()
-    base = base(start, filter_tuple.close, filter_tuple.open, end, filter_tuple.chamber)
+    base = base(start, filter_tuple.close, filter_tuple.open, end, filter_tuple.id)
     return base
 
 
@@ -116,5 +118,5 @@ def add_min_to_cycle(filter_tuple):
     start = filter_tuple.start - time_to_remove
     end = filter_tuple.end + time_to_remove
     base = base_tuple()
-    base = base(start, filter_tuple.close, filter_tuple.open, end, filter_tuple.chamber)
+    base = base(start, filter_tuple.close, filter_tuple.open, end, filter_tuple.id)
     return base

@@ -112,7 +112,7 @@ def create_sparkline(df, filename, gas, fig, ax, rects):
     ax.cla()
 
 
-def create_rects(y, times, m_times):
+def create_rects(y, times):
     """
     Create bounds for rectangles displayed in the gas measurement sparklines
 
@@ -131,11 +131,18 @@ def create_rects(y, times, m_times):
     rects : tuple
         list of the bounds of the displayed rectangles
     """
-    wrec_x = date2num(times[0])
-    wrec_w = date2num(times[1]) - date2num(times[0])
-    srec_x = date2num(m_times[0])
-    srec_w = date2num(m_times[1]) - date2num(m_times[0])
-    rec_y = y.min()
-    rec_h = y.max() - y.min()
-    rects = (wrec_x, wrec_w, srec_x, srec_w, rec_y, rec_h)
+    whole_measurement_x = date2num(times.plot_start)
+    whole_measurement_width = date2num(times.plot_end) - date2num(times.plot_start)
+    calc_x = date2num(times.close)
+    calc_width = date2num(times.open) - date2num(times.close)
+    rectangle_y = y.min()
+    rectangle_h = y.max() - y.min()
+    rects = (
+        whole_measurement_x,
+        whole_measurement_width,
+        calc_x,
+        calc_width,
+        rectangle_y,
+        rectangle_h,
+    )
     return rects

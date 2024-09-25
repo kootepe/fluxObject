@@ -18,6 +18,7 @@ from tools.gas_funcs import (
 )
 from tools.filter import mk_fltr_tuples
 from tools.fluxer import li7810
+from tools.measurement import measurement
 
 
 from tests.test_data import (
@@ -39,9 +40,38 @@ from tests.test_data import (
 )
 
 
-@pytest.mark.parametrize("input,expected", [(man_time_df.head(2), expected_tuple)])
-def test_mk_fltr_tuple(input, expected):
-    assert mk_fltr_tuples(input) == expected
+# @pytest.mark.parametrize("input,expected", [(man_time_df.head(2), expected_tuple)])
+# def test_mk_fltr_tuple(input, expected):
+#     assert mk_fltr_tuples(input) == expected
+
+
+@pytest.mark.parametrize(
+    "input,expected",
+    [
+        (
+            [measurement(t).start for t in mk_fltr_tuples((man_time_df.head(2)))],
+            [t.start for t in expected_tuple],
+        ),
+        (
+            [measurement(t).close for t in mk_fltr_tuples((man_time_df.head(2)))],
+            [t.close for t in expected_tuple],
+        ),
+        (
+            [measurement(t).open for t in mk_fltr_tuples((man_time_df.head(2)))],
+            [t.open for t in expected_tuple],
+        ),
+        (
+            [measurement(t).end for t in mk_fltr_tuples((man_time_df.head(2)))],
+            [t.end for t in expected_tuple],
+        ),
+        (
+            [measurement(t).id for t in mk_fltr_tuples((man_time_df.head(2)))],
+            [t.id for t in expected_tuple],
+        ),
+    ],
+)
+def test_mk_init_measurement_class(input, expected):
+    assert input == expected
 
 
 @pytest.mark.parametrize(
