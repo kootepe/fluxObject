@@ -95,7 +95,7 @@ class fluxCalculator:
         self.aux_cfgs = read_aux_data(self.aux_cfgs, self.start_ts, self.end_ts)
         self.merge_aux()
         self.merged = check_valid(
-            self.merged, self.fltr_tuple, self.device, self.ini_handler.meas_et
+            self.merged, self.measurement_list, self.device, self.ini_handler.meas_et
         )
 
         self.merged = self.calc_slope_pearsR(self.merged)
@@ -184,7 +184,7 @@ class fluxCalculator:
 
             # measurement times dataframe
             self.w_merged = self.data
-            self.fltr_tuple = mk_fltr_tuples(self.time_data)
+            self.measurement_list = mk_fltr_tuples(self.time_data)
             self.merged = self.merge_main_and_time()
 
             # self.fltr_tuple = mk_fltr_tuple(self.time_data)
@@ -236,7 +236,7 @@ class fluxCalculator:
                 self.time_data["chamber"] = self.time_data["chamber"].astype(int)
             # measurement times dataframe
             self.w_merged = self.data
-            self.fltr_tuple = mk_fltr_tuples(self.time_data)
+            self.measurement_list = mk_fltr_tuples(self.time_data)
             self.merged = self.merge_main_and_time()
 
     def mk_cham_cycle2(self):
@@ -468,10 +468,10 @@ class fluxCalculator:
         logger.debug("Attaching measurement times to gas measurement.")
         df = self.data.copy()
         self.time_data.dropna(inplace=True, axis=1)
-        time_df = self.time_data
-        for filter in self.measurement_list:
-            st, et = get_datetime_index(df, filter)
-            stt, ett = get_datetime_index(time_df, filter)
+        time_df = self.time_data.copy()
+        for msrmnt in self.measurement_list:
+            st, et = get_datetime_index(df, msrmnt)
+            stt, ett = get_datetime_index(time_df, msrmnt)
             times = time_df.iloc[stt:ett]
             for idx, row in times.iterrows():
                 for col, value in row.items():
@@ -526,33 +526,35 @@ class fluxCalculator:
         """
         measurement_list = []
 
-        def append_df_with_logging(df, message, date):
-            logger.warning(message + f" at {date[0]}")
+        def append_df_with_logging(df, message, measurement):
+            logger.warning(message + f" at {measurement.start}")
             measurement_list.append(df)
 
-        def check_conditions_and_continue(mdf, df, date):
+        def check_conditions_and_continue(mdf, df, measurement):
             if mdf.empty:
-                append_df_with_logging(df, "DataFrame empty", date)
+                append_df_with_logging(df, "DataFrame empty", measurement)
                 return True
             if "has errors" in mdf.iloc[0]["checks"]:
                 append_df_with_logging(
-                    df, "Skipping flux calculation due to diagnostic flags", date
+                    df, "Skipping flux calculation due to diagnostic flags", measurement
                 )
                 return True
             if df["overlap"].any():
-                append_df_with_logging(df, "Overlapping measurement, skipping", date)
+                append_df_with_logging(
+                    df, "Overlapping measurement, skipping", measurement
+                )
                 return True
             return False
 
         logger.info("Starting gas flux calculations.")
-        for date in self.fltr_tuple:
-            df = date_filter(data, date).copy()
-            mdf = date_filter(df, date).copy()
+        for msrmnt in self.measurement_list:
+            df = date_filter(data, msrmnt, "plot_start", "plot_end").copy()
+            mdf = date_filter(df, msrmnt).copy()
 
-            logger.info(f"Calculating flux from {date.close} to {date.open}")
+            logger.info(f"Calculating flux from {msrmnt.close} to {msrmnt.open}")
 
             # Skip iteration if conditions are met
-            if check_conditions_and_continue(mdf, df, date):
+            if check_conditions_and_continue(mdf, df, msrmnt):
                 continue
 
             # Ensure snowdepth column exists
@@ -645,8 +647,8 @@ class fluxCalculator:
             + drop_cols
             + [col for col in self.merged.columns if "idx_cp" in col]
         )
-        for date in self.fltr_tuple:
-            dfa = date_filter(self.merged, date)
+        for msrmnt in self.measurement_list:
+            dfa = date_filter(self.merged, msrmnt)
             dfList.append(dfa.iloc[:1])
         summary = pd.concat(dfList)
         if "test" not in self.ini_handler.ini_name:
@@ -657,55 +659,53 @@ class fluxCalculator:
         return summary
 
     def create_xlsx(self):
+        def create_path(root, gas, date):
+            path = Path(f"{fig_root}/{gas}/{date}/")
+            if not path.exists():
+                path.mkdir(parents=True)
+            return path
+
         # create a list of days for creating outputs
         daylist = []
         # initiate sparkline
         fig, ax = create_fig()
-        logger.debug(self.fltr_tuple)
-        times = self.fltr_tuple.copy()
-
-        # NOTE: these need to be as class attribute
-        w_times = [add_min_to_calc(time) for time in times]
-
-        m_times = times
+        times = self.measurement_list.copy()
 
         gases = self.device.gas_cols
         logger.info(f"Creating {len(times) * len(gases)} sparklines.")
         logger.info(
             f"Time estimate: {convert_seconds(len(times) * (0.05 * len(gases)))}."
         )
-        for i, date in enumerate(w_times):
-            data = date_filter(self.w_merged, date).copy()
-            day = date.close.date()
+        for msrmnt in self.measurement_list:
+            data = date_filter(self.w_merged, msrmnt, "plot_start", "plot_end").copy()
+            day = msrmnt.date
             if data.empty:
                 daylist.append(day)
                 continue
-            smask = self.ready_data.index == w_times[i][0]
+            smask = self.ready_data.index == msrmnt.start
             daylist.append(day)
             try:
-                day = str(date.close.date())
-                name = date.close.strftime("%Y%m%d%H%M%S")
+                day = msrmnt.date
+                name = msrmnt.start.strftime("%Y%m%d%H%M%S")
                 for gas in gases:
                     fig_root = "figs"
-                    path = Path(f"{fig_root}/{gas}/{day}/")
                     plotname = f"{name}.png"
+                    path = create_path(fig_root, gas, day)
                     fig_path = str(path / plotname)
-                    if not path.exists():
-                        path.mkdir(parents=True)
                     self.ready_data.loc[smask, f"fig_dir_{gas}"] = fig_path
                     y = data[gas]
-                    rects = create_rects(y, times[i], m_times[i])
+                    rects = create_rects(y, msrmnt)
                     create_sparkline(data[[gas]], fig_path, gas, fig, ax, rects)
             except Exception as e:
                 logger.warning("Failed sparkline creation.")
                 logger.warning(e)
         # converting list to dict and then to list again removes duplicate items
         daylist = list(dict.fromkeys(daylist))
+        sort = None
         for day in daylist:
             data = self.ready_data[self.ready_data.index.date == day]
             if data.empty:
                 continue
-            sort = None
             logger.debug(f"Columns in data passed to create_excel: {data.columns}")
             logger.debug(f"{data.head()}")
             create_excel(data, self.ini_handler.excel_path, sort)
