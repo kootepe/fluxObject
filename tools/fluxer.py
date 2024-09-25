@@ -473,7 +473,9 @@ class fluxCalculator:
             # start = filter.start
             # end = filter.end
             st, et = get_datetime_index(df, filter)
-            for idx, row in self.time_data.iterrows():
+            stt, ett = get_datetime_index(time_df, filter)
+            times = time_df.iloc[stt:ett]
+            for idx, row in times.iterrows():
                 for col, value in row.items():
                     if col not in df.columns:
                         df[col] = pd.NA
