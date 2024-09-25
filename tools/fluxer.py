@@ -468,6 +468,7 @@ class fluxCalculator:
         logger.debug("Attaching measurement times to gas measurement.")
         df = self.data.copy()
         self.time_data.dropna(inplace=True, axis=1)
+        time_df = self.time_data.copy()
         for filter in self.measurement_list:
             print(filter.start)
             # start = filter.start
