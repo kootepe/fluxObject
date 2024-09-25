@@ -49,7 +49,7 @@ def get_datetime_index(df, filter_tuple, s_key="start", e_key="end"):
     return start, end
 
 
-def date_filter(data_to_filter, filter_tuple):
+def date_filter(data_to_filter, filter_tuple, s_key="start", e_key="end"):
     """
     Filters dataframes with two dates provided in a tuple
     Equivalent to using a boolean mask but considerably faster.
@@ -69,7 +69,7 @@ def date_filter(data_to_filter, filter_tuple):
     # before getting to this point...
     if not data_to_filter.index.is_monotonic_increasing:
         data_to_filter.sort_index(inplace=True)
-    start, end = get_datetime_index(data_to_filter, filter_tuple)
+    start, end = get_datetime_index(data_to_filter, filter_tuple, s_key, e_key)
     df = data_to_filter.iloc[start:end]
     return df
 
