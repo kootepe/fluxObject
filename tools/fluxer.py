@@ -469,9 +469,9 @@ class fluxCalculator:
         df = self.data.copy()
         self.time_data.dropna(inplace=True, axis=1)
         time_df = self.time_data.copy()
-        for filter in self.measurement_list:
-            st, et = get_datetime_index(df, filter)
-            stt, ett = get_datetime_index(time_df, filter)
+        for msrmnt in self.measurement_list:
+            st, et = get_datetime_index(df, msrmnt)
+            stt, ett = get_datetime_index(time_df, msrmnt)
             times = time_df.iloc[stt:ett]
             for idx, row in times.iterrows():
                 for col, value in row.items():
@@ -547,16 +547,14 @@ class fluxCalculator:
             return False
 
         logger.info("Starting gas flux calculations.")
-        for measurement in self.measurement_list:
-            df = date_filter(data, measurement).copy()
-            mdf = date_filter(df, measurement).copy()
+        for msrmnt in self.measurement_list:
+            df = date_filter(data, msrmnt, "plot_start", "plot_end").copy()
+            mdf = date_filter(df, msrmnt).copy()
 
-            logger.info(
-                f"Calculating flux from {measurement.close} to {measurement.open}"
-            )
+            logger.info(f"Calculating flux from {msrmnt.close} to {msrmnt.open}")
 
             # Skip iteration if conditions are met
-            if check_conditions_and_continue(mdf, df, measurement):
+            if check_conditions_and_continue(mdf, df, msrmnt):
                 continue
 
             # Ensure snowdepth column exists
@@ -649,8 +647,8 @@ class fluxCalculator:
             + drop_cols
             + [col for col in self.merged.columns if "idx_cp" in col]
         )
-        for date in self.measurement_list:
-            dfa = date_filter(self.merged, date)
+        for msrmnt in self.measurement_list:
+            dfa = date_filter(self.merged, msrmnt)
             dfList.append(dfa.iloc[:1])
         summary = pd.concat(dfList)
         if "test" not in self.ini_handler.ini_name:
