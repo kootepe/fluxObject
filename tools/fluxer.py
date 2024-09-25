@@ -661,43 +661,42 @@ class fluxCalculator:
         return summary
 
     def create_xlsx(self):
+        def create_path(root, gas, date):
+            path = Path(f"{fig_root}/{gas}/{date}/")
+            if not path.exists():
+                path.mkdir(parents=True)
+            return path
+
         # create a list of days for creating outputs
         daylist = []
         # initiate sparkline
         fig, ax = create_fig()
         times = self.measurement_list.copy()
 
-        # NOTE: these need to be as class attribute
-        w_times = [add_min_to_calc(time) for time in times]
-
-        m_times = times
-
         gases = self.device.gas_cols
         logger.info(f"Creating {len(times) * len(gases)} sparklines.")
         logger.info(
             f"Time estimate: {convert_seconds(len(times) * (0.05 * len(gases)))}."
         )
-        for i, date in enumerate(self.measurement_list):
-            data = date_filter(self.w_merged, date).copy()
-            day = date.date
+        for msrmnt in self.measurement_list:
+            data = date_filter(self.w_merged, msrmnt, "plot_start", "plot_end").copy()
+            day = msrmnt.date
             if data.empty:
                 daylist.append(day)
                 continue
-            smask = self.ready_data.index == w_times[i][0]
+            smask = self.ready_data.index == msrmnt.start
             daylist.append(day)
             try:
-                day = str(date.date)
-                name = date.date.strftime("%Y%m%d%H%M%S")
+                day = msrmnt.date
+                name = msrmnt.start.strftime("%Y%m%d%H%M%S")
                 for gas in gases:
                     fig_root = "figs"
-                    path = Path(f"{fig_root}/{gas}/{day}/")
                     plotname = f"{name}.png"
+                    path = create_path(fig_root, gas, day)
                     fig_path = str(path / plotname)
-                    if not path.exists():
-                        path.mkdir(parents=True)
                     self.ready_data.loc[smask, f"fig_dir_{gas}"] = fig_path
                     y = data[gas]
-                    rects = create_rects(y, date)
+                    rects = create_rects(y, msrmnt)
                     create_sparkline(data[[gas]], fig_path, gas, fig, ax, rects)
             except Exception as e:
                 logger.warning("Failed sparkline creation.")
