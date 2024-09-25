@@ -428,38 +428,6 @@ class fluxCalculator:
 
         return dfs
 
-    # def read_man_meas_f(self):
-    #     # note: the format of the manual measurement is hardcoded
-    #     tmp = []
-    #     for f in self.meas_t_files:
-    #         # with open(f) as f:
-    #         #    first_line = f.read_line()
-    #         # date = first_line
-    #         logger.debug(f"reading measurement {f.name}.")
-    #         df = self.timestamp_file.read_file(f)
-    #         # note: for the sake of consisteny, even though the manual
-    #         # measurement doesn't really have a closing time, the
-    #         # variable is named like this
-    #         df["start_time"] = df["datetime"]
-    #         df["end_time"] = df["datetime"] + pd.to_timedelta(
-    #             self.ini_handler.meas_et, unit="s"
-    #         )
-    #         df["close_time"] = df["datetime"] + pd.to_timedelta(
-    #             self.ini_handler.ch_ct, unit="s"
-    #         )
-    #         df["open_time"] = df["datetime"] + pd.to_timedelta(
-    #             self.ini_handler.ch_ot, unit="s"
-    #         )
-    #         df["snowdepth"] = df["snowdepth"].fillna(0)
-    #         df["ts_file"] = str(f.name)
-    #         tmp.append(df)
-    #     dfs = pd.concat(tmp)
-    #     dfs.set_index("datetime", inplace=true)
-    #     dfs["notes"] = dfs["notes"].fillna("")
-    #     dfs = overlap_test(dfs)
-    #     dfs.sort_index(inplace=true)
-    #     return dfs
-
     def merge_main_and_time(self):
         """
         Merges the measurement files into the main gas measurement dataframe row
