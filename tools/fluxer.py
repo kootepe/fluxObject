@@ -470,9 +470,6 @@ class fluxCalculator:
         self.time_data.dropna(inplace=True, axis=1)
         time_df = self.time_data.copy()
         for filter in self.measurement_list:
-            print(filter.start)
-            # start = filter.start
-            # end = filter.end
             st, et = get_datetime_index(df, filter)
             stt, ett = get_datetime_index(time_df, filter)
             times = time_df.iloc[stt:ett]
