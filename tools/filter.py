@@ -41,9 +41,11 @@ def date_filter_list(data_to_filter, filter_tuple_list):
     return df
 
 
-def get_datetime_index(df, filter_tuple):
-    start = df.index.searchsorted(filter_tuple.start, side="left")
-    end = df.index.searchsorted(filter_tuple.end, side="left")
+def get_datetime_index(df, filter_tuple, s_key="start", e_key="end"):
+    # start = df.index.searchsorted(filter_tuple.s_key, side="left")
+    # end = df.index.searchsorted(filter_tuple.e_key, side="left")
+    start = df.index.searchsorted(getattr(filter_tuple, s_key), side="left")
+    end = df.index.searchsorted(getattr(filter_tuple, e_key), side="left")
     return start, end
 
 
