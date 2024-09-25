@@ -704,11 +704,11 @@ class fluxCalculator:
                 logger.warning(e)
         # converting list to dict and then to list again removes duplicate items
         daylist = list(dict.fromkeys(daylist))
+        sort = None
         for day in daylist:
             data = self.ready_data[self.ready_data.index.date == day]
             if data.empty:
                 continue
-            sort = None
             logger.debug(f"Columns in data passed to create_excel: {data.columns}")
             logger.debug(f"{data.head()}")
             create_excel(data, self.ini_handler.excel_path, sort)
