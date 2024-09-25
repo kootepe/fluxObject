@@ -548,7 +548,7 @@ class fluxCalculator:
 
         logger.info("Starting gas flux calculations.")
         for msrmnt in self.measurement_list:
-            df = date_filter(data, msrmnt, "plot_start", "plot_end").copy()
+            df = date_filter(data, msrmnt).copy()
             mdf = date_filter(df, msrmnt).copy()
 
             logger.info(f"Calculating flux from {msrmnt.close} to {msrmnt.open}")
@@ -677,8 +677,8 @@ class fluxCalculator:
             f"Time estimate: {convert_seconds(len(times) * (0.05 * len(gases)))}."
         )
         for msrmnt in self.measurement_list:
-            data = date_filter(self.w_merged, msrmnt, "plot_start", "plot_end").copy()
-            day = msrmnt.date
+            data = date_filter(self.w_merged, msrmnt).copy()
+            day = msrmnt.start.date()
             if data.empty:
                 daylist.append(day)
                 continue
