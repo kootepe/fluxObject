@@ -468,11 +468,12 @@ class fluxCalculator:
         logger.debug("Attaching measurement times to gas measurement.")
         df = self.data.copy()
         self.time_data.dropna(inplace=True, axis=1)
-        for filter in self.fltr_tuple:
-            # start = filter.start
-            # end = filter.end
+        time_df = self.time_data
+        for filter in self.measurement_list:
             st, et = get_datetime_index(df, filter)
-            for idx, row in self.time_data.iterrows():
+            stt, ett = get_datetime_index(time_df, filter)
+            times = time_df.iloc[stt:ett]
+            for idx, row in times.iterrows():
                 for col, value in row.items():
                     if col not in df.columns:
                         df[col] = pd.NA
