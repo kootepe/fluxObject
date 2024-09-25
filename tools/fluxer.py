@@ -526,21 +526,23 @@ class fluxCalculator:
         """
         measurement_list = []
 
-        def append_df_with_logging(df, message, date):
-            logger.warning(message + f" at {date[0]}")
+        def append_df_with_logging(df, message, measurement):
+            logger.warning(message + f" at {measurement.start}")
             measurement_list.append(df)
 
-        def check_conditions_and_continue(mdf, df, date):
+        def check_conditions_and_continue(mdf, df, measurement):
             if mdf.empty:
-                append_df_with_logging(df, "DataFrame empty", date)
+                append_df_with_logging(df, "DataFrame empty", measurement)
                 return True
             if "has errors" in mdf.iloc[0]["checks"]:
                 append_df_with_logging(
-                    df, "Skipping flux calculation due to diagnostic flags", date
+                    df, "Skipping flux calculation due to diagnostic flags", measurement
                 )
                 return True
             if df["overlap"].any():
-                append_df_with_logging(df, "Overlapping measurement, skipping", date)
+                append_df_with_logging(
+                    df, "Overlapping measurement, skipping", measurement
+                )
                 return True
             return False
 
