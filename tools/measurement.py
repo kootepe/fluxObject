@@ -33,7 +33,7 @@ class measurement:
         self.plot_end = filter_tuple.end + Timedelta(minutes=2)
         self.plot_start = filter_tuple.start - Timedelta(minutes=2)
         self.doy = filter_tuple.start.dayofyear
-        self.date = filter_tuple.start.date
+        self.date = filter_tuple.start.date()
         self.month = filter_tuple.start.month
         self.day = filter_tuple.start.day
         self.week = filter_tuple.start.week
