@@ -685,7 +685,7 @@ class fluxCalculator:
             smask = self.ready_data.index == msrmnt.start
             daylist.append(day)
             try:
-                day = msrmnt.date
+                day = msrmnt.start.date()
                 name = msrmnt.start.strftime("%Y%m%d%H%M%S")
                 for gas in gases:
                     fig_root = "figs"
@@ -694,7 +694,9 @@ class fluxCalculator:
                     fig_path = str(path / plotname)
                     self.ready_data.loc[smask, f"fig_dir_{gas}"] = fig_path
                     y = data[gas]
-                    rects = create_rects(y, msrmnt)
+                    rects = create_rects(
+                        y, (msrmnt.start, msrmnt.end), (msrmnt.close, msrmnt.open)
+                    )
                     create_sparkline(data[[gas]], fig_path, gas, fig, ax, rects)
             except Exception as e:
                 logger.warning("Failed sparkline creation.")
